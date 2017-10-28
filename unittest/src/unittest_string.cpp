@@ -1,218 +1,103 @@
-#include "catch.hpp"
-#include <cpprelude/string.h>
+ #include "catch.hpp"
+ #include <cpprelude/string.h>
+#include <string>
 
-using namespace cpprelude;
+ using namespace cpprelude;
 
-TEST_CASE("string test", "[string]")
-{
-	string str;
+ TEST_CASE("string test", "[string]")
+ {
+ 	string str;
 
-	SECTION("Case 01")
-	{
-		string new_str;
-		CHECK(str == new_str);
+ 	SECTION("Case 01")
+ 	{
+ 		string new_str;
 
-		str = new_str;
-		CHECK(str == new_str);
+ 		CHECK(str == new_str);
+ 		CHECK(str.empty() == true);
+ 		CHECK(new_str.empty() == true);
+ 		CHECK(str.count() == 0);
+ 		CHECK(new_str.count() == 0);
+ 	}
 
-		CHECK(str.empty() == true);
-		CHECK(str.count() == 0);
-	}
+ 	SECTION("Case 02")
+ 	{
+ 		string a(u8"mostafa");
+ 		string b;
 
-	SECTION("Case 02")
-	{
-		literal a = "koko"_l;
-		literal b = "wawa"_l;
-		literal c = "koko"_l;
+ 		for(auto c: b)
+ 			CHECK(false);
 
-		CHECK(a.count() == 4);
-		CHECK(b.count() == 4);
-		CHECK(c.count() == 4);
+ 		CHECK(a.empty() == false);
+ 		CHECK(a.count() == 7);
 
-		CHECK(a.empty() == false);
+ 		b = a;
 		CHECK(b.empty() == false);
-		CHECK(c.empty() == false);
+ 		CHECK(b.count() == 7);
 
-		CHECK(a != b);
-		CHECK(b != c);
-		CHECK(a == c);
+ 		CHECK(a == b);
 
-		c.reset();
-		CHECK(c.empty() == true);
-		CHECK(c.count() == 0);
-	}
+ 		auto b_it = b.begin();
+ 		auto a_it = a.begin();
+ 		while(b_it != b.end())
+ 			CHECK(*b_it++ == *a_it++);
+ 	}
 
-	SECTION("Case 03")
-	{
-		literal a = ""_l;
-		literal b = ""_l;
+ 	SECTION("Case 03")
+ 	{
+ 		string a(u8"مصطفى");
+ 		string b;
 
-		CHECK(a==b);
+ 		for(auto c: b)
+ 			CHECK(false);
 
-		CHECK(a.count() == 0);
-		CHECK(b.count() == 0);
+ 		CHECK(a.empty() == false);
+ 		CHECK(a.count() == 5);
 
-		CHECK(a.empty() == true);
-		CHECK(b.empty() == true);
+ 		b = a;
+ 		CHECK(b.empty() == false);
+ 		CHECK(b.count() == 5);
 
-		CHECK(a.begin() == a.end());
-	}
+ 		CHECK(a == b);
 
-	SECTION("Case 04")
-	{
-		literal a = "abc"_l;
+ 		auto b_it = b.begin();
+ 		auto a_it = a.begin();
+ 		while(b_it != b.end())
+ 			CHECK(*b_it++ == *a_it++);
+ 	}
 
-		CHECK(a.empty() == false);
-		CHECK(a.count() == 3);
+ 	SECTION("Case 04")
+ 	{
+ 		string cpp_str[6] = {"abcd", "ab", "ba", "dcba", "fegh", "cdab"};
+ 		std::string std_str[6] = {"abcd", "ab", "ba", "dcba", "fegh", "cdab"};
 
-		CHECK(*a.data() == 'a');
-		CHECK(*a.front() == 'a');
-		CHECK(*a.begin() == 'a');
-		CHECK(*a.back() == 'c');
-		CHECK(*a.end() == '\0');
+ 		for(usize i = 0; i < 6; ++i)
+ 		{
+ 			for(usize j = 0; j < 6; ++j)
+ 			{
+ 				auto a 	= cpp_str[i] == cpp_str[j];
+ 				auto as = std_str[i] == std_str[j];
+ 				CHECK(a == as);
 
-		CHECK(a[0] == 'a');
-		CHECK(a[1] == 'b');
-		CHECK(a[2] == 'c');
-	}
+ 				a  = cpp_str[i] != cpp_str[j];
+ 				as = std_str[i] != std_str[j];
+ 				CHECK(a == as);
 
-	SECTION("Case 05")
-	{
-		auto str = string::from_cstring("abc");
+ 				a  = cpp_str[i] < cpp_str[j];
+ 				as = std_str[i] < std_str[j];
+ 				CHECK(a == as);
 
-		for(auto& ch: str)
-			CHECK(ch != '\0');
+ 				a  = cpp_str[i] <= cpp_str[j];
+ 				as = std_str[i] <= std_str[j];
+ 				CHECK(a == as);
 
-		CHECK(str.count() == 3);
-		CHECK(str.empty() == false);
+ 				a  = cpp_str[i] > cpp_str[j];
+ 				as = std_str[i] > std_str[j];
+ 				CHECK(a == as);
 
-		string::dispose(str);
-		CHECK(str.count() == 0);
-		CHECK(str.empty() == true);
-
-		for(auto& ch: str)
-			CHECK(false);
-	}
-
-	SECTION("Case 06")
-	{
-		auto a = string::from_cstring("abc");
-		auto b = string::from_cstring("abc");
-
-		CHECK(a.count() == 3);
-		CHECK(b.count() == 3);
-
-		CHECK(a.empty() == false);
-		CHECK(b.empty() == false);
-
-		CHECK(a == b);
-
-		b[1] = 'd';
-
-		CHECK(a != b);
-
-		auto c = a;
-
-		CHECK(c != b);
-		CHECK(c == a);
-
-		string::dispose(c);
-		string::dispose(b);
-	}
-
-	SECTION("Case 07")
-	{
-		auto a = string::from_cstring("abc");
-		auto b = a;
-		CHECK(a == b);
-
-		auto c = string::copy(a);
-
-		CHECK(c == a);
-
-		string::dispose(a);
-
-		CHECK(c != a);
-
-		CHECK(c.count() == 3);
-		CHECK(c.empty() == false);
-		for(auto& ch: c)
-			CHECK(ch != '\0');
-
-		string::dispose(c);
-	}
-
-	SECTION("Case 08")
-	{
-		auto a = string::from_cstring("koko");
-		auto b = a.view(2);
-
-		CHECK(a != b);
-		CHECK(b.count() == 2);
-		CHECK(b.empty() == false);
-
-		b = a.view(0);
-		CHECK(a == b);
-		CHECK(b.count() == 4);
-		CHECK(b.empty() == false);
-
-		b = a.view(4);
-		CHECK(a!=b);
-		CHECK(b.count() == 0);
-		CHECK(b.empty() == true);
-
-		b = a.view(0, 2);
-		CHECK(a != b);
-		CHECK(b.count() == 2);
-		CHECK(b.empty() == false);
-
-		for(auto& ch: b)
-			CHECK(ch != '\0');
-
-		string::dispose(a);
-	}
-
-	SECTION("Case 09")
-	{
-		local_string<256> str, str2;
-		CHECK(str.empty() == true);
-		CHECK(str.capacity() == 256);
-
-		write(str, 1111);
-		for(auto& ch: str.view(0,4))
-			CHECK(ch == '1');
-		u16 num;
-		CHECK(read(str, num) == true);
-		CHECK(num == 1111);
-
-		str2 = "1111";
-		CHECK(str.view(0, 4) == str2.view(0, 4));
-	}
-
-	SECTION("Case 10")
-	{
-		local_string<64> str;
-		write(str, 1.123f);
-		auto str2 = "1.123"_l;
-		CHECK(str.view(0, 5) == str2);
-		r32 f;
-		CHECK(read(str, f) == true);
-		CHECK(f == 1.123f);
-	}
-
-	SECTION("Case 11")
-	{
-		local_string<64> a = "abc";
-		local_string<64> b = "";
-
-		CHECK((a > b) == true);
-
-		local_string<128> c = "xb";
-		CHECK((c > a) == true);
-
-		CHECK((c < a) == false);
-
-		local_string<256> d = "ab";
-		CHECK((d < a) == true);
-	}
-}
+ 				a  = cpp_str[i] >= cpp_str[j];
+ 				as = std_str[i] >= std_str[j];
+ 				CHECK(a == as);
+ 			}
+ 		}
+ 	}
+ }

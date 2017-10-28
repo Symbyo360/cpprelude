@@ -17,6 +17,9 @@ project "scratch"
 		buildoptions {"-std=c++14", "-Wall", "-fno-rtti", "-fno-exceptions"}
 		linkoptions {"-pthread"}
 
+	filter "action:vs*"
+		buildoptions {"-utf-8"}
+
 	filter "configurations:debug"
 		defines {"DEBUG"}
 		symbols "On"

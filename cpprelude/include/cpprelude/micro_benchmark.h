@@ -37,33 +37,11 @@ namespace cpprelude
 		nanoseconds() const;
 	};
 
-	struct API abstract_benchmark
+	struct API workbench
 	{
 		stopwatch watch;
 		const char* name;
-		virtual void execute() = 0;
-	};
-
-	template<typename T>
-	struct benchmark: abstract_benchmark
-	{
-		std::function<T(benchmark*)> proc;
-
-		void execute() override
-		{
-			proc(this);
-		}
-	};
-
-	template<>
-	struct benchmark<void>: abstract_benchmark
-	{
-		std::function<void(benchmark*)> proc;
-
-		void execute() override
-		{
-			proc(this);
-		}
+		std::function<void(workbench*)> _proc;
 	};
 
 	struct API benchmark_stats
@@ -91,24 +69,36 @@ namespace cpprelude
 	}
 
 	template<typename TCallable, typename ... TArgs>
-	inline static benchmark<typename std::result_of<TCallable(abstract_benchmark*, TArgs...)>::type>
-	make_benchmark(const char* func_name, TCallable&& proc, TArgs&& ... args)
+	inline static workbench
+	make_benchmark(TCallable&& proc, TArgs&& ... args)
 	{
-		benchmark<typename std::result_of<TCallable(abstract_benchmark*, TArgs...)>::type> result;
-		result.name = func_name;
-		result.proc = std::bind(proc, std::placeholders::_1, std::forward<TArgs>(args)...);
+		workbench result;
+		result.name = "unnamed";
+
+		result._proc = [&](workbench* bench)
+		{
+			proc(bench, std::forward<TArgs>(args)...);
+		};
+
 		return result;
 	}
 
 	template<typename TCallable, typename ... TArgs>
-	inline static benchmark<typename std::result_of<TCallable(abstract_benchmark*, TArgs...)>::type>
-	make_benchmark(TCallable&& proc, TArgs&& ... args)
+	inline static workbench
+	make_benchmark(const char* name, TCallable&& proc, TArgs&& ... args)
 	{
-		benchmark<typename std::result_of<TCallable(abstract_benchmark*, TArgs...)>::type> result;
-		result.name = "unnamed";
-		result.proc = std::bind(proc, std::placeholders::_1, std::forward<TArgs>(args)...);
+		workbench result;
+		result.name = name;
+
+		result._proc = [&](workbench* bench)
+		{
+			proc(bench, std::forward<TArgs>(args)...);
+		};
+
 		return result;
 	}
+
+	#define CPPRELUDE_BENCHMARK(proc, ...) cpprelude::make_benchmark(#proc, proc, __VA_ARGS__)
 
 	namespace details
 	{
@@ -158,27 +148,26 @@ namespace cpprelude
 		}
 	}
 
-	template<typename T>
-	benchmark_stats
-	run_benchmark(benchmark<T> bench, usize lower_bound = 10, usize upper_bound = 1000000, r64 tolerance = 0.5f)
+	inline static benchmark_stats
+	run_benchmark(workbench bench, usize lower_bound = 10, usize upper_bound = 1000000, r64 tolerance = 0.5f)
 	{
 		dynamic_array<stopwatch> runs;
 		benchmark_stats stats;
-		stats.name = bench.name;
 		while(true)
 		{
-			bench.execute();
+			bench._proc(&bench);
 			if(!details::do_again(stats, bench.watch, runs, lower_bound, upper_bound, tolerance))
 				break;
 		}
 		stats.median = details::calc_median(runs);
+		stats.name = bench.name;
 				
 		return stats;
 	}
 
-	template<typename TChar, typename TCallable>
+	template<typename TChar>
 	inline static std::basic_ostream<TChar>&
-	compare_benchmark(std::basic_ostream<TChar>& out, std::initializer_list<TCallable> procs, usize lower_bound = 10, usize upper_bound = 1000000, r64 tolerance = 0.5f)
+	compare_benchmark(std::basic_ostream<TChar>& out, std::initializer_list<workbench> procs, usize lower_bound = 10, usize upper_bound = 1000000, r64 tolerance = 0.5f)
 	{
 		dynamic_array<benchmark_stats> stats;
 		stats.reserve(procs.size());

@@ -3,6 +3,7 @@
 #include <cpprelude/tree_map.h>
 #include <cpprelude/algorithm.h>
 #include <cpprelude/dynamic_array.h>
+#include <cpprelude/string.h>
 #include <iostream>
 
 using namespace cpprelude;
@@ -659,5 +660,20 @@ TEST_CASE("tree_map test", "[tree_map]")
 		//Applying insert-lambda function by calling inorder_traverse
 		std::string aa = "AA";
 		tree.inorder_traverse(append, &aa);
+	}
+
+	SECTION("Case 24")
+	{
+		tree_map<string, usize> str_map;
+
+		str_map["abcd"] = 1;
+		str_map["ab"] = 1;
+		str_map["ba"] = 1;
+		str_map["dcba"] = 1;
+		str_map["fegh"] = 1;
+		str_map["cdab"] = 1;
+
+		CHECK(str_map.empty() == false);
+		CHECK(str_map.count() == 6);
 	}
 }

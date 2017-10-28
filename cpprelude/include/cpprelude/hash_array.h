@@ -8,7 +8,6 @@
 #include "cpprelude/iterator.h"
 
 #include <new>
-#include <iostream>
 
 namespace cpprelude
 {
@@ -178,13 +177,13 @@ namespace cpprelude
 	API usize
 	hash_bytes(const void* ptr, usize len, usize seed = 0xc70f6907UL);
 
-	template<typename T>
-	struct hash<string_slice<T>>
+	template<>
+	struct hash<string>
 	{
 		inline usize
-		operator()(const string_slice<T>& str) const
+		operator()(const string& str) const
 		{
-			return hash_bytes(str.data(), str.count() * sizeof(T));
+			return hash_bytes(str.data(), str.size());
 		}
 	};
 

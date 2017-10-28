@@ -20,6 +20,9 @@ project "unittest"
 		buildoptions {"-std=c++14", "-Wall"}
 		linkoptions {"-pthread"}
 
+	filter "action:vs*"
+		buildoptions {"-utf-8"}
+
 	filter "configurations:debug"
 		defines {"DEBUG"}
 		symbols "On"

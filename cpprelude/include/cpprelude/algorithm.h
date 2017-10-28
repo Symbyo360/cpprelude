@@ -369,7 +369,9 @@ namespace cpprelude
 		if (k >= count)
 			return element_marker<iterator_type>(next(begin_it, count), count);
 
-		shuffle(begin_it, count);
+		auto presult = _median_of3(begin_it, count, less_than);
+		std::swap(*begin_it, *presult.iterator);
+
 
 		auto it = begin_it;
 		auto it_ix = 0;

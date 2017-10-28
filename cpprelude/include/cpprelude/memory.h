@@ -1,7 +1,7 @@
 #pragma once
 
 #include "cpprelude/defines.h"
-#include "cpprelude/platform.h"
+// #include "cpprelude/platform.h"
 
 #include <cstdlib>
 #include <iostream>
@@ -150,36 +150,36 @@ namespace cpprelude
 		std::memmove(dst.ptr, src.ptr, count * sizeof(T));
 	}
 
-	template<typename T>
-	slice<T>
-	virtual_alloc(usize count = 1)
-	{
-		if(count == 0)
-			return slice<T>();
+	// template<typename T>
+	// slice<T>
+	// virtual_alloc(usize count = 1)
+	// {
+	// 	if(count == 0)
+	// 		return slice<T>();
 
-		T* ptr = reinterpret_cast<T*>(platform::virtual_alloc(NULL, count*sizeof(T)));
-		return slice<T>(ptr, ptr ? count * sizeof(T) : 0);
-	}
+	// 	T* ptr = reinterpret_cast<T*>(platform::virtual_alloc(NULL, count*sizeof(T)));
+	// 	return slice<T>(ptr, ptr ? count * sizeof(T) : 0);
+	// }
 
-	template<typename T>
-	bool
-	virtual_free(slice<T>& slice_)
-	{
-		return virtual_free(std::move(slice_));
-	}
+	// template<typename T>
+	// bool
+	// virtual_free(slice<T>& slice_)
+	// {
+	// 	return virtual_free(std::move(slice_));
+	// }
 
-	template<typename T>
-	bool
-	virtual_free(slice<T>&& slice_)
-	{
-		bool result = true;
-		if(slice_.ptr != nullptr)
-			result = platform::virtual_free(slice_.ptr, slice_.size);
+	// template<typename T>
+	// bool
+	// virtual_free(slice<T>&& slice_)
+	// {
+	// 	bool result = true;
+	// 	if(slice_.ptr != nullptr)
+	// 		result = platform::virtual_free(slice_.ptr, slice_.size);
 
-		slice_.ptr = nullptr;
-		slice_.size = 0;
-		return result;
-	}
+	// 	slice_.ptr = nullptr;
+	// 	slice_.size = 0;
+	// 	return result;
+	// }
 
 	template<typename T>
 	slice<T>

@@ -12,6 +12,9 @@ project "cpprelude"
 		buildoptions {"-std=c++14", "-Wall", "-fno-rtti", "-fno-exceptions"}
 		linkoptions {"-pthread"}
 
+	filter "action:vs*"
+		buildoptions {"-utf-8"}
+
 	filter "configurations:debug"
 		targetsuffix "d"
 		defines {"DEBUG", "COMPILE_DYNAMIC_LIB"}

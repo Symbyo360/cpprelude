@@ -1,4 +1,5 @@
 #include "cpprelude/platform.h"
+#include <mutex>
 
 #if defined(OS_WINDOWS)
 #include <Windows.h>
@@ -8,6 +9,13 @@
 
 namespace cpprelude
 {
+    memory_context*
+    global_memory_context()
+    {
+        static memory_context context;
+        return &context;
+    }
+
     namespace platform
     {
         void*
@@ -35,6 +43,28 @@ namespace cpprelude
             #elif defined(OS_LINUX)
                 return munmap(ptr, size) == 0;
             #endif
+        }
+    }
+
+    namespace helper
+    {
+        inline static std::mutex&
+        print_lock()
+        {
+            static std::mutex _print_lock;
+            return _print_lock;
+        }
+
+        void
+        __acquire_print_lock()
+        {
+            print_lock().lock();
+        }
+
+        void
+        __release_print_lock()
+        {
+            print_lock().unlock();
         }
     }
 }
