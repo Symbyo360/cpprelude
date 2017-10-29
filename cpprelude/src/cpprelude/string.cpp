@@ -155,7 +155,8 @@ namespace cpprelude
 	_count_runes(const byte* data)
 	{
 		usize result = 0;
-	    while(*data) result += (*data++ & 0xC0) != 0x80;
+		if(data)
+	    	while(*data) result += (*data++ & 0xC0) != 0x80;
 	    return result;
 	}
 
@@ -188,7 +189,7 @@ namespace cpprelude
 	string::string()
 	{}
 
-	string::string(const char* data, memory_context* context)
+	string::string(const char* data, memory_context_t* context)
 	{
 		_context = context;
 
@@ -200,7 +201,7 @@ namespace cpprelude
 		_data[data_size] = 0;
 	}
 
-	string::string(const slice<byte>& data, memory_context* context)
+	string::string(const slice<byte>& data, memory_context_t* context)
 	{
 		_context = context;
 
@@ -209,7 +210,7 @@ namespace cpprelude
 		copy_slice(_data, data);
 	}
 
-	string::string(slice<byte>&& data, memory_context* context)
+	string::string(slice<byte>&& data, memory_context_t* context)
 	{
 		_context = context;
 		_data = std::move(data);
@@ -226,7 +227,7 @@ namespace cpprelude
 		_count = other._count;
 	}
 
-	string::string(const string& other, memory_context* context)
+	string::string(const string& other, memory_context_t* context)
 	{
 		_context = context;
 
@@ -270,7 +271,7 @@ namespace cpprelude
 		other._context = nullptr;
 	}
 
-	string::string(string&& other, memory_context* context)
+	string::string(string&& other, memory_context_t* context)
 	{
 		_data = std::move(other._data);
 		_count = other._count;

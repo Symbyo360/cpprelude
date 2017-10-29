@@ -5,34 +5,16 @@
 
 namespace cpprelude
 {
-	struct memory_context
+	struct memory_context_t
 	{
-		using alloc_func_t = slice<byte>(*)(void*, usize);
-		using realloc_func_t = void(*)(void*, slice<byte>&, usize);
-		using free_func_t = void(*)(void*, slice<byte>&);
+		using alloc_func_t 		= slice<byte>(*)(void*, usize);
+		using realloc_func_t 	= void(*)(void*, slice<byte>&, usize);
+		using free_func_t 		= void(*)(void*, slice<byte>&);
 
-		static slice<byte>
-		_default_alloc(void*, usize size)
-		{
-			return cpprelude::alloc<byte>(size);
-		}
-
-		static void
-		_default_realloc(void*, slice<byte>& data, usize size)
-		{
-			cpprelude::realloc(data, size);
-		}
-
-		static void
-		_default_free(void*, slice<byte>& data)
-		{
-			cpprelude::free(data);
-		};
-
-		void* _self = this;
-		alloc_func_t _alloc = _default_alloc;
-		realloc_func_t _realloc = _default_realloc;
-		free_func_t _free = _default_free;
+		void* _self = nullptr;
+		alloc_func_t _alloc = nullptr;
+		realloc_func_t _realloc = nullptr;
+		free_func_t _free = nullptr;
 
 		template<typename T>
 		slice<T>
@@ -78,8 +60,24 @@ namespace cpprelude
 		}
 	};
 
-	API memory_context*
-	global_memory_context();
+	struct platform_t
+	{
+		memory_context_t* global_memory;
+
+		API slice<byte>
+        virtual_alloc(void* address_hint, usize size);
+
+        API bool
+        virtual_free(slice<byte>& data);
+
+        API bool
+        virtual_free(slice<byte>&& data);
+	};
+
+	API platform_t&
+	_init_platform();
+
+	static platform_t& platform = _init_platform();
 
 	namespace helper
     {
@@ -103,30 +101,21 @@ namespace cpprelude
     	}
     }
 
-    namespace platform
+    template<typename TStream, typename ... TArgs>
+    inline static void
+    print(TStream& out, TArgs&& ... args)
     {
-        API void*
-        virtual_alloc(void* address_hint, usize size);
+    	helper::__acquire_print_lock();
+    	helper::_print(out, std::forward<TArgs>(args)...);
+    	helper::__release_print_lock();
+    }
 
-        API bool
-        virtual_free(void* ptr, usize size);
-
-        template<typename TStream, typename ... TArgs>
-	    inline static void
-	    print(TStream& out, TArgs&& ... args)
-	    {
-	    	helper::__acquire_print_lock();
-	    	helper::_print(out, std::forward<TArgs>(args)...);
-	    	helper::__release_print_lock();
-	    }
-
-	    template<typename TStream, typename ... TArgs>
-	    inline static void
-	    println(TStream& out, TArgs&& ... args)
-	    {
-	    	helper::__acquire_print_lock();
-	    	helper::_print(out, std::forward<TArgs>(args)..., "\n");
-	    	helper::__release_print_lock();
-	    }
+    template<typename TStream, typename ... TArgs>
+    inline static void
+    println(TStream& out, TArgs&& ... args)
+    {
+    	helper::__acquire_print_lock();
+    	helper::_print(out, std::forward<TArgs>(args)..., "\n");
+    	helper::__release_print_lock();
     }
 }
