@@ -40,20 +40,6 @@
 
 using namespace cpprelude;
 
-static void escape_op(void* p)
-{
-	#ifdef OS_LINUX
-	asm volatile("": : "g"(p) : "memory");
-	#endif
-}
-
-static void clobber()
-{
-	#ifdef OS_LINUX
-	asm volatile("": : : "memory");
-	#endif
-}
-
 //Vector like container
 usize
 bm_dynamic_array(workbench* bench, usize limit)
@@ -816,80 +802,49 @@ check_thread_multi_reader(cpprelude::usize limit)
 	std::cout << "count: " << thread_multi_reader_job_queue.value.count() << std::endl;
 }
 
-void
-bm_std_string_empty(workbench* bench, usize limit)
-{
-	bench->watch.start();
-	while(limit--)
-	{
-		std::string str;
-		escape_op(&str);
-		clobber();
-	}
-	bench->watch.stop();
+void gen_random(char *s, const int len) {
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    for (int i = 0; i < len; ++i) {
+        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+
+    s[len] = 0;
 }
 
-void
-bm_string_empty(workbench* bench, usize limit)
-{
-	bench->watch.start();
-	while(limit--)
-	{
-		string str;
-		escape_op(&str);
-		clobber();
-	}
-	bench->watch.stop();
-}
-
-void
+std::string
 bm_std_string_create(workbench* bench, usize limit)
 {
+	usize arr_size = (rand()%1000) + 1000;
+	char* arr = new char[arr_size];
+	gen_random(arr, arr_size-1);
+
 	bench->watch.start();
-	while(limit--)
-	{
 		std::string str;
-		escape_op(&str);
-		str = u8R"STR(
-			String is a long flexible structure made from fibers twisted together
-			into a single strand, or from multiple such strands which are in turn
-			twisted together. String is used to tie, bind, or hang other objects.
-			It is also used as a material to make things, such as textiles, and in
-			arts and crafts. String is a simple tool, and its use by humans is known
-			to have been developed tens of thousands of years ago.[1] In Mesoamerica,
-			for example, string was invented some 20,000 to 30,000 years ago, and was
-			made by twisting plant fibers together.[1] String may also be a component
-			in other tools, and in devices as diverse as weapons, musical instruments,
-			and toys.
-		)STR";
-		clobber();
-	}
+		str = arr;
 	bench->watch.stop();
+
+	delete[] arr;
+	return str;
 }
 
-void
+string
 bm_string_create(workbench* bench, usize limit)
 {
+	usize arr_size = (rand()%1000) + 1000;
+	char* arr = new char[arr_size];
+	gen_random(arr, arr_size-1);
+
 	bench->watch.start();
-	while(limit--)
-	{
 		string str;
-		escape_op(&str);
-		str = u8R"STR(
-			String is a long flexible structure made from fibers twisted together
-			into a single strand, or from multiple such strands which are in turn
-			twisted together. String is used to tie, bind, or hang other objects.
-			It is also used as a material to make things, such as textiles, and in
-			arts and crafts. String is a simple tool, and its use by humans is known
-			to have been developed tens of thousands of years ago.[1] In Mesoamerica,
-			for example, string was invented some 20,000 to 30,000 years ago, and was
-			made by twisting plant fibers together.[1] String may also be a component
-			in other tools, and in devices as diverse as weapons, musical instruments,
-			and toys.
-		)STR";
-		clobber();
-	}
+		str = arr;
 	bench->watch.stop();
+
+	delete[] arr;
+	return str;
 }
 
 void
@@ -899,111 +854,108 @@ do_benchmark()
 
 	std::cout << "\nBENCHMARK START\n" << std::endl;
 
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_vector, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_dynamic_array, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_custom_dynamic_array, limit)
-	// });
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_vector, limit),
+		CPPRELUDE_BENCHMARK(bm_dynamic_array, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_dynamic_array, limit)
+	});
 
-	// std::cout << std::endl << std::endl;
-
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_forward_list, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_slinked_list, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_custom_slinked_list, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_list, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_dlinked_list, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_custom_dlinked_list, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_stack, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_stack_array, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_stack_list, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_queue, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_queue_array, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_queue_list, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_std_priority_queue, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_priority_queue, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_deque, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_bucket_array, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_std_stable_sort, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_merge_sort, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_std_sort, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_quick_sort, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_std_heap_sort, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_heap_sort, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_unordered_map, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_hash_array, limit)
-	// });
-
-	// std::cout << std::endl << std::endl;
-	
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_map, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_tree_map, limit)
-	// });
+	std::cout << std::endl << std::endl;
 
 	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_std_string_empty, limit),
-		CPPRELUDE_BENCHMARK(bm_string_empty, limit)
-	}, 100000);
+		CPPRELUDE_BENCHMARK(bm_forward_list, limit),
+		CPPRELUDE_BENCHMARK(bm_slinked_list, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_slinked_list, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_list, limit),
+		CPPRELUDE_BENCHMARK(bm_dlinked_list, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_dlinked_list, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_stack, limit),
+		CPPRELUDE_BENCHMARK(bm_stack_array, limit),
+		CPPRELUDE_BENCHMARK(bm_stack_list, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_queue, limit),
+		CPPRELUDE_BENCHMARK(bm_queue_array, limit),
+		CPPRELUDE_BENCHMARK(bm_queue_list, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_priority_queue, limit),
+		CPPRELUDE_BENCHMARK(bm_priority_queue, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_deque, limit),
+		CPPRELUDE_BENCHMARK(bm_bucket_array, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_stable_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_merge_sort, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_quick_sort, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_heap_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_heap_sort, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_unordered_map, limit),
+		CPPRELUDE_BENCHMARK(bm_hash_array, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_map, limit),
+		CPPRELUDE_BENCHMARK(bm_tree_map, limit)
+	});
+
+	std::cout << std::endl << std::endl;
 
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_std_string_create, limit),
 		CPPRELUDE_BENCHMARK(bm_string_create, limit)
-	}, 100000);
+	});
 
-	// std::cout << std::endl;
-	// check_binary_semaphore(limit/10);
-	// std::cout << std::endl;
-	// check_count_semaphore(limit/10);
-	// std::cout << std::endl;
-	// check_thread_unique(limit/10);
-	// std::cout << std::endl;
-	// check_thread_multi_reader(limit/10);
+	std::cout << std::endl;
+	check_binary_semaphore(limit/10);
+	std::cout << std::endl;
+	check_count_semaphore(limit/10);
+	std::cout << std::endl;
+	check_thread_unique(limit/10);
+	std::cout << std::endl;
+	check_thread_multi_reader(limit/10);
 
 	std::cout << "\nBENCHMARK END\n" << std::endl;
 }
