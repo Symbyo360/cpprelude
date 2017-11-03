@@ -46,7 +46,7 @@ namespace cpprelude
 		realloc(slice<T>& data, usize count)
 		{
 			auto byte_block = data.template convert<byte>();
-			_realloc(_self, byte_block, count);
+			_realloc(_self, byte_block, count * sizeof(T));
 			data = byte_block.template convert<T>();
 		}
 
@@ -55,7 +55,7 @@ namespace cpprelude
 		realloc(slice<T>&& data, usize count)
 		{
 			auto byte_block = data.template convert<byte>();
-			_realloc(_self, byte_block, count);
+			_realloc(_self, byte_block, count * sizeof(T));
 			data = byte_block.template convert<T>();
 		}
 	};

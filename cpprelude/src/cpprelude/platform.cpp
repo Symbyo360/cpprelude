@@ -48,21 +48,37 @@ namespace cpprelude
 	}
 
 	slice<byte>
-	_default_alloc(void*, usize size)
+	_default_alloc(void*, usize count)
 	{
-		return alloc<byte>(size);
+		using T = byte;
+		if (count == 0)
+			return slice<T>();
+		T* ptr = reinterpret_cast<T*>(std::malloc(count * sizeof(T)));
+		return slice<T>(ptr, ptr ? count * sizeof(T) : 0);
 	}
 
 	void
-	_default_realloc(void*, slice<byte>& data, usize size)
+	_default_free(void*, slice<byte>& slice_)
 	{
-		realloc(data, size);
+		if (slice_.ptr != nullptr)
+			std::free(slice_.ptr);
+
+		slice_.ptr = nullptr;
+		slice_.size = 0;
 	}
 
 	void
-	_default_free(void*, slice<byte>& data)
+	_default_realloc(void* self, slice<byte>& slice_, usize count)
 	{
-		free(data);
+		using T = byte;
+		if (count == 0)
+		{
+			_default_free(self, slice_);
+			return;
+		}
+
+		slice_.ptr = reinterpret_cast<T*>(std::realloc(slice_.ptr, count * sizeof(T)));
+		slice_.size = count * sizeof(T);
 	}
 
 	usize

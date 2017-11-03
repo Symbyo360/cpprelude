@@ -21,6 +21,41 @@ namespace cpprelude
 
 		API bool
 		virtual_free(slice<byte>&& data);
+
+		template<typename T>
+		slice<T>
+		alloc(usize count = 1)
+		{
+			return global_memory->template alloc<T>(count);
+		}
+
+		template<typename T>
+		void
+		free(slice<T>& data)
+		{
+			global_memory->free(data);
+		}
+
+		template<typename T>
+		void
+		free(slice<T>&& data)
+		{
+			global_memory->free(data);
+		}
+
+		template<typename T>
+		void
+		realloc(slice<T>& data, usize count)
+		{
+			global_memory->realloc(data, count);
+		}
+
+		template<typename T>
+		void
+		realloc(slice<T>&& data, usize count)
+		{
+			global_memory->realloc(data, count);
+		}
 	};
 
 	API extern platform_t& platform;

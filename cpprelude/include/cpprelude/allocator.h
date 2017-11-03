@@ -2,6 +2,7 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/memory.h"
+#include "cpprelude/platform.h"
 
 namespace cpprelude
 {
@@ -11,35 +12,35 @@ namespace cpprelude
 		slice<T>
 		alloc(usize count = 1, ubyte alignment = 4)
 		{
-			return cpprelude::alloc<T>(count);
+			return platform.template alloc<T>(count);
 		}
 
 		template<typename T>
 		void
 		free(slice<T>& slice_)
 		{
-			cpprelude::free<T>(slice_);
+			platform.free(slice_);
 		}
 
 		template<typename T>
 		void
 		free(slice<T>&& slice_)
 		{
-			cpprelude::free<T>(std::move(slice_));
+			platform.free(slice_);
 		}
 
 		template<typename T>
 		void
 		realloc(slice<T>& slice_, usize count)
 		{
-			cpprelude::realloc<T>(slice_, count);
+			platform.realloc(slice_, count);
 		}
 
 		template<typename T>
 		void
 		realloc(slice<T>&& slice_, usize count)
 		{
-			cpprelude::realloc<T>(std::move(slice_), count);
+			platform.realloc(slice_, count);
 		}
 	};
 

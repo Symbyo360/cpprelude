@@ -5,7 +5,7 @@ namespace cpprelude
 	linear_allocator
 	make_arena_allocator(usize arena_size, slice<ubyte>& mem_block)
 	{
-		mem_block = alloc<ubyte>(arena_size);
+		mem_block = platform.alloc<ubyte>(arena_size);
 		return linear_allocator(mem_block);
 	}
 
