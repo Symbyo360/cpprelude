@@ -89,7 +89,7 @@ namespace cpprelude
 		{
 			struct sysinfo info;
 			sysinfo(&info);
-			totalram = std::max<usize>(GIGABYTES(4) - 1ULL, (info.totalram * 1024ULL) - 1 ULL);
+			totalram = std::max<usize>(GIGABYTES(4) - 1ULL, (info.totalram * 1024ULL) - 1ULL);
 		}
 		#elif defined(OS_WINDOWS)
 		{
