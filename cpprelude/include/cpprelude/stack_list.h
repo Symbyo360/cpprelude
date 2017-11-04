@@ -1,31 +1,32 @@
 #pragma once
 #include "cpprelude/defines.h"
 #include "cpprelude/slinked_list.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 
 namespace cpprelude
 {
-	template<typename T, typename AllocatorT = global_allocator>
+	template<typename T>
 	struct stack_list
 	{
 		using data_type = T;
 
-		slinked_list<T, AllocatorT> _list;
+		slinked_list<T> _list;
 
-		stack_list(const AllocatorT& allocator = AllocatorT())
-			:_list(allocator)
+		stack_list(memory_context_t* context = platform.global_memory)
+			:_list(context)
 		{}
 
 		stack_list(const stack_list&) = default;
 
 		stack_list(stack_list&&) = default;
 
-		stack_list(const stack_list& other, const AllocatorT& allocator)
-			:_list(other._list, allocator)
+		stack_list(const stack_list& other, memory_context_t* context)
+			:_list(other._list, context)
 		{}
 
-		stack_list(stack_list&& other, const AllocatorT& allocator)
-			:_list(std::move(other), allocator)
+		stack_list(stack_list&& other, memory_context_t* context)
+			:_list(std::move(other), context)
 		{}
 
 		template<typename ... TArgs>
@@ -83,7 +84,7 @@ namespace cpprelude
 			return _list.count();
 		}
 
-		slice<typename slinked_list<T, AllocatorT>::node_type>
+		slice<typename slinked_list<T>::node_type>
 		decay()
 		{
 			return _list.decay();

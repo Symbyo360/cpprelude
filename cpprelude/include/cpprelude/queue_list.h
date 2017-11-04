@@ -1,31 +1,32 @@
 #pragma once
 #include "cpprelude/defines.h"
 #include "cpprelude/dlinked_list.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 
 namespace cpprelude
 {
-	template<typename T, typename AllocatorT = global_allocator>
+	template<typename T>
 	struct queue_list
 	{
 		using data_type = T;
 
-		dlinked_list<T, AllocatorT> _list;
+		dlinked_list<T> _list;
 
-		queue_list(const AllocatorT& allocator = AllocatorT())
-			:_list(allocator)
+		queue_list(memory_context_t* context = platform.global_memory)
+			:_list(context)
 		{}
 
 		queue_list(const queue_list&) = default;
 
 		queue_list(queue_list&&) = default;
 
-		queue_list(const queue_list& other, const AllocatorT& allocator)
-			:_list(other._list, allocator)
+		queue_list(const queue_list& other, memory_context_t* context)
+			:_list(other._list, context)
 		{}
 
-		queue_list(queue_list&& other, const AllocatorT& allocator)
-			:_list(std::move(other._list), allocator)
+		queue_list(queue_list&& other, memory_context_t* context)
+			:_list(std::move(other._list), context)
 		{}
 
 		template<typename ... TArgs>
@@ -83,7 +84,7 @@ namespace cpprelude
 			return _list.count();
 		}
 
-		slice<typename dlinked_list<T, AllocatorT>::node_type>
+		slice<typename dlinked_list<T>::node_type>
 		decay()
 		{
 			return _list.decay();

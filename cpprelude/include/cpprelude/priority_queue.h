@@ -1,12 +1,13 @@
 #pragma once
 #include "cpprelude/defines.h"
 #include "cpprelude/dynamic_array.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 #include "cpprelude/defaults.h"
 
 namespace cpprelude {
 	// Minheap is the default
-	template<typename T, typename Comparator = default_less_than<T>, typename AllocatorT = global_allocator>
+	template<typename T, typename Comparator = default_less_than<T>>
 	struct priority_queue
 	{
 		using data_type = T;
@@ -14,31 +15,31 @@ namespace cpprelude {
 		usize _count;
 		Comparator _compare;
 
-		priority_queue(Comparator compare_function = Comparator(), const AllocatorT& allocator = AllocatorT())
-			:_array(), _count(0), _compare(compare_function)
+		priority_queue(Comparator compare_function = Comparator(), memory_context_t* context = platform.global_memory)
+			:_array(context), _count(0), _compare(compare_function)
 		{}
 
-		priority_queue(usize count, Comparator compare_function = Comparator(), const AllocatorT& allocator = AllocatorT())
-			:_array(count, allocator), _count(0), _compare(compare_function)
+		priority_queue(usize count, Comparator compare_function = Comparator(), memory_context_t* context = platform.global_memory)
+			:_array(count, context), _count(0), _compare(compare_function)
 		{}
 
-		priority_queue(const priority_queue& other, Comparator compare_function = Comparator(), const AllocatorT& allocator = AllocatorT())
-			:_array(other._array, allocator), _count(other._count), _compare(compare_function)
+		priority_queue(const priority_queue& other, Comparator compare_function = Comparator(), memory_context_t* context = platform.global_memory)
+			:_array(other._array, context), _count(other._count), _compare(compare_function)
 		{}
 
-		priority_queue(priority_queue&& other, Comparator compare_function, const AllocatorT& allocator)
-			:_array(std::move(other._array), allocator), _count(other._count), _compare(compare_function)
+		priority_queue(priority_queue&& other, Comparator compare_function, memory_context_t* context)
+			:_array(std::move(other._array), context), _count(other._count), _compare(compare_function)
 		{}
 
-		priority_queue(std::initializer_list<T> list, Comparator compare_function = Comparator(), const AllocatorT& allocator = AllocatorT() )
-			:_array(list, allocator), _count(list.size()), _compare(compare_function)
+		priority_queue(std::initializer_list<T> list, Comparator compare_function = Comparator(), memory_context_t* context = platform.global_memory)
+			:_array(list, context), _count(list.size()), _compare(compare_function)
 		{
 			_heapify();
 		}
 
 		template<typename iterator_type>
-		priority_queue(iterator_type it, usize count, Comparator compare_function = Comparator(), const AllocatorT& allocator = AllocatorT())
-			:_array(), _count(count), _compare(compare_function)
+		priority_queue(iterator_type it, usize count, Comparator compare_function = Comparator(), memory_context_t* context = platform.global_memory)
+			:_array(context), _count(count), _compare(compare_function)
 		{ 
 			_array.reserve(count);
 			while (count--)
@@ -50,8 +51,8 @@ namespace cpprelude {
 			_heapify();
 		}
 
-		priority_queue(const dynamic_array<T>& arr, Comparator compare_function = Comparator(), const AllocatorT& allocator = AllocatorT())
-			:_array(arr, allocator), _count(arr.count()), _compare(compare_function)
+		priority_queue(const dynamic_array<T>& arr, Comparator compare_function = Comparator(), memory_context_t* context = platform.global_memory)
+			:_array(arr, context), _count(arr.count()), _compare(compare_function)
 		{
 			_heapify();
 		}

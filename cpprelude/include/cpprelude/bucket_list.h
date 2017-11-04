@@ -2,25 +2,25 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/memory.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 
 namespace cpprelude
 {
 	template<typename T,
-			 usize bucket_size = 128,
-			 typename AllocatorT = global_allocator>
+			 usize bucket_size = 128>
 	struct bucket_list
 	{
 		using data_type = T;
 		
 		slice<T> _memory;
-		AllocatorT _allocator;
+		memory_context_t *_context = platform.global_memory;
 		bucket_list* _next;
 
-		bucket_list(const AllocatorT& allocator = AllocatorT())
-			:_allocator(allocator), _next(nullptr)
+		bucket_list(memory_context_t *context = platform.global_memory)
+			:_context(context), _next(nullptr)
 		{
-			_memory = _allocator.template alloc<T>(bucket_size);
+			_memory = _context->template alloc<T>(bucket_size);
 		}
 
 		bucket_list(const bucket_list&) = delete;
@@ -31,12 +31,12 @@ namespace cpprelude
 		~bucket_list()
 		{
 			if(_memory.ptr != nullptr && _memory.size > 0)
-				_allocator.free(_memory);
+				_context->free(_memory);
 
 			if(_next)
 			{
 				_next->~bucket_list();
-				_allocator.free(make_slice(_next));
+				_context->free(make_slice(_next));
 			}
 		}
 
@@ -101,8 +101,8 @@ namespace cpprelude
 				_next->expand();
 			else
 			{
-				_next = _allocator.template alloc<bucket_list>();
-				new (_next) bucket_list(_allocator);
+				_next = _context->template alloc<bucket_list>();
+				new (_next) bucket_list(_context);
 			}
 		}
 	};

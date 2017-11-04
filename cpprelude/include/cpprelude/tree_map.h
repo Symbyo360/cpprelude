@@ -1,7 +1,8 @@
 #pragma once
 
 #include "cpprelude/defines.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 #include "cpprelude/memory.h"
 #include "cpprelude/defaults.h"
 
@@ -14,8 +15,7 @@ namespace cpprelude
 	//red black tree implmenetion follows Introduction to Algorithms, Second Edition,” by Thomas H. Cormen, Charles E, Chapter 14
 
 	template<typename T,
-			 typename ComparatorType = default_less_than<T>,
-			 typename AllocatorT = global_allocator>
+			 typename ComparatorType = default_less_than<T>>
 	struct red_black_tree
 	{
 		using data_type = T;
@@ -26,22 +26,22 @@ namespace cpprelude
 
 		node_type *_root;
 		usize _count;
-		AllocatorT _allocator;
+		memory_context_t *_context = platform.global_memory;
 		ComparatorType _less_than;
 
-		red_black_tree(const ComparatorType& compare_function, const AllocatorT& allocator = AllocatorT())
-			:_root(nullptr), _count(0), _allocator(allocator),
+		red_black_tree(const ComparatorType& compare_function, memory_context_t* context = platform.global_memory)
+			:_root(nullptr), _count(0), _context(context),
 			 _less_than(compare_function)
 		{}
 
-		red_black_tree(const AllocatorT& allocator = AllocatorT())
-			:_root(nullptr), _count(0), _allocator(allocator)
+		red_black_tree(memory_context_t* context = platform.global_memory)
+			:_root(nullptr), _count(0), _context(context)
 		{}
 
 		red_black_tree(std::initializer_list<T> list,
 			const ComparatorType& compare_function = ComparatorType(),
-			const AllocatorT& allocator = AllocatorT())
-			:_root(nullptr), _count(0), _allocator(allocator), _less_than(compare_function)
+			memory_context_t* context = platform.global_memory)
+			:_root(nullptr), _count(0), _context(context), _less_than(compare_function)
 		{
 			auto it = list.begin();
 			for(usize i = 0;
@@ -54,7 +54,7 @@ namespace cpprelude
 		}
 
 		red_black_tree(const red_black_tree& other)
-			:_root(nullptr), _count(0), _allocator(other._allocator),
+			:_root(nullptr), _count(0), _context(other._context),
 			 _less_than(other._less_than)
 		{
 			_copy_content(other);
@@ -62,24 +62,24 @@ namespace cpprelude
 
 		red_black_tree(const red_black_tree& other,
 			const ComparatorType& compare_function)
-			:_root(nullptr), _count(0), _allocator(other._allocator),
+			:_root(nullptr), _count(0), _context(other._context),
 			 _less_than(compare_function)
 		{
 			_copy_content(other);
 		}
 
 		red_black_tree(const red_black_tree& other,
-			const AllocatorT& allocator)
-			:_root(nullptr), _count(0), _allocator(allocator),
+			memory_context_t* context)
+			:_root(nullptr), _count(0), _context(context),
 			 _less_than(other._less_than)
 		{
 			_copy_content(other);
 		}
 
 		red_black_tree(const red_black_tree& other,
-			const AllocatorT& allocator,
+			memory_context_t* context,
 			const ComparatorType& compare_function)
-			:_root(nullptr), _count(0), _allocator(allocator),
+			:_root(nullptr), _count(0), _context(context),
 			 _less_than(compare_function)
 		{
 			_copy_content(other);
@@ -87,51 +87,56 @@ namespace cpprelude
 
 		red_black_tree(red_black_tree&& other)
 			:_root(other._root), _count(other._count),
-			 _allocator(std::move(other._allocator)),
+			 _context(other._context),
 			 _less_than(std::move(other._less_than))
 		{
 			other._root = nullptr;
 			other._count = 0;
+			other._context = nullptr;
 		}
 
 		red_black_tree(red_black_tree&& other, const ComparatorType& compare_function)
 			:_root(other._root), _count(other._count),
-			 _allocator(std::move(other._allocator)),
+			 _context(other._context),
 			 _less_than(compare_function)
 		{
 			other._root = nullptr;
 			other._count = 0;
+			other._context = nullptr;
 		}
 
-		red_black_tree(red_black_tree&& other, const AllocatorT& allocator)
+		red_black_tree(red_black_tree&& other, memory_context_t* context)
 			:_root(other._root), _count(other._count),
-			 _allocator(allocator),
+			 _context(context),
 			 _less_than(std::move(other._less_than))
 		{
 			other._root = nullptr;
 			other._count = 0;
+			other._context = nullptr;
 		}
 
-		red_black_tree(red_black_tree&& other, const AllocatorT& allocator,
+		red_black_tree(red_black_tree&& other, memory_context_t* context,
 			const ComparatorType& compare_function)
 			:_root(other._root), _count(other._count),
-			 _allocator(allocator),
+			 _context(context),
 			 _less_than(compare_function)
 		{
 			other._root = nullptr;
 			other._count = 0;
+			other._context = nullptr;
 		}
 
 		~red_black_tree()
 		{
 			clear();
+			_context = nullptr;
 		}
 
 		red_black_tree&
 		operator=(const red_black_tree& other)
 		{
 			clear();
-			_allocator = other._allocator;
+			_context = other._context;
 			_less_than = other._less_than;
 			_copy_content(other);
 			return *this;
@@ -141,13 +146,14 @@ namespace cpprelude
 		operator=(red_black_tree&& other)
 		{
 			_reset(_root);
-			_allocator = std::move(other._allocator);
+			_context = std::move(other._context);
 			_less_than = std::move(other._less_than);
 
 			_count = other._count;
 			_root = other._root;
 			other._count = 0;
 			other._root = nullptr;
+			other._context = nullptr;
 			return *this;
 		}
 
@@ -319,7 +325,7 @@ namespace cpprelude
 		{
 			std::swap(_root, other._root);
 			std::swap(_count, other._count);
-			std::swap(_allocator, other._allocator);
+			std::swap(_context, other._context);
 			std::swap(_less_than, other._less_than);
 		}
 
@@ -697,7 +703,7 @@ namespace cpprelude
 		node_type*
 		_create_node(const T& data)
 		{
-			auto result = _allocator.template alloc<node_type>();
+			auto result = _context->template alloc<node_type>();
 			new (result) node_type(data);
 			return result;
 		}
@@ -705,7 +711,7 @@ namespace cpprelude
 		node_type*
 		_create_node(T&& data)
 		{
-			auto result = _allocator.template alloc<node_type>();
+			auto result = _context->template alloc<node_type>();
 			new (result) node_type(std::move(data));
 			return result;
 		}
@@ -716,7 +722,7 @@ namespace cpprelude
 			if (it == nullptr) return;
 
 			it->data.~data_type();
-			_allocator.free(make_slice(it));
+			_context->free(make_slice(it));
 			--_count;
 		}
 
@@ -868,9 +874,8 @@ namespace cpprelude
 	};
 
 	template<typename KeyType, typename ValueType,
-		typename ComparatorType = default_less_than<details::pair_node<KeyType, ValueType>>,
-		typename AllocatorT = global_allocator>
-	struct red_black_map: public red_black_tree<details::pair_node<KeyType, ValueType>, ComparatorType, AllocatorT>
+		typename ComparatorType = default_less_than<details::pair_node<KeyType, ValueType>>>
+	struct red_black_map: public red_black_tree<details::pair_node<KeyType, ValueType>, ComparatorType>
 	{
 		using key_type = KeyType;
 		using value_type = ValueType;
@@ -879,20 +884,20 @@ namespace cpprelude
 		using iterator = red_black_tree_pair_iterator<key_type, value_type>;
 		using const_iterator = red_black_tree_const_pair_iterator<key_type, value_type>;
 		using color_type = typename node_type::color_type;
-		using _implementation = red_black_tree<data_type, ComparatorType, AllocatorT>;
+		using _implementation = red_black_tree<data_type, ComparatorType>;
 
-		red_black_map(const AllocatorT& allocator = AllocatorT())
-			:_implementation(allocator)
+		red_black_map(memory_context_t* context = platform.global_memory)
+			:_implementation(context)
 		{}
 
-		red_black_map(const ComparatorType& compare_function, const AllocatorT& allocator = AllocatorT())
-			:_implementation(compare_function, allocator)
+		red_black_map(const ComparatorType& compare_function, memory_context_t* context = platform.global_memory)
+			:_implementation(compare_function, context)
 		{}
 
 		red_black_map(std::initializer_list<data_type> list,
 			const ComparatorType& compare_function = ComparatorType(),
-			const AllocatorT& allocator = AllocatorT())
-			:_implementation(list, compare_function, allocator)
+			memory_context_t* context = platform.global_memory)
+			:_implementation(list, compare_function, context)
 		{}
 
 		red_black_map(const red_black_map& other)
@@ -905,14 +910,14 @@ namespace cpprelude
 		{}
 
 		red_black_map(const red_black_map& other,
-			const AllocatorT& allocator)
-			:_implementation(other, allocator)
+			memory_context_t* context)
+			:_implementation(other, context)
 		{}
 
 		red_black_map(const red_black_map& other,
-			const AllocatorT& allocator,
+			memory_context_t* context,
 			const ComparatorType& compare_function)
-			:_implementation(other, allocator, compare_function)
+			:_implementation(other, context, compare_function)
 		{}
 
 		red_black_map(red_black_map&& other)
@@ -923,13 +928,13 @@ namespace cpprelude
 			:_implementation(other, compare_function)
 		{}
 
-		red_black_map(red_black_map&& other, const AllocatorT& allocator)
-			:_implementation(other, allocator)
+		red_black_map(red_black_map&& other, memory_context_t* context)
+			:_implementation(other, context)
 		{}
 
-		red_black_map(red_black_map&& other, const AllocatorT& allocator,
+		red_black_map(red_black_map&& other, memory_context_t* context,
 			const ComparatorType& compare_function)
-			:_implementation(other, allocator, compare_function)
+			:_implementation(other, context, compare_function)
 		{}
 
 		value_type&
@@ -1060,12 +1065,10 @@ namespace cpprelude
 	};
 
 	template<typename T,
-			 typename ComparatorType = default_less_than<T>,
-			 typename AllocatorT = global_allocator>
-	using tree_set = red_black_tree<T, ComparatorType, AllocatorT>;
+			 typename ComparatorType = default_less_than<T>>
+	using tree_set = red_black_tree<T, ComparatorType>;
 
 	template<typename KeyType, typename ValueType,
-		typename ComparatorType = default_less_than<details::pair_node<KeyType, ValueType>>,
-		typename AllocatorT = global_allocator>
-	using tree_map = red_black_map<KeyType, ValueType, ComparatorType, AllocatorT>;
+		typename ComparatorType = default_less_than<details::pair_node<KeyType, ValueType>>>
+	using tree_map = red_black_map<KeyType, ValueType, ComparatorType>;
 }

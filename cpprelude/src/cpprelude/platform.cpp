@@ -14,6 +14,13 @@
 
 namespace cpprelude
 {
+	platform_t::~platform_t()
+	{
+#ifdef DEBUG
+		print_memory_report();
+#endif
+	}
+
 	slice<byte>
 	platform_t::virtual_alloc(void* address_hint, usize size)
 	{

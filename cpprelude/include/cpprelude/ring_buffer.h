@@ -1,26 +1,26 @@
 #pragma once
 
 #include "cpprelude/defines.h"
-#include "cpprelude/allocator.h"
 #include "cpprelude/bucket_list.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 
 namespace cpprelude
 {
 	template<typename T,
-			 usize bucket_size,
-			 typename AllocatorT = global_allocator>
+			 usize bucket_size>
 	struct ring_buffer
 	{
 		using data_type = T;
 		
-		bucket_list<T, bucket_size, AllocatorT> _array;
+		bucket_list<T, bucket_size> _array;
 		usize _capacity, _write_head, _read_head;
 
-		ring_buffer(const AllocatorT& allocator = AllocatorT())
+		ring_buffer(memory_context_t* context = platform.global_memory)
 			:_capacity(bucket_size),
 			 _write_head(0),
 			 _read_head(0),
-			 _array(allocator)
+			 _array(context)
 		{}
 
 		bool
@@ -88,28 +88,6 @@ namespace cpprelude
 			_array.expand();
 			_capacity += bucket_size;
 			return true;
-		}
-
-		owner_mem_block
-		decay_continuous(usize count)
-		{
-			if(count == 0)
-				return owner_mem_block();
-
-			//allocate the memory of the supplied allocator
-			owner_mem_block result = _array._allocator.alloc(count * sizeof(T));
-
-			//move the first element
-			usize i = 0;
-			new (result.template at<T>(i++)) T(std::move(front()));
-
-			//while has something to pop then add it
-			while(pop())
-			{
-				new (result.template at<T>(i++)) T(std::move(front()));
-			}
-
-			return result;
 		}
 	};
 }

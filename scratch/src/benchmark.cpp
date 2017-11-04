@@ -104,25 +104,25 @@ bm_slinked_list(workbench* bench, usize limit)
 	return *array.begin();
 }
 
-usize
-bm_custom_slinked_list(workbench* bench, usize limit)
-{
-	slice<ubyte> mem_block;
-	auto arena_allocator = make_arena_allocator(MEGABYTES(25), mem_block);
-
-	usize result = 0;
-	{
-		slinked_list<usize, linear_allocator> array(arena_allocator);
-		bench->watch.start();
-		for(usize i = 0; i < limit; ++i)
-			array.insert_front(rand());
-		result = *array.begin();
-		bench->watch.stop();
-	}
-
-	free(mem_block);
-	return result;
-}
+//usize
+//bm_custom_slinked_list(workbench* bench, usize limit)
+//{
+//	slice<ubyte> mem_block;
+//	auto arena_allocator = make_arena_allocator(MEGABYTES(25), mem_block);
+//
+//	usize result = 0;
+//	{
+//		slinked_list<usize, linear_allocator> array(arena_allocator);
+//		bench->watch.start();
+//		for(usize i = 0; i < limit; ++i)
+//			array.insert_front(rand());
+//		result = *array.begin();
+//		bench->watch.stop();
+//	}
+//
+//	free(mem_block);
+//	return result;
+//}
 
 usize
 bm_forward_list(workbench* bench, usize limit)
@@ -153,25 +153,25 @@ bm_dlinked_list(workbench* bench, usize limit)
 	return *array.begin();
 }
 
-usize
-bm_custom_dlinked_list(workbench* bench, usize limit)
-{
-	slice<ubyte> mem_block;
-	auto arena_allocator = make_arena_allocator(MEGABYTES(25), mem_block);
-
-	usize result = 0;
-	{
-		dlinked_list<usize, linear_allocator> array(arena_allocator);
-		bench->watch.start();
-		for(usize i = 0; i < limit; ++i)
-			array.insert_front(rand());
-		result = *array.begin();
-		bench->watch.stop();
-	}
-
-	free(mem_block);
-	return result;
-}
+//usize
+//bm_custom_dlinked_list(workbench* bench, usize limit)
+//{
+//	slice<ubyte> mem_block;
+//	auto arena_allocator = make_arena_allocator(MEGABYTES(25), mem_block);
+//
+//	usize result = 0;
+//	{
+//		dlinked_list<usize, linear_allocator> array(arena_allocator);
+//		bench->watch.start();
+//		for(usize i = 0; i < limit; ++i)
+//			array.insert_front(rand());
+//		result = *array.begin();
+//		bench->watch.stop();
+//	}
+//
+//	free(mem_block);
+//	return result;
+//}
 
 usize
 bm_list(workbench* bench, usize limit)
@@ -864,16 +864,14 @@ do_benchmark()
 
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_forward_list, limit),
-		CPPRELUDE_BENCHMARK(bm_slinked_list, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_slinked_list, limit)
+		CPPRELUDE_BENCHMARK(bm_slinked_list, limit)
 	});
 
 	std::cout << std::endl << std::endl;
 	
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_list, limit),
-		CPPRELUDE_BENCHMARK(bm_dlinked_list, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_dlinked_list, limit)
+		CPPRELUDE_BENCHMARK(bm_dlinked_list, limit)
 	});
 
 	std::cout << std::endl << std::endl;
@@ -949,12 +947,19 @@ do_benchmark()
 	});
 
 	std::cout << std::endl;
+
 	check_binary_semaphore(limit/10);
+
 	std::cout << std::endl;
+
 	check_count_semaphore(limit/10);
+
 	std::cout << std::endl;
+
 	check_thread_unique(limit/10);
+
 	std::cout << std::endl;
+
 	check_thread_multi_reader(limit/10);
 
 	std::cout << "\nBENCHMARK END\n" << std::endl;

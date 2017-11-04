@@ -1,7 +1,8 @@
 #pragma once
 
 #include "cpprelude/defines.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 #include "cpprelude/iterator.h"
 
 #include <cstring>
@@ -18,8 +19,7 @@ namespace cpprelude
 	}
 
 	template<typename T,
-			 usize bucket_size = details::default_size(sizeof(T)),
-			 typename AllocatorT = global_allocator>
+			 usize bucket_size = details::default_size(sizeof(T))>
 	struct bucket_array
 	{
 		using bucket_type = T*;
@@ -29,17 +29,17 @@ namespace cpprelude
 		using data_type = T;
 
 		map_type _map;
-		AllocatorT _allocator;
+		memory_context_t *_context = platform.global_memory;
 		usize _count, _bucket_count;
 		iterator _begin, _end;
 		iterator _cap_begin, _cap_end;
 
-		bucket_array(const AllocatorT& allocator = AllocatorT())
-			:_map(nullptr), _allocator(allocator), _count(0), _bucket_count(0)
+		bucket_array(memory_context_t* context = platform.global_memory)
+			:_map(nullptr), _context(context), _count(0), _bucket_count(0)
 		{ _init(); }
 
-		bucket_array(std::initializer_list<T> list, const AllocatorT& allocator = AllocatorT())
-			:_map(nullptr), _allocator(allocator), _count(0), _bucket_count(0)
+		bucket_array(std::initializer_list<T> list, memory_context_t* context = platform.global_memory)
+			:_map(nullptr), _context(context), _count(0), _bucket_count(0)
 		{
 			_init();
 
@@ -47,8 +47,8 @@ namespace cpprelude
 				insert_back(std::move(value));
 		}
 
-		bucket_array(usize count, const T& fill_value, const AllocatorT& allocator = AllocatorT())
-			:_map(nullptr), _allocator(allocator), _count(0), _bucket_count(0)
+		bucket_array(usize count, const T& fill_value, memory_context_t* context = platform.global_memory)
+			:_map(nullptr), _context(context), _count(0), _bucket_count(0)
 		{
 			_init();
 
@@ -57,7 +57,7 @@ namespace cpprelude
 		}
 
 		bucket_array(const bucket_array& other)
-			:_map(nullptr), _allocator(other._allocator), _count(0), _bucket_count(0)
+			:_map(nullptr), _context(other._context), _count(0), _bucket_count(0)
 		{
 			_init();
 
@@ -65,8 +65,8 @@ namespace cpprelude
 				insert_back(value);
 		}
 
-		bucket_array(const bucket_array& other, const AllocatorT& allocator)
-			:_map(nullptr), _allocator(allocator), _count(0), _bucket_count(0)
+		bucket_array(const bucket_array& other, memory_context_t* context)
+			:_map(nullptr), _context(context), _count(0), _bucket_count(0)
 		{
 			_init();
 
@@ -76,7 +76,7 @@ namespace cpprelude
 
 		bucket_array(bucket_array&& other)
 			:_map(other._map),
-			_allocator(std::move(other._allocator)),
+			_context(other._context),
 			_count(other._count),
 			_bucket_count(other._bucket_count),
 			_begin(std::move(other._begin)),
@@ -91,11 +91,12 @@ namespace cpprelude
 			other._begin = iterator();
 			other._end = iterator();
 			other._map = nullptr;
+			other._context = nullptr;
 		}
 
-		bucket_array(bucket_array&& other, const AllocatorT& allocator)
+		bucket_array(bucket_array&& other, memory_context_t* context)
 			:_map(other._map),
-			 _allocator(allocator),
+			 _context(context),
 			 _count(other._count),
 			 _bucket_count(other._bucket_count),
 			 _begin(std::move(other._begin)),
@@ -110,6 +111,7 @@ namespace cpprelude
 			other._begin = iterator();
 			other._end = iterator();
 			other._map = nullptr;
+			other._context = nullptr;
 		}
 
 		~bucket_array()
@@ -133,7 +135,7 @@ namespace cpprelude
 		{
 			_free();
 
-			_allocator = std::move(other._allocator);
+			_context = other._context;
 			_count = other._count;
 			_bucket_count = other._bucket_count;
 			_cap_begin = std::move(other._cap_begin);
@@ -149,6 +151,7 @@ namespace cpprelude
 			other._begin = iterator();
 			other._end = iterator();
 			other._map = nullptr;
+			other._context = nullptr;
 
 			return *this;
 		}
@@ -423,7 +426,7 @@ namespace cpprelude
 		slice<T>
 		decay_continuous()
 		{
-			slice<T> result = _allocator.template alloc(_count);
+			slice<T> result = _context->template alloc(_count);
 			usize i = 0;
 
 			for (auto& value : *this)
@@ -440,12 +443,12 @@ namespace cpprelude
 			_bucket_count = 3;
 
 			//allocates 3 buckets at start
-			_map = _allocator.template alloc<bucket_type>(_bucket_count);
+			_map = _context->template alloc<bucket_type>(_bucket_count);
 
 			//allocate the individual buckets
-			_map[0] = _allocator.template alloc<T>(bucket_size);
-			_map[1] = _allocator.template alloc<T>(bucket_size);
-			_map[2] = _allocator.template alloc<T>(bucket_size);
+			_map[0] = _context->template alloc<T>(bucket_size);
+			_map[1] = _context->template alloc<T>(bucket_size);
+			_map[2] = _context->template alloc<T>(bucket_size);
 
 			_init_bucket(_map[0]);
 			_init_bucket(_map[1]);
@@ -461,7 +464,7 @@ namespace cpprelude
 		void
 		_insert_bucket_back(usize count = 1)
 		{
-			bucket_type* _new_map = _allocator.template alloc<bucket_type>(_bucket_count + count);
+			bucket_type* _new_map = _context->template alloc<bucket_type>(_bucket_count + count);
 
 			usize i = 0;
 			for(; i < _bucket_count; ++i)
@@ -480,13 +483,13 @@ namespace cpprelude
 
 			}
 
-			_allocator.free(make_slice(_map, _bucket_count));
+			_context->free(make_slice(_map, _bucket_count));
 
 			_bucket_count += count;
 
 			for (; i < _bucket_count; ++i)
 			{
-				_new_map[i] = _allocator.template alloc<T>(bucket_size);
+				_new_map[i] = _context->template alloc<T>(bucket_size);
 				_init_bucket(_new_map[i]);
 			}
 
@@ -498,7 +501,7 @@ namespace cpprelude
 		void
 		_insert_bucket_front(usize count = 1)
 		{
-			bucket_type* _new_map = _allocator.template alloc<bucket_type>(_bucket_count + count);
+			bucket_type* _new_map = _context->template alloc<bucket_type>(_bucket_count + count);
 
 			usize i = count;
 			for (; i < _bucket_count + count; ++i)
@@ -517,13 +520,13 @@ namespace cpprelude
 
 			}
 
-			_allocator.free(make_slice(_map, _bucket_count));
+			_context->free(make_slice(_map, _bucket_count));
 
 			_bucket_count += count;
 
 			for (i = 0; i < count; ++i)
 			{
-				_new_map[i] = _allocator.template alloc<T>(bucket_size);
+				_new_map[i] = _context->template alloc<T>(bucket_size);
 				_init_bucket(_new_map[i]);
 			}
 
@@ -549,10 +552,10 @@ namespace cpprelude
 				for (usize i = 0; i < _bucket_count; ++i)
 				{
 					auto other_handle = _map[i];
-					_allocator.free(make_slice(other_handle, bucket_size));
+					_context->free(make_slice(other_handle, bucket_size));
 				}
 
-				_allocator.free(make_slice(_map, _bucket_count));
+				_context->free(make_slice(_map, _bucket_count));
 			}
 
 			_map = nullptr;

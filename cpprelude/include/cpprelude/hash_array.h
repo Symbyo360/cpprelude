@@ -2,7 +2,8 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/dynamic_array.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 #include "cpprelude/string.h"
 #include "cpprelude/memory.h"
 #include "cpprelude/iterator.h"
@@ -219,8 +220,7 @@ namespace cpprelude
 
 	template<typename keyType,
 			 typename valueType,
-			 typename hashType = hash<keyType>,
-			 typename AllocatorT = global_allocator>
+			 typename hashType = hash<keyType>>
 	struct hash_array
 	{
 		using key_type = keyType;
@@ -239,8 +239,8 @@ namespace cpprelude
 		hash_type _hasher;
 		usize _count;
 
-		hash_array(const AllocatorT& allocator = AllocatorT())
-			:_keys(), _values(), _flags(), _count(0)
+		hash_array(memory_context_t* context = platform.global_memory)
+			:_keys(context), _values(context), _flags(context), _count(0)
 		{
 			constexpr usize starting_count = 256;
 
@@ -781,6 +781,6 @@ namespace cpprelude
 		}
 	};
 
-	template<typename T, typename hashType = hash<T>, typename AllocatorT = global_allocator>
-	using hash_set = hash_array<T, bool, hashType, AllocatorT>;
+	template<typename T, typename hashType = hash<T>>
+	using hash_set = hash_array<T, bool, hashType>;
 }

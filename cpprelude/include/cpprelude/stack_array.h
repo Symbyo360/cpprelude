@@ -1,11 +1,12 @@
 #pragma once
 #include "cpprelude/defines.h"
 #include "cpprelude/dynamic_array.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 
 namespace cpprelude
 {
-	template<typename T, typename AllocatorT = global_allocator>
+	template<typename T>
 	struct stack_array
 	{
 		using data_type = T;
@@ -13,24 +14,24 @@ namespace cpprelude
 		dynamic_array<T> _array;
 		usize _count;
 
-		stack_array(const AllocatorT& allocator = AllocatorT())
-			: _array(), _count(0)
+		stack_array(memory_context_t* context = platform.global_memory)
+			: _array(context), _count(0)
 		{}
 
 		stack_array(const stack_array&) = default;
 
 		stack_array(stack_array&&) = default;
 
-		stack_array(usize count, const AllocatorT& allocator = AllocatorT())
-			:_array(count), _count(0)
+		stack_array(usize count, memory_context_t* context = platform.global_memory)
+			:_array(count, context), _count(0)
 		{}
 
-		stack_array(const stack_array& other, const AllocatorT& allocator)
-			:_array(other._array), _count(other._count)
+		stack_array(const stack_array& other, memory_context_t* context)
+			:_array(other._array, context), _count(other._count)
 		{}
 
-		stack_array(stack_array&& other, const AllocatorT& allocator)
-			:_array(std::move(other._array)), _count(other._count)
+		stack_array(stack_array&& other, memory_context_t* context)
+			:_array(std::move(other._array), context), _count(other._count)
 		{}
 
 		template<typename ... TArgs>

@@ -1,21 +1,21 @@
 #pragma once
 #include "cpprelude/defines.h"
 #include "cpprelude/bucket_array.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 
 namespace cpprelude
 {
 
 	template<typename T,
-			 usize buffer_size = details::default_size(sizeof(T)),
-			 typename AllocatorT = global_allocator>
+			 usize buffer_size = details::default_size(sizeof(T))>
 	struct queue_array
 	{
 		using data_type = T;
-		bucket_array<T, buffer_size, AllocatorT> _list;
+		bucket_array<T, buffer_size> _list;
 
-		queue_array(const AllocatorT& allocator = AllocatorT())
-			:_list(allocator)
+		queue_array(memory_context_t* context = platform.global_memory)
+			:_list(context)
 		{}
 
 		template<typename ... TArgs>

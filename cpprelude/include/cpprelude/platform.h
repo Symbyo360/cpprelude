@@ -15,6 +15,8 @@ namespace cpprelude
 		usize allocation_size = 0;
 		usize RAM_SIZE;
 
+		~platform_t();
+
 		API slice<byte>
 		virtual_alloc(void* address_hint, usize size);
 
