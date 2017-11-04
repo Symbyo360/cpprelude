@@ -233,14 +233,14 @@ namespace cpprelude
 								const_hash_array_value_iterator<value_type>>;
 		using const_value_view = const_view<const_hash_array_value_iterator<value_type>>;
 
-		dynamic_array<key_type, AllocatorT> _keys;
-		dynamic_array<value_type, AllocatorT> _values;
-		dynamic_array<u8, AllocatorT> _flags;
+		dynamic_array<key_type> _keys;
+		dynamic_array<value_type> _values;
+		dynamic_array<u8> _flags;
 		hash_type _hasher;
 		usize _count;
 
 		hash_array(const AllocatorT& allocator = AllocatorT())
-			:_keys(allocator), _values(allocator), _flags(allocator), _count(0)
+			:_keys(), _values(), _flags(), _count(0)
 		{
 			constexpr usize starting_count = 256;
 

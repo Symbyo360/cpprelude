@@ -3,7 +3,8 @@
 #include "cpprelude/defines.h"
 #include "cpprelude/memory.h"
 #include "cpprelude/iterator.h"
-#include "cpprelude/allocator.h"
+#include "cpprelude/memory_context.h"
+#include "cpprelude/platform.h"
 #include <initializer_list>
 #include <new>
 #include <iterator>
@@ -14,7 +15,7 @@ namespace cpprelude
 	constexpr r32 grow_factor = 1.5f;
 	constexpr usize starting_count = 64;
 
-	template<typename T, typename AllocatorT = global_allocator>
+	template<typename T>
 	struct dynamic_array
 	{
 		using iterator = sequential_iterator<T>;
@@ -23,16 +24,16 @@ namespace cpprelude
 
 		slice<T> _data_block;
 		usize _count;
-		AllocatorT _allocator;
+		memory_context_t *_context;
 
-		dynamic_array(const AllocatorT& allocator = AllocatorT())
-			:_count(0), _allocator(allocator)
+		dynamic_array(memory_context_t* context = platform.global_memory)
+			:_count(0), _context(context)
 		{}
 
-		dynamic_array(std::initializer_list<T> list, const AllocatorT& allocator = AllocatorT())
-			:_count(list.size()), _allocator(allocator)
+		dynamic_array(std::initializer_list<T> list, memory_context_t* context = platform.global_memory)
+			:_count(list.size()), _context(context)
 		{
-			_data_block = _allocator.template alloc<T>(_count);
+			_data_block = _context->template alloc<T>(_count);
 			auto it = list.begin();
 			for(usize i = 0; i < _count; ++i)
 			{
@@ -41,50 +42,52 @@ namespace cpprelude
 			}
 		}
 
-		dynamic_array(usize count, const AllocatorT& allocator = AllocatorT())
-			:_count(count), _allocator(allocator)
-		{ _data_block = _allocator.template alloc<T>(count); }
+		dynamic_array(usize count, memory_context_t* context = platform.global_memory)
+			:_count(count), _context(context)
+		{ _data_block = _context->template alloc<T>(count); }
 
-		dynamic_array(usize count, const T& fill_value, const AllocatorT& allocator = AllocatorT())
-			:_count(0), _allocator(allocator)
+		dynamic_array(usize count, const T& fill_value, memory_context_t* context = platform.global_memory)
+			:_count(0), _context(context)
 		{
 			expand_back(count, fill_value);
 		}
 
-		dynamic_array(const dynamic_array<T, AllocatorT>& other)
+		dynamic_array(const dynamic_array<T>& other)
 			:_count(other._count),
-			 _allocator(other._allocator)
+			 _context(other._context)
 		{
-			_data_block = _allocator.template alloc<T>(other._data_block.count());
+			_data_block = _context->template alloc<T>(other._data_block.count());
 
 			for(usize i = 0; i < _count; ++i)
 				new (&_data_block[i]) T(other._data_block[i]);
 		}
 
-		dynamic_array(const dynamic_array<T, AllocatorT>& other, const AllocatorT& allocator)
+		dynamic_array(const dynamic_array<T>& other, memory_context_t* context)
 			:_count(other._count),
-			 _allocator(allocator)
+			 _context(context)
 		{
-			_data_block = _allocator.template alloc<T>(other._data_block.count());
+			_data_block = _context->template alloc<T>(other._data_block.count());
 
 			for(usize i = 0; i < _count; ++i)
 				new (&_data_block[i]) T(other._data_block[i]);
 		}
 
-		dynamic_array(dynamic_array<T, AllocatorT>&& other)
+		dynamic_array(dynamic_array<T>&& other)
 			:_data_block(std::move(other._data_block)),
 			 _count(other._count),
-			 _allocator(std::move(other._allocator))
+			 _context(other._context)
 		{
 			other._count = 0;
+			other._context = nullptr;
 		}
 
-		dynamic_array(dynamic_array<T, AllocatorT>&& other, const AllocatorT& allocator)
+		dynamic_array(dynamic_array<T>&& other, memory_context_t* context)
 			:_count(other._count),
 			 _data_block(std::move(other._data_block)),
-			 _allocator(allocator)
+			 _context(context)
 		{
 			other._count = 0;
+			other._context = nullptr;
 		}
 
 		~dynamic_array()
@@ -94,37 +97,43 @@ namespace cpprelude
 				(*it++).~T();
 			_count = 0;
 
-			_allocator.free(_data_block);
+			if (_context)
+			{
+				_context->free(_data_block);
+				_context = nullptr;
+			}
 		}
 
-		dynamic_array<T, AllocatorT>&
-		operator=(const dynamic_array<T, AllocatorT>& other)
+		dynamic_array<T>&
+		operator=(const dynamic_array<T>& other)
 		{
-			slice<T> tmp_data_block = _allocator.template alloc<T>(other._data_block.count());
+			slice<T> tmp_data_block = _context->template alloc<T>(other._data_block.count());
 			for(usize i = 0; i < other._count; ++i)
 				new (&tmp_data_block[i]) T(other._data_block[i]);
 
-			_allocator.free(_data_block);
+			_context->free(_data_block);
 
 			_data_block = std::move(tmp_data_block);
 			_count = other._count;
-			_allocator = other._allocator;
+			_context = other._context;
 
 			return *this;
 		}
 
-		dynamic_array<T, AllocatorT>&
-		operator=(dynamic_array<T, AllocatorT>&& other)
+		dynamic_array<T>&
+		operator=(dynamic_array<T>&& other)
 		{
 			for(usize i = 0; i < _count; ++i)
 				_data_block[i].~T();
 
-			_allocator.free(_data_block);
+			_context->free(_data_block);
 
 			_data_block = std::move(other._data_block);
 			_count = other._count;
-			_allocator = std::move(other._allocator);
+			_context = other._context;
+			
 			other._count = 0;
+			other._context = nullptr;
 
 			return *this;
 		}
@@ -300,7 +309,7 @@ namespace cpprelude
 			for(usize i = 0; i < _count; ++i)
 				_data_block[i].~T();
 			_count = 0;
-			_allocator.free(_data_block);
+			_context->free(_data_block);
 		}
 
 		bool
@@ -392,9 +401,9 @@ namespace cpprelude
 				return;
 
 			if(_data_block.ptr != nullptr && _data_block.size > 0)
-				_allocator.template realloc<T>(_data_block, new_count);
+				_context->template realloc<T>(_data_block, new_count);
 			else
-				_data_block = _allocator.template alloc<T>(new_count);
+				_data_block = _context->template alloc<T>(new_count);
 		}
 
 		inline void
@@ -404,9 +413,9 @@ namespace cpprelude
 				return;
 
 			if(_data_block.ptr != nullptr && _data_block.size > 0)
-				_allocator.template realloc<T>(_data_block, new_count);
+				_context->template realloc<T>(_data_block, new_count);
 			else
-				_data_block = _allocator.template alloc<T>(new_count);
+				_data_block = _context->template alloc<T>(new_count);
 		}
 	};
 }

@@ -10,11 +10,11 @@ namespace cpprelude
 	{
 		using data_type = T;
 
-		dynamic_array<T, AllocatorT> _array;
+		dynamic_array<T> _array;
 		usize _count;
 
 		stack_array(const AllocatorT& allocator = AllocatorT())
-			: _array(allocator), _count(0)
+			: _array(), _count(0)
 		{}
 
 		stack_array(const stack_array&) = default;
@@ -22,15 +22,15 @@ namespace cpprelude
 		stack_array(stack_array&&) = default;
 
 		stack_array(usize count, const AllocatorT& allocator = AllocatorT())
-			:_array(count, allocator), _count(0)
+			:_array(count), _count(0)
 		{}
 
 		stack_array(const stack_array& other, const AllocatorT& allocator)
-			:_array(other._array, allocator), _count(other._count)
+			:_array(other._array), _count(other._count)
 		{}
 
 		stack_array(stack_array&& other, const AllocatorT& allocator)
-			:_array(std::move(other._array), allocator), _count(other._count)
+			:_array(std::move(other._array)), _count(other._count)
 		{}
 
 		template<typename ... TArgs>

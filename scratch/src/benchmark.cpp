@@ -55,25 +55,25 @@ bm_dynamic_array(workbench* bench, usize limit)
 	return *array.begin();
 }
 
-usize
-bm_custom_dynamic_array(workbench* bench, usize limit)
-{
-	slice<ubyte> mem_block;
-	auto arena_allocator = make_arena_allocator(MEGABYTES(25), mem_block);
-
-	usize result = 0;
-	{
-		dynamic_array<usize, linear_allocator> array(arena_allocator);
-		bench->watch.start();
-		for(usize i = 0; i < limit; ++i)
-			array.insert_back(rand());
-		result = *array.begin();
-		bench->watch.stop();
-	}
-
-	free(mem_block);
-	return result;
-}
+//usize
+//bm_custom_dynamic_array(workbench* bench, usize limit)
+//{
+//	slice<ubyte> mem_block;
+//	auto arena_allocator = make_arena_allocator(MEGABYTES(25), mem_block);
+//
+//	usize result = 0;
+//	{
+//		dynamic_array<usize, linear_allocator> array(arena_allocator);
+//		bench->watch.start();
+//		for(usize i = 0; i < limit; ++i)
+//			array.insert_back(rand());
+//		result = *array.begin();
+//		bench->watch.stop();
+//	}
+//
+//	free(mem_block);
+//	return result;
+//}
 
 usize
 bm_vector(workbench* bench, usize limit)
@@ -856,8 +856,8 @@ do_benchmark()
 
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_vector, limit),
-		CPPRELUDE_BENCHMARK(bm_dynamic_array, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_dynamic_array, limit)
+		CPPRELUDE_BENCHMARK(bm_dynamic_array, limit)
+		//CPPRELUDE_BENCHMARK(bm_custom_dynamic_array, limit)
 	});
 
 	std::cout << std::endl << std::endl;

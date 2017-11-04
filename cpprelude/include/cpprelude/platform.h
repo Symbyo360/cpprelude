@@ -11,6 +11,8 @@ namespace cpprelude
 	{
 		//heap_t heap;
 		memory_context_t* global_memory;
+		isize allocation_count = 0;
+		usize allocation_size = 0;
 		usize RAM_SIZE;
 
 		API slice<byte>
@@ -56,6 +58,9 @@ namespace cpprelude
 		{
 			global_memory->realloc(data, count);
 		}
+
+		API void
+		print_memory_report();
 	};
 
 	API extern platform_t& platform;

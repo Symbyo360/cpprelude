@@ -15,7 +15,7 @@ namespace cpprelude {
 		Comparator _compare;
 
 		priority_queue(Comparator compare_function = Comparator(), const AllocatorT& allocator = AllocatorT())
-			:_array(allocator), _count(0), _compare(compare_function)
+			:_array(), _count(0), _compare(compare_function)
 		{}
 
 		priority_queue(usize count, Comparator compare_function = Comparator(), const AllocatorT& allocator = AllocatorT())
@@ -38,7 +38,7 @@ namespace cpprelude {
 
 		template<typename iterator_type>
 		priority_queue(iterator_type it, usize count, Comparator compare_function = Comparator(), const AllocatorT& allocator = AllocatorT())
-			:_array(allocator), _count(count), _compare(compare_function)
+			:_array(), _count(count), _compare(compare_function)
 		{ 
 			_array.reserve(count);
 			while (count--)

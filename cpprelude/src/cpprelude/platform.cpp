@@ -47,6 +47,16 @@ namespace cpprelude
 		return virtual_free(data);
 	}
 
+	void
+	platform_t::print_memory_report()
+	{
+#ifdef DEBUG
+		println(std::cout,
+			"allocation count = ", allocation_count, "\n",
+			"allocation size = ", allocation_size);
+#endif
+	}
+
 	slice<byte>
 	_default_alloc(void*, usize count)
 	{
@@ -54,6 +64,12 @@ namespace cpprelude
 		if (count == 0)
 			return slice<T>();
 		T* ptr = reinterpret_cast<T*>(std::malloc(count * sizeof(T)));
+
+#ifdef DEBUG
+		++platform.allocation_count;
+		platform.allocation_size += count * sizeof(T);
+#endif
+
 		return slice<T>(ptr, ptr ? count * sizeof(T) : 0);
 	}
 
@@ -61,7 +77,13 @@ namespace cpprelude
 	_default_free(void*, slice<byte>& slice_)
 	{
 		if (slice_.ptr != nullptr)
+		{
+#ifdef DEBUG
+			--platform.allocation_count;
+			platform.allocation_size -= slice_.size;
+#endif
 			std::free(slice_.ptr);
+		}
 
 		slice_.ptr = nullptr;
 		slice_.size = 0;
@@ -76,6 +98,11 @@ namespace cpprelude
 			_default_free(self, slice_);
 			return;
 		}
+
+#ifdef DEBUG
+		platform.allocation_size += (count * sizeof(T)) - slice_.size;
+		if (!slice_.valid()) ++platform.allocation_count;
+#endif
 
 		slice_.ptr = reinterpret_cast<T*>(std::realloc(slice_.ptr, count * sizeof(T)));
 		slice_.size = count * sizeof(T);
@@ -116,6 +143,8 @@ namespace cpprelude
 
 		//setup the platform
 		_platform.global_memory = &_global_memory;
+		_platform.allocation_count = 0;
+		_platform.allocation_size = 0;
 		_platform.RAM_SIZE = _get_ram_size();
 
 		//return the created platform
