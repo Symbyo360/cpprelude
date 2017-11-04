@@ -97,7 +97,7 @@ TEST_CASE("slinked_list test", "[slinked_list]")
 
 		CHECK(array.count() == 0);
 
-		for(i32 i = 0; i < 64; ++i)
+		for(usize i = 0; i < 64; ++i)
 			array.insert_front(i);
 
 		CHECK(array.count() == 64);
@@ -105,11 +105,11 @@ TEST_CASE("slinked_list test", "[slinked_list]")
 		slinked_list<i32> array2(std::move(array));
 
 		usize i_ = 64 - 1;
-		for(i32 i = 0; i < 64; ++i)
+		for(usize i = 0; i < 64; ++i)
 			CHECK(array2[i] == i_--);
 
 		i_ = array.count() -1;
-		for(i32 i = 0; i < array.count(); ++i)
+		for(usize i = 0; i < array.count(); ++i)
 			CHECK(array[i] == i_--);
 
 		CHECK(array2.count() != array.count());

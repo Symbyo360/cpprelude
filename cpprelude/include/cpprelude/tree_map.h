@@ -722,7 +722,7 @@ namespace cpprelude
 			if (it == nullptr) return;
 
 			it->data.~data_type();
-			_context->free(make_slice(it));
+			if(_context) _context->free(make_slice(it));
 			--_count;
 		}
 

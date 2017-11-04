@@ -20,9 +20,6 @@ namespace cpprelude
 		slice<T>
 		alloc(usize count = 1)
 		{
-			if (this == nullptr || _alloc == nullptr)
-				return slice<T>();
-
 			return _alloc(_self, sizeof(T) * count).template convert<T>();
 		}
 
@@ -31,8 +28,7 @@ namespace cpprelude
 		free(slice<T>& data)
 		{
 			auto byte_block = data.template convert<byte>();
-			if(this != nullptr && _free != nullptr)
-				_free(_self, byte_block);
+			_free(_self, byte_block);
 			data = byte_block.template convert<T>();
 		}
 
@@ -41,8 +37,7 @@ namespace cpprelude
 		free(slice<T>&& data)
 		{
 			auto byte_block = data.template convert<byte>();
-			if(this != nullptr && _free != nullptr)
-				_free(_self, byte_block);
+			_free(_self, byte_block);
 			data = byte_block.template convert<T>();
 		}
 
@@ -51,8 +46,7 @@ namespace cpprelude
 		realloc(slice<T>& data, usize count)
 		{
 			auto byte_block = data.template convert<byte>();
-			if(this != nullptr && _realloc != nullptr)
-				_realloc(_self, byte_block, count * sizeof(T));
+			_realloc(_self, byte_block, count * sizeof(T));
 			data = byte_block.template convert<T>();
 		}
 
@@ -61,8 +55,7 @@ namespace cpprelude
 		realloc(slice<T>&& data, usize count)
 		{
 			auto byte_block = data.template convert<byte>();
-			if(this != nullptr && _realloc != nullptr)
-				_realloc(_self, byte_block, count * sizeof(T));
+			_realloc(_self, byte_block, count * sizeof(T));
 			data = byte_block.template convert<T>();
 		}
 	};

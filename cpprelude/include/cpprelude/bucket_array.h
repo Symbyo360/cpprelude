@@ -426,7 +426,7 @@ namespace cpprelude
 		slice<T>
 		decay_continuous()
 		{
-			slice<T> result = _context->template alloc(_count);
+			slice<T> result = _context->template alloc<T>(_count);
 			usize i = 0;
 
 			for (auto& value : *this)
@@ -547,7 +547,7 @@ namespace cpprelude
 		{
 			clear();
 
-			if (_map)
+			if (_map && _context)
 			{
 				for (usize i = 0; i < _bucket_count; ++i)
 				{

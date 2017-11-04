@@ -429,7 +429,7 @@ namespace cpprelude
 		decay_continuous()
 		{
 			//allocate the memory of the supplied allocator
-			slice<T> result = _context->template alloc(_count);
+			slice<T> result = _context->template alloc<T>(_count);
 
 			//move the elements over
 			usize i = 0;

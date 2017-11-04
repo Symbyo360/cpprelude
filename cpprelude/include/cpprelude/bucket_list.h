@@ -31,12 +31,12 @@ namespace cpprelude
 		~bucket_list()
 		{
 			if(_memory.ptr != nullptr && _memory.size > 0)
-				_context->free(_memory);
+				if(_context) _context->free(_memory);
 
 			if(_next)
 			{
 				_next->~bucket_list();
-				_context->free(make_slice(_next));
+				if(_context) _context->free(make_slice(_next));
 			}
 		}
 

@@ -98,8 +98,11 @@ namespace cpprelude
 		{
 			reset();
 			//remove the sentinals
-			_context->free(make_slice(_head));
-			_context->free(make_slice(_tail));
+			if(_context)
+			{
+				_context->free(make_slice(_head));
+				_context->free(make_slice(_tail));
+			}
 			_count = 0;
 			_context = nullptr;
 		}
@@ -442,7 +445,7 @@ namespace cpprelude
 
 				it->data.~T();
 
-				_context->free(make_slice(it));
+				if(_context) _context->free(make_slice(it));
 
 				it = next_node;
 

@@ -344,17 +344,17 @@ TEST_CASE("dlinked_list test", "[dlinked_list]")
 	{
 		CHECK(array.count() == 0);
 
-		for(i32 i = 0; i < 64; ++i)
+		for(usize i = 0; i < 64; ++i)
 			array.insert_back(i);
 
 		CHECK(array.count() == 64);
 
 		dlinked_list<i32> array2(std::move(array));
 
-		for(i32 i = 0; i < 64; ++i)
+		for(usize i = 0; i < 64; ++i)
 			CHECK(array2[i] == i);
 
-		for(i32 i = 0; i < array.count(); ++i)
+		for(usize i = 0; i < array.count(); ++i)
 			CHECK(array[i] == i);
 
 		CHECK(array2.count() != array.count());

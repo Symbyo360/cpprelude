@@ -22,6 +22,7 @@ namespace cpprelude
 			operator()(const void* ptr, usize len, usize seed)
 			{
 				static_assert(ptr_size == 0, "there's no hash function defined for this architecture pointer size");
+				return 0;
 			}
 		};
 
@@ -136,6 +137,7 @@ namespace cpprelude
 			operator()(T value) const
 			{
 				static_assert(sizeof(T) == 0, "there's no hash function defined for this type");
+				return 0;
 			}
 		};
 
