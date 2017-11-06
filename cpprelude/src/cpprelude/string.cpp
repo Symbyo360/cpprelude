@@ -189,6 +189,10 @@ namespace cpprelude
 	string::string()
 	{}
 
+	string::string(memory_context_t* context)
+		:_context(context)
+	{}
+
 	string::string(const char* data, memory_context_t* context)
 	{
 		_context = context;

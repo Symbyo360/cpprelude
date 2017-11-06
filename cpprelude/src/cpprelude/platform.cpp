@@ -123,13 +123,13 @@ namespace cpprelude
 		{
 			struct sysinfo info;
 			sysinfo(&info);
-			totalram = std::max<usize>(GIGABYTES(4) - 1ULL, (info.totalram * 1024ULL) - 1ULL);
+			totalram = std::max<usize>(GIGABYTES(4) - 1ULL, (info.totalram * 1024ULL));
 		}
 		#elif defined(OS_WINDOWS)
 		{
 			ULONGLONG result = 0; //size of physical memory in kilobytes
 			GetPhysicallyInstalledSystemMemory(&result);
-			totalram = std::max<usize>(GIGABYTES(4) - 1ULL, (result * 1024ULL) - 1ULL);
+			totalram = std::max<usize>(GIGABYTES(4) - 1ULL, (result * 1024ULL));
 		}
 		#endif
 		return totalram;
@@ -161,7 +161,6 @@ namespace cpprelude
 	platform_t& platform = _init_platform();
 
 	//print stuff
-
 	namespace helper
 	{
 		inline static std::mutex&

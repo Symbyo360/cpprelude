@@ -83,7 +83,8 @@ namespace cpprelude
 		mutable usize _count = static_cast<usize>(-1);
 		memory_context_t* _context = platform.global_memory;
 
-		API string();		
+		API string();
+		API string(memory_context_t* context);
 		API string(const char* data, memory_context_t* context = platform.global_memory);
 		API string(const slice<byte>& data, memory_context_t* context = platform.global_memory);
 		API string(slice<byte>&& data, memory_context_t* context = platform.global_memory);
