@@ -1,6 +1,7 @@
 #include "cpprelude/platform.h"
 #include <mutex>
 #include <algorithm>
+#include <iostream>
 
 #if defined(OS_WINDOWS)
 #include <Windows.h>
@@ -14,6 +15,7 @@
 
 namespace cpprelude
 {
+	//platform
 	platform_t::~platform_t()
 	{
 #ifdef DEBUG
@@ -55,7 +57,7 @@ namespace cpprelude
 	}
 
 	void
-	platform_t::print_memory_report()
+	platform_t::print_memory_report() const
 	{
 #ifdef DEBUG
 		println(std::cout,

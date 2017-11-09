@@ -11,7 +11,7 @@ namespace cpprelude
 	{
 		//heap_t heap;
 		memory_context_t* global_memory;
-		isize allocation_count = 0;
+		usize allocation_count = 0;
 		usize allocation_size = 0;
 		usize RAM_SIZE;
 
@@ -62,7 +62,7 @@ namespace cpprelude
 		}
 
 		API void
-		print_memory_report();
+		print_memory_report() const;
 	};
 
 	API extern platform_t& platform;

@@ -39,6 +39,7 @@
 
 #include <iostream>
 #include <cpprelude/micro_benchmark.h>
+#include <cpprelude/memory_watcher.h>
 
 using namespace cpprelude;
 
@@ -48,6 +49,8 @@ cpprelude::arena_t arena(MEGABYTES(100));
 usize
 bm_dynamic_array(workbench* bench, usize limit)
 {
+	memory_watcher_t w("dynamic_array");
+
 	dynamic_array<usize> array;
 	
 	bench->watch.start();
@@ -62,6 +65,8 @@ bm_dynamic_array(workbench* bench, usize limit)
 usize
 bm_custom_dynamic_array(workbench* bench, usize limit)
 {
+	memory_watcher_t w();
+
 	arena.free_all();
 	dynamic_array<usize> array(arena.context());
 
