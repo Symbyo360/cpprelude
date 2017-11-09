@@ -15,6 +15,9 @@ project "cpprelude"
 	filter "action:vs*"
 		buildoptions {"-utf-8"}
 
+	filter "action:vs2017"
+		systemversion(win10_sdk_version())
+
 	filter "configurations:debug"
 		targetsuffix "d"
 		defines {"DEBUG", "COMPILE_DYNAMIC_LIB"}

@@ -23,6 +23,9 @@ project "unittest"
 	filter "action:vs*"
 		buildoptions {"-utf-8"}
 
+	filter "action:vs2017"
+		systemversion(win10_sdk_version())
+
 	filter "configurations:debug"
 		defines {"DEBUG"}
 		symbols "On"
