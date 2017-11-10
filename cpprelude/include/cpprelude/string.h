@@ -4,6 +4,7 @@
 #include "cpprelude/memory.h"
 #include "cpprelude/platform.h"
 #include <ostream>
+#include <sstream>
 
 namespace cpprelude
 {
@@ -154,6 +155,18 @@ namespace cpprelude
 		API const_iterator
 		cend() const;
 	};
+
+	API string
+	operator"" _cs(const char* str, usize str_count);
+
+	template<typename ... TArgs>
+	inline static string
+	concat(TArgs&& ... args)
+	{
+		std::stringstream result;
+		print(result, std::forward<TArgs>(args)...);
+		return string(result.str().data());
+	}
 
 	inline static std::ostream&
 	operator<<(std::ostream& out,const cpprelude::string& str)

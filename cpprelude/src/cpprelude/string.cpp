@@ -406,4 +406,14 @@ namespace cpprelude
 			return const_iterator(nullptr);
 		return const_iterator(_data.ptr + _data.size - 1);
 	}
+
+	string
+	operator"" _cs(const char* str, usize str_count)
+	{
+		string result;
+		result._data = make_slice<byte>((byte*)(str), str_count);
+		result._context = nullptr;
+		result._count = _count_runes(result._data.ptr);
+		return result;
+	}
 }
