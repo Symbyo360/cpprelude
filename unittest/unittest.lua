@@ -16,15 +16,19 @@ project "unittest"
 
 	links {"cpprelude"}
 
-	filter "action:gmake"
+	if os.istarget("linux") then
+
 		buildoptions {"-std=c++14", "-Wall"}
 		linkoptions {"-pthread"}
 
-	filter "action:vs*"
-		buildoptions {"-utf-8"}
+	elseif os.istarget("windows") then
 
-	filter "action:vs2017"
-		systemversion(win10_sdk_version())
+		if os.getversion().majorversion == 10.0 then
+			systemversion(win10_sdk_version())
+		end
+
+		buildoptions {"-utf-8"}
+	end
 
 	filter "configurations:debug"
 		defines {"DEBUG"}

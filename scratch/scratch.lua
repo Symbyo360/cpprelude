@@ -13,15 +13,19 @@ project "scratch"
 
 	links {"cpprelude"}
 
-	filter "action:gmake"
+	if os.istarget("linux") then
+
 		buildoptions {"-std=c++14", "-Wall", "-fno-rtti", "-fno-exceptions"}
 		linkoptions {"-pthread"}
 
-	filter "action:vs*"
+	elseif os.istarget("windows") then
+		
+		if os.getversion().majorversion == 10.0 then
+			systemversion(win10_sdk_version())
+		end
+
 		buildoptions {"-utf-8"}
-	
-	filter "action:vs2017"
-		systemversion(win10_sdk_version())
+	end
 
 	filter "configurations:debug"
 		defines {"DEBUG"}
