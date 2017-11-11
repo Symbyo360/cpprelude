@@ -44,7 +44,7 @@ namespace cpprelude
 	platform_t::virtual_free(slice<byte>& data)
 	{
 		#if defined(OS_WINDOWS)
-			return VirtualFree(data.ptr, data.size, MEM_RELEASE) != NULL;
+			return VirtualFree(data.ptr, 0, MEM_RELEASE) != NULL;
 		#elif defined(OS_LINUX)
 			return munmap(data.ptr, data.size) == 0;
 		#endif

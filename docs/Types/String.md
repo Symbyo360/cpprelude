@@ -1,6 +1,6 @@
 # String
 
-`cpprelude::string` is a `utf-8` encoded string. It's simply a slice of binary data. This string is immutable once it's created. 
+`cpprelude::string` is a `utf-8` encoded string. It's simply a slice of binary data. This string is immutable once it's created, However you can reassign and copy strings around.
 
 ## Interface
 
@@ -8,7 +8,7 @@
 struct string;
 ```
 
-`cpprelude::string` is a `utf-8` encoded string. It's simply a slice of binary data. This string is immutable once it's created.
+`cpprelude::string` is a `utf-8` encoded string. It's simply a slice of binary data. This string is immutable once it's created, However you can reassign and copy strings around.
 
 ### Meta Interface
 

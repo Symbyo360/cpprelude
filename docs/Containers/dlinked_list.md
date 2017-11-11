@@ -7,12 +7,11 @@
 #### Template Interface
 
 ```c++
-template<typename T, typename AllocatorT = global_allocator>
+template<typename T>
 struct dlinked_list;
 ```
 
 1. **T**: specifics element type.
-2. **AllocatorT**: specifics the type of the allocator the `dlinked_list` will use.
 
 #### Alias Interface
 
@@ -33,22 +32,22 @@ using node_type = details::double_node<T>;
 #### Constructor
 
 ```c++
-dlinked_list(const AllocatorT& allocator = AllocatorT());
-dlinked_list(std::initializer_list<T> list, const AllocatorT& allocator = AllocatorT());
-dlinked_list(usize count, const T& fill_value, const AllocatorT& allocator = AllocatorT());
+dlinked_list(memory_context_t* context = platform.global_memory);
+dlinked_list(std::initializer_list<T> list, memory_context_t* context = platform.global_memory);
+dlinked_list(usize count, const T& fill_value, memory_context_t* context = platform.global_memory);
 dlinked_list(const dlinked_list<T>& other);
-dlinked_list(const dlinked_list<T>& other, const AllocatorT& allocator);
+dlinked_list(const dlinked_list<T>& other, memory_context_t* context);
 dlinked_list(dlinked_list<T>&& other);
-dlinked_list(dlinked_list<T>&& other, const AllocatorT& allocator);
+dlinked_list(dlinked_list<T>&& other, memory_context_t* context);
 ```
 
-1. A constructor that builds the container with the provided allocator.
-2. A constructor that initializes the container with the provided `initializer_list` using the provided allocator.
+1. A constructor that builds the container with the provided memory context.
+2. A constructor that initializes the container with the provided `initializer_list` using the provided memory context.
 3. A constructor that initializes the container with the provided `count` and fills it with the provided `fill_value`.
 4. A copy constructor.
-5. A copy constructor that accepts another allocator.
+5. A copy constructor that accepts another memory context.
 6. A move constructor.
-7. A move constructor that accepts another allocator.
+7. A move constructor that accepts another memory context.
 
 #### count
 

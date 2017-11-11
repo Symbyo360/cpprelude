@@ -1,115 +1,54 @@
 # Allocators
 
-Allocators are objects that's wrapping a memory and memory allocation algorithms. They have a standard interface consisting of 3 functions. You can create your own allocator and pass it to the containers.
+Allocators can be anything that wrap a `memory_context_t` and provide an access to `memory_context_t*` to be used later to interact with memory.
 
-### global_allocator
-#### alloc
+##arena_t
+```C++
+struct arena_t;
+```
+An arena is a chunk of memory that allocates memory in a stack fashion and it can only free memory if the provided chunk is at the top of the stack. the main philosophy of an arena is that you want to build data structures quickly into the provided container and you will throw it away and reuse the same chunk of memory to build another temp data structures.
+
+###Interface
+####Constructor
+```C++
+arena_t(usize size, bool use_virtual_memory = true);
+```
+Constructs an arena with the provided size and it by default uses `virtual_alloc`.
+
+####context
+```C++
+memory_context_t* context();
+```
+Returns a pointer to the context.
+
+####free_all
+```C++
+void free_all();
+```
+Resets the memory and starts to allocate from the beginning.
+
+####alloc
 ```C++
 template<typename T>
-slice<T>
-alloc(usize count = 1, ubyte alignment = 4);
+slice<T> alloc(usize count = 1);
 ```
+Allocates a slice of type T that can accomodate the provided `count`.
 
-Allocates a slice of type `T` that can hold up to the provided `count` with the provided alignment.
-
-#### free
+####free
 ```C++
 template<typename T>
-void
-free(slice<T>& slice_);
-
+void free(slice<T>& data);
 template<typename T>
-void
-free(slice<T>&& slice_);
+void free(slice<T>&& data);
 ```
+Given a slice memory it frees the provided `data`.
 
-Frees an allocated slice of type `T` given that it's allocated using this allocator. It also resets the slice to an invalid state which points to `nullptr`.
-
-#### realloc
+####realloc
 ```C++
 template<typename T>
-void
-realloc(slice<T>& slice_, usize count);
-
+void realloc(slice<T>& data, usize count);
 template<typename T>
-void
-realloc(slice<T>&& slice_, usize count);
+void realloc(slice<T>&& data, usize count);
 ```
+Given a slice of memory it resizes the slice to accomodate to the provided `count`.
 
-Reallocates the provided slice to fit the count.
-* if count is less than the count of the provided slice then it will be shrunk.
-* if count is more than the count of the provided slice then it will be enlarged.
-* if the provided slice is an empty slice then realloc should behave exactly like `alloc`.
-
-### linear_allocator
-Provides a linear -stack like- allocation algorithm. The provided memory to allocate from should be freed explicitly.
-
-#### Constructor
-```C++
-linear_allocator();
-template<typename T>
-linear_allocator(slice<T> memory);
-```
-
-1. Creates an empty linear allocator.
-2. Creates a linear allocator with the provided memory to allocate from.
-
-#### alloc
-```C++
-template<typename T>
-slice<T>
-alloc(usize count = 1, ubyte alignment = 4);
-```
-
-If there's a space available then it moves the allocation head and returns a slice pointing to the allocated memory. If there's no space then it will return an empty slice.
-
-#### free
-
-```C++
-template<typename T>
-void
-free(slice<T>& slice_);
-
-template<typename T>
-void
-free(slice<T>&& slice_);
-```
-
-If this is the latest allocation then it will decrement the allocation header. If not then it will only decrease the allocation count and if the allocation count is 0 it will reset the allocation head back to the beginning.
-
-#### realloc
-
-```C++
-template<typename T>
-void
-realloc(slice<T>&& slice_, usize count);
-```
-
-Reallocates the provided slice. If the slice is the latest slice allocated then it will only move the allocation head accordingly. If it's not then it will try to allocate a new slice and copy the data to the new slice.
-
-### Example
-
-```C++
-#include <iostream>
-#include <cpprelude/dynamic_array.h>
-#include <cpprelude/allocator.h>
-using namespace cpprelude;
-
-int
-main(int argc, char** argv)
-{
-	auto memory = virtual_alloc<ubyte>(MEGABYTES(1));
-	auto allocator = linear_allocator(memory);
-
-	dynamic_array<usize, linear_allocator> array(allocator);
-
-	for(usize i = 0; i < 10; ++i)
-		array.insert_back(i);
-
-	for(const auto& element: array)
-		std::cout << element << std::endl;
-
-	virtual_free(memory);
-	return 0;
-}
-```

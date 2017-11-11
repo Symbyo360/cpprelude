@@ -30,14 +30,17 @@ For Philosophy and coding standard please refer to this [link](https://moustapha
 
 ## Content
 
-|                Content                 |               Description                |
-| :------------------------------------: | :--------------------------------------: |
-|        [Types](Types/Types.md)         | Contains the primitive types that cpprelude uses |
-|       [Memory](Memory/Memory.md)       | Contains the memory management model (slices, alloc, virtual_alloc, free, ...) |
-| [Containers](Containers/Containers.md) | Contains variety of containers (dynamic_array, slinked_list, queue, tree_map, hash_array, ...) |
-| [Algorithms](Algorithms/Algorithms.md) | Contains variety of algorithms (shuffle, mergesort, quicksort, quickselect ...) |
-| [Allocators](Allocators/Allocators.md) | Contains a wrapper to allocation algorithms |
-|  [Threading](Threading/Threading.md)   | Contains useful wrappers that help in thread safe operations |
+|                 Content                  |               Description                |
+| :--------------------------------------: | :--------------------------------------: |
+|         [Types](Types/Types.md)          | Contains the primitive types that cpprelude uses |
+|        [Memory](Memory/Memory.md)        | Contains the memory management model (slices, alloc, virtual_alloc, free, ...) |
+|  [Containers](Containers/Containers.md)  | Contains variety of containers (dynamic_array, slinked_list, queue, tree_map, hash_array, ...) |
+|  [Algorithms](Algorithms/Algorithms.md)  | Contains variety of algorithms (shuffle, mergesort, quicksort, quickselect ...) |
+|  [Allocators](Allocators/Allocators.md)  | Contains a wrapper to allocation algorithms |
+| [Memory Context](Allocators/memory_context.md) | Contains a memory context for allocators |
+|     [Platform](Platform/platform.md)     |       Contains the platform layer        |
+| [Memory Watcher](Platform/memory_watcher.md) | Contains a memory watcher for detecting memory leaks |
+|   [Threading](Threading/Threading.md)    | Contains useful wrappers that help in thread safe operations |
 
 ## How to contribute
 

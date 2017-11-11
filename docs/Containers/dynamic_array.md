@@ -7,12 +7,11 @@
 #### Template Interface
 
 ```c++
-template<typename T, typename AllocatorT = global_allocator>
+template<typename T>
 struct dynamic_array;
 ```
 
 1. **T**: specifics element type.
-2. **AllocatorT**: specifics the type of the allocator the `dynamic_array` will use.
 
 #### Alias Interface
 
@@ -29,24 +28,24 @@ using data_type = T;
 ### Interface
 #### Constructor
 ```C++
-dynamic_array(const AllocatorT& allocator = AllocatorT());
-dynamic_array(std::initializer_list<T> list, const AllocatorT& allocator = AllocatorT());
-dynamic_array(usize count, const AllocatorT& allocator = AllocatorT());
-dynamic_array(usize count, const T& fill_value, const AllocatorT& allocator = AllocatorT());
-dynamic_array(const dynamic_array<T, AllocatorT>& other);
-dynamic_array(const dynamic_array<T, AllocatorT>& other, const AllocatorT& allocator)
-dynamic_array(dynamic_array<T, AllocatorT>&& other);
-dynamic_array(dynamic_array<T, AllocatorT>&& other, const AllocatorT& allocator);
+dynamic_array(memory_context_t* context = platform.global_memory);
+dynamic_array(std::initializer_list<T> list, memory_context_t* context = platform.global_memory);
+dynamic_array(usize count, memory_context_t* context = platform.global_memory);
+dynamic_array(usize count, const T& fill_value, memory_context_t* context = platform.global_memory);
+dynamic_array(const dynamic_array<T>& other);
+dynamic_array(const dynamic_array<T>& other, memory_context_t* context);
+dynamic_array(dynamic_array<T>&& other);
+dynamic_array(dynamic_array<T>&& other, memory_context_t* context);
 ```
 
-1. A Constructor that builds a dynamic array given an allocator.
+1. A Constructor that builds a dynamic array given a memory context.
 2. A Constructor that accepts an initializer list.
 3. A Constructor that accepts a known count and constructs a dynamic_array with that count.
 4. A Constructor that accepts a count and a value that's used to fill the dynamic array.
 5. A copy constructor.
-6. A copy constructor with a new allocator for the new dynamic_array.
+6. A copy constructor with a new memory context.
 7. A move constructor.
-8. A move constructor with a new allocator for the new dynamic_array.
+8. A move constructor with a new memory context.
 
 #### count
 

@@ -47,20 +47,30 @@ namespace cpprelude
 		return;
 	}
 
-	arena_t::arena_t(usize size)
+	arena_t::arena_t(usize size, bool use_virtual_memory)
 	{
-		_memory = platform.virtual_alloc(nullptr, size);
+		if(use_virtual_memory)
+			_memory = platform.virtual_alloc(nullptr, size);
+		else
+			_memory = platform.alloc<byte>(size);
+
 		_allocation_head = 0;
 		_context._self = this;
 		_context._alloc = _arena_alloc;
 		_context._realloc = _arena_realloc;
 		_context._free = _arena_free;
+		_uses_virtual_memory = use_virtual_memory;
 	}
 
 	arena_t::~arena_t()
 	{
 		if(_memory.valid())
-			platform.virtual_free(_memory);
+		{
+			if(_uses_virtual_memory)
+				platform.virtual_free(_memory);
+			else
+				platform.free(_memory);
+		}
 		_allocation_head = 0;
 	}
 
