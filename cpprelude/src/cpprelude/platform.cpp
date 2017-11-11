@@ -156,6 +156,12 @@ namespace cpprelude
 		_platform.allocation_size = 0;
 		_platform.RAM_SIZE = _get_ram_size();
 
+		//windows setup stuff
+		#if defined(OS_WINDOWS)
+			//set the console mode to support utf8
+			SetConsoleOutputCP(CP_UTF8);
+		#endif
+
 		//return the created platform
 		return _platform;
 	}

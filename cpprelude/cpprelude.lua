@@ -19,7 +19,7 @@ project "cpprelude"
 			systemversion(win10_sdk_version())
 		end
 
-		buildoptions {"-utf-8"}
+		buildoptions {"/utf-8"}
 	end
 
 	filter "configurations:debug"
