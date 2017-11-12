@@ -2,7 +2,7 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/memory.h"
-
+#include<iterator>
 #include <ostream>
 
 namespace cpprelude
@@ -124,11 +124,12 @@ namespace cpprelude
 	}
 
 	template<typename T>
-	struct sequential_iterator
-	{
+	struct sequential_iterator:std::iterator<std::random_access_iterator_tag, T, isize, T*, T&>
+	{		
+		using base = std::iterator<std::random_access_iterator_tag, T, isize, T*, T&>;
 		T* _element;
 		using data_type = T;
-
+		
 		sequential_iterator()
 			:_element(nullptr)
 		{}
@@ -136,6 +137,7 @@ namespace cpprelude
 		sequential_iterator(T* ptr)
 			:_element(ptr)
 		{}
+
 
 		sequential_iterator<T>&
 		operator++()
@@ -152,6 +154,23 @@ namespace cpprelude
 			return result;
 		}
 
+	
+		sequential_iterator<T>&
+		operator+=(typename base::difference_type offset)
+		{
+			auto result = *this;
+			_element += offset;
+			return *this;	
+
+		}
+
+		sequential_iterator<T>
+		operator+(typename base::difference_type offset)const
+		{
+			sequential_iterator<T> temp = *this;
+			return temp += offset;
+		}
+	
 		sequential_iterator<T>&
 		operator--()
 		{
@@ -167,6 +186,25 @@ namespace cpprelude
 			return result;
 		}
 
+		sequential_iterator<T>&
+		operator-=(typename base::difference_type offset)
+		{
+			return this += -offset;
+		}
+
+		sequential_iterator<T>
+		operator-(typename base::difference_type offset)
+		{
+			sequential_iterator<T> temp = *this;
+			return temp += -offset;
+		}
+
+		typename base::difference_type
+		operator-(const sequential_iterator<T>& other) const
+		{
+			return _element - other._element;
+		}
+
 		bool
 		operator==(const sequential_iterator<T>& other) const
 		{
@@ -177,6 +215,30 @@ namespace cpprelude
 		operator!=(const sequential_iterator<T>& other) const
 		{
 			return !operator==(other);
+		}
+
+		bool
+		operator<(const sequential_iterator<T>& other) const
+		{
+			return other - *this > 0;
+		}
+
+		bool
+		operator>(const sequential_iterator<T>& other)const
+		{
+			return other < *this ;
+		}
+
+		bool 
+		operator<=(const sequential_iterator<T>& other)const
+		{
+			return !(other > *this);
+		}
+
+		bool
+		operator>=(const sequential_iterator<T>& other)const
+		{
+			return !(other < *this);
 		}
 
 		const T&
@@ -212,14 +274,22 @@ namespace cpprelude
 		{
 			return _element;
 		}
+
+		T&
+		operator[](typename base::difference_type offset)
+		{
+			return *(*this += offset);				
+		}
+
 	};
 
 	template<typename T>
 	struct const_forward_iterator;
 
 	template<typename T>
-	struct forward_iterator
+	struct forward_iterator//:std::iterator<std::forward_iterator_tag, T, isize, T*, T&>
 	{
+		//using base = std::iterator<std::forward_iterator_tag, T, isize, T*, T&>;
 		using data_type = T;
 		details::single_node<T>* _node;
 
