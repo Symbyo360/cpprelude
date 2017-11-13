@@ -1254,7 +1254,7 @@ namespace cpprelude
 		bool
 		operator==(const const_hash_array_iterator<key_type, value_type>& other) const
 		{
-			return _flag_it 	== other._flag_it &&
+			return _flag_it 	== other._flag_it  &&
 				   key_it 		== other.key_it   &&
 				   value_it 	== other.value_it &&
 				   _capacity	== other._capacity;
@@ -1795,7 +1795,7 @@ namespace cpprelude
 	};
 
 	template<typename T>
-	struct red_black_tree_iterator
+	struct red_black_tree_iterator:std::iterator<std::bidirectional_iterator_tag, T, isize, T*, T&>
 	{
 		using data_type = const T;
 		using node_type = const details::red_black_tree_node<T>;
