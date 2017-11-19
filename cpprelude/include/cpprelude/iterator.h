@@ -913,7 +913,7 @@ namespace cpprelude
 	};
 
 	template<typename T, usize bucket_size>
-	struct const_bucket_array_iterator
+	struct const_bucket_array_iterator:std::iterator<std::random_access_iterator_tag, T, isize, T*, T&>
 	{
 		using base = std::iterator<std::random_access_iterator_tag, T, isize, T*, T&>;
 		using data_type = T;
@@ -1182,7 +1182,7 @@ namespace cpprelude
 	struct const_hash_array_iterator;
 
 	template<typename key_type, typename value_type>
-	struct hash_array_iterator
+	struct hash_array_iterator:std::iterator<std::forward_iterator_tag, value_type, isize, value_type*, value_type&>
 	{
 		sequential_iterator<const key_type> key_it;
 		sequential_iterator<value_type> value_it;
@@ -1304,7 +1304,7 @@ namespace cpprelude
 	};
 
 	template<typename key_type, typename value_type>
-	struct const_hash_array_iterator
+	struct const_hash_array_iterator:std::iterator<std::forward_iterator_tag, const value_type, isize, const value_type*, const value_type&>
 	{
 		sequential_iterator<const key_type> key_it;
 		sequential_iterator<const value_type> value_it;
@@ -1421,7 +1421,7 @@ namespace cpprelude
 	};
 
 	template<typename key_type>
-	struct hash_array_key_iterator
+	struct hash_array_key_iterator:std::iterator<std::forward_iterator_tag, key_type, isize, key_type*, key_type&>
 	{
 		sequential_iterator<const key_type> key_it;
 		sequential_iterator<const u8> _flag_it;
@@ -1504,7 +1504,7 @@ namespace cpprelude
 	};
 
 	template<typename value_type>
-	struct hash_array_value_iterator
+	struct hash_array_value_iterator:std::iterator<std::forward_iterator_tag, value_type, isize, value_type*, value_type&>
 	{
 		sequential_iterator<value_type> value_it;
 		sequential_iterator<u8> _flag_it;
@@ -1566,6 +1566,20 @@ namespace cpprelude
 		{
 			return !operator==(other);
 		}
+		/*
+		bool
+		operator==(const const_hash_array_value_iterator<value_type>& other) const
+		{
+			return _flag_it 	== other._flag_it &&
+				   value_it 	== other.value_it &&
+				   _capacity	== other._capacity;
+		}
+
+		bool
+		operator!=(const const_hash_array_value_iterator<value_type>& other) const
+		{
+			return !operator==(other);
+		}*/
 
 		value_type&
 		operator*()
@@ -1605,7 +1619,7 @@ namespace cpprelude
 	};
 
 	template<typename value_type>
-	struct const_hash_array_value_iterator
+	struct const_hash_array_value_iterator:std::iterator<std::forward_iterator_tag, value_type, isize, value_type*, value_type&>
 	{
 		sequential_iterator<const value_type> value_it;
 		sequential_iterator<const u8> _flag_it;
@@ -1653,9 +1667,9 @@ namespace cpprelude
 
 			return result;
 		}
-
+		/*
 		bool
-		operator==(const const_hash_array_value_iterator& other) const
+		operator==(const hash_array_value_iterator& other) const
 		{
 			return _flag_it 	== other._flag_it &&
 				   value_it 	== other.value_it &&
@@ -1663,7 +1677,21 @@ namespace cpprelude
 		}
 
 		bool
-		operator!=(const const_hash_array_value_iterator& other) const
+		operator!=(const hash_array_value_iterator& other) const
+		{
+			return !operator==(other);
+		}
+		*/
+		bool
+		operator==(const const_hash_array_value_iterator<value_type>& other) const
+		{
+			return _flag_it 	== other._flag_it &&
+				   value_it 	== other.value_it &&
+				   _capacity	== other._capacity;
+		}
+
+		bool
+		operator!=(const const_hash_array_value_iterator<value_type>& other) const
 		{
 			return !operator==(other);
 		}
