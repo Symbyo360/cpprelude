@@ -647,6 +647,8 @@ namespace cpprelude
 		T** _bucket_it;
 		T* _element_it;
 		usize _index;
+		usize _bucket_index = 0;
+		usize size = bucket_size;
 
 		bucket_array_iterator()
 			:_bucket_it(nullptr), _element_it(nullptr), _index(0)
@@ -700,23 +702,21 @@ namespace cpprelude
 		bucket_array_iterator&
 		operator+=(typename base::difference_type offset)
 		{
-			_index += offset;
-
-			if(_index >= bucket_size)
+			typename base::difference_type _offset = offset + _index;
+			if (_offset >= 0 && _offset < (typename base::difference_type)bucket_size)
 			{
-				typename base::difference_type bucket_offset = _index / bucket_size;
-				typename base::difference_type index_offset = _index  - (bucket_offset * bucket_size);
-
-				_index = index_offset;
-				_bucket_it += bucket_offset;
-				_element_it = *_bucket_it;
-				_element_it += _index; 
-			}	
-			else
-			{
+				_index += offset;
 				_element_it += offset;
 			}
-
+			else
+			{
+				typename base::difference_type _bucket_offset = _offset > 0 ? _offset / (typename base::difference_type) bucket_size : 
+					-(typename base::difference_type)((-_offset - 1) / bucket_size) - 1;
+				_bucket_it += _bucket_offset;
+				_index = _offset - _bucket_offset * bucket_size;
+				_element_it = *_bucket_it + _index;
+			}
+			
 			return *this;
 		}
 
@@ -768,25 +768,7 @@ namespace cpprelude
 		bucket_array_iterator&
 		operator-=(typename base::difference_type offset)
 		{
-			_index -= offset;
-
-			if(_index < 0)
-			{
-				_index += (2 * offset);
-				typename base::difference_type bucket_offset = _index / bucket_size;
-				typename base::difference_type index_offset = _index  - (bucket_offset * bucket_size);
-
-				_index = bucket_size - index_offset - 1;
-				_bucket_it -= bucket_offset;
-				_element_it = *_bucket_it;
-				_element_it += _index; 
-			}	
-			else
-			{
-				_element_it -= offset;
-			}
-
-			return *this;
+			return *this += -offset;
 		}
 
 		bucket_array_iterator
@@ -799,13 +781,13 @@ namespace cpprelude
 		typename base::difference_type
 		operator-(const bucket_array_iterator& other) const
 		{
-			return ((_bucket_it - other._bucket_it) * bucket_size) + (_element_it - other._element_it);
+			return bucket_size * (_bucket_it - other._bucket_it - 1) + _index + (bucket_size - other._index);
 		}
 
 		typename base::difference_type
 		operator-(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return ((_bucket_it - other._bucket_it) * bucket_size) + (_element_it - other._element_it);
+			return bucket_size * (_bucket_it - other._bucket_it - 1) + _index + (bucket_size - other._index);
 		}
 
 		bool
@@ -816,7 +798,7 @@ namespace cpprelude
 
 		bool
 		operator!=(const bucket_array_iterator& other) const
-		{
+		{		
 			return !operator==(other);
 		}
 
@@ -979,21 +961,19 @@ namespace cpprelude
 		const_bucket_array_iterator&
 		operator+=(typename base::difference_type offset)
 		{
-			_index += offset;
-
-			if(_index >= bucket_size)
+			typename base::difference_type _offset = offset + _index;
+			if (_offset >= 0 && _offset < (typename base::difference_type)bucket_size)
 			{
-				typename base::difference_type bucket_offset = _index / bucket_size;
-				typename base::difference_type index_offset = _index  - (bucket_offset * bucket_size);
-
-				_index = index_offset;
-				_bucket_it += bucket_offset;
-				_element_it = *_bucket_it;
-				_element_it += _index; 
-			}	
+				_index += offset;
+				_element_it += offset;
+			}
 			else
 			{
-				_element_it += offset;
+				typename base::difference_type _bucket_offset = _offset > 0 ? _offset / (typename base::difference_type) bucket_size :
+					-(typename base::difference_type)((-_offset - 1) / bucket_size) - 1;
+				_bucket_it += _bucket_offset;
+				_index = _offset - _bucket_offset * bucket_size;
+				_element_it = *_bucket_it + _index;
 			}
 
 			return *this;
@@ -1047,25 +1027,7 @@ namespace cpprelude
 		const_bucket_array_iterator&
 		operator-=(typename base::difference_type offset)
 		{
-			_index -= offset;
-
-			if(_index < 0)
-			{
-				_index += (2 * offset);
-				typename base::difference_type bucket_offset = _index / bucket_size;
-				typename base::difference_type index_offset = _index  - (bucket_offset * bucket_size);
-
-				_index = bucket_size - index_offset - 1;
-				_bucket_it -= bucket_offset;
-				_element_it = *_bucket_it;
-				_element_it += _index; 
-			}	
-			else
-			{
-				_element_it -= offset;
-			}
-
-			return *this;
+			return *this += -offset;
 		}
 
 		const_bucket_array_iterator
@@ -1078,13 +1040,13 @@ namespace cpprelude
 		typename base::difference_type
 		operator-(const bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return ((_bucket_it - other._bucket_it) * bucket_size) + (_element_it - other._element_it);
+			return bucket_size * (_bucket_it - other._bucket_it - 1) + _index + (bucket_size - other._index);
 		}
 
 		typename base::difference_type
 		operator-(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return ((_bucket_it - other._bucket_it) * bucket_size) + (_element_it - other._element_it);
+			return bucket_size * (_bucket_it - other._bucket_it - 1) + _index + (bucket_size - other._index);
 		}
 
 		bool
@@ -1667,9 +1629,10 @@ namespace cpprelude
 
 			return result;
 		}
+		
 		/*
 		bool
-		operator==(const hash_array_value_iterator& other) const
+		operator==(const hash_array_value_iterator<R>& other) const
 		{
 			return _flag_it 	== other._flag_it &&
 				   value_it 	== other.value_it &&
@@ -1677,7 +1640,7 @@ namespace cpprelude
 		}
 
 		bool
-		operator!=(const hash_array_value_iterator& other) const
+		operator!=(const hash_array_value_iterator<value_type>& other) const
 		{
 			return !operator==(other);
 		}
