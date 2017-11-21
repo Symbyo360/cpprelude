@@ -7,13 +7,11 @@
 #### Template interface
 
 ```c++
-template<typename T, typename AllocatorT = global_allocator>
+template<typename T>
 struct queue_list;
 ```
 
 1. **T**: specifies the type of queue elements.
-
-2. **AllocatorT**: specifies how to allocate in memory by default it is `global_allocator`.
 
    ​
 
@@ -30,18 +28,18 @@ struct queue_list;
    #### Constructor
 
    ```c++
-   queue_list(const AllocatorT& allocator = AllocatorT());
+   queue_list(memory_context_t* context = platform.global_memory);
    queue_list(const queue_list&);
-   queue_list(const queue_list& other, const AllocatorT& allocator);
+   queue_list(const queue_list& other, memory_context_t* context);
    queue_list(queue_list&&);
-   queue_list(queue_list&& other, const AllocatorT& allocator); 
+   queue_list(queue_list&& other, memory_context_t* context);
    ```
 
-   1. A constructor that builds the container with the provided allocator.
+   1. A constructor that builds the container with the provided memory context.
    2. A copy constructor.
-   3. A copy constructor that accepts another allocator.
+   3. A copy constructor that accepts another memory context.
    4. A move constructor.
-   5. A move constructor that accepts another allocator.
+   5. A move constructor that accepts another memory context.
 
    #### Member data
 

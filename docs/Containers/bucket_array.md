@@ -7,13 +7,12 @@
 #### Template Interface
 
 ```c++
-template<typename T, usize bucket_size = details::default_size(sizeof(T)), typename AllocatorT = global_allocator>
+template<typename T, usize bucket_size = details::default_size(sizeof(T))>
 struct bucket_array;
 ```
 
 1. **T**: specifics element type.
-2. **bucket_size**: specifics the size of the bucket which depends on the size of single item a single bucket is 258KB.
-3. **AllocatorT**: specifics the type of the allocator the `bucket_array` will use.
+2. **bucket_size**: specifics the size of the bucket which depends on the size of single item. A single bucket is 256KB.
 
 #### Alias Interface
 
@@ -32,22 +31,22 @@ using data_type = T;
 #### Constructor
 
 ```c++
-bucket_array(const AllocatorT& allocator = AllocatorT());
-bucket_array(std::initializer_list<T> list, const AllocatorT& allocator = AllocatorT());
-bucket_array(usize count, const T& fill_value, const AllocatorT& allocator = AllocatorT());
+bucket_array(memory_context_t* context = platform.global_memory);
+bucket_array(std::initializer_list<T> list, memory_context_t* context = platform.global_memory);
+bucket_array(usize count, const T& fill_value, memory_context_t* context = platform.global_memory);
 bucket_array(const bucket_array& other);
-bucket_array(const bucket_array& other, const AllocatorT& allocator);
+bucket_array(const bucket_array& other, memory_context_t* context);
 bucket_array(bucket_array&& other);
-bucket_array(bucket_array&& other, const AllocatorT& allocator);
+bucket_array(bucket_array&& other, memory_context_t* context);
 ```
 
-1. A constructor that builds the container with the provided allocator.
-2. A constructor that initializes the container with the provided `initializer_list` using the provided allocator.
+1. A constructor that builds the container with the provided memory context.
+2. A constructor that initializes the container with the provided `initializer_list` using the provided memory context.
 3. A constructor that initializes the container with the provided `count` and fills it with the provided `fill_value`.
 4. A copy constructor.
-5. A copy constructor that accepts another allocator.
+5. A copy constructor that accepts another memory context.
 6. A move constructor.
-7. A move constructor that accepts another allocator.
+7. A move constructor that accepts another memory context.
 
 #### count
 

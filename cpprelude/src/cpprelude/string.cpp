@@ -189,11 +189,18 @@ namespace cpprelude
 	string::string()
 	{}
 
-	string::string(memory_context_t* context)
+	string::string(memory_context* context)
 		:_context(context)
 	{}
 
-	string::string(const char* data, memory_context_t* context)
+	string::string(usize size, memory_context* context)
+		:_context(context)
+	{
+		_data = _context->template alloc<byte>(size);
+		_data[0U] = 0;
+	}
+
+	string::string(const char* data, memory_context* context)
 	{
 		_context = context;
 
@@ -205,7 +212,7 @@ namespace cpprelude
 		_data[data_size] = 0;
 	}
 
-	string::string(const slice<byte>& data, memory_context_t* context)
+	string::string(const slice<byte>& data, memory_context* context)
 	{
 		_context = context;
 
@@ -214,7 +221,7 @@ namespace cpprelude
 		copy_slice(_data, data);
 	}
 
-	string::string(slice<byte>&& data, memory_context_t* context)
+	string::string(slice<byte>&& data, memory_context* context)
 	{
 		_context = context;
 		_data = std::move(data);
@@ -231,7 +238,7 @@ namespace cpprelude
 		_count = other._count;
 	}
 
-	string::string(const string& other, memory_context_t* context)
+	string::string(const string& other, memory_context* context)
 	{
 		_context = context;
 
@@ -262,6 +269,8 @@ namespace cpprelude
 
 		_data[data_size] = 0;
 
+		_count = static_cast<usize>(-1);
+
 		return *this;
 	}
 
@@ -275,7 +284,7 @@ namespace cpprelude
 		other._context = nullptr;
 	}
 
-	string::string(string&& other, memory_context_t* context)
+	string::string(string&& other, memory_context* context)
 	{
 		_data = std::move(other._data);
 		_count = other._count;
@@ -405,5 +414,16 @@ namespace cpprelude
 		if (_data.ptr == nullptr)
 			return const_iterator(nullptr);
 		return const_iterator(_data.ptr + _data.size - 1);
+	}
+
+	string
+	operator"" _cs(const char* str, usize str_count)
+	{
+		string result;
+		//the +1 for the 0 null at the end
+		result._data = make_slice<byte>((byte*)(str), str_count + 1);
+		result._context = nullptr;
+		result._count = _count_runes(result._data.ptr);
+		return result;
 	}
 }

@@ -9,8 +9,7 @@
 ```c++
 template<typename KeyType, 
 		typename ValueType,
-		typename ComparatorType = default_less_than<details::pair_node<KeyType,ValueType>>,
-		typename AllocatorT = global_allocator>
+		typename ComparatorType = default_less_than<details::pair_node<KeyType,ValueType>>>
 using tree_map = red_black_map<KeyType, ValueType, ComparatorType, AllocatorT>;
 ```
 
@@ -21,8 +20,6 @@ This container is build on `red_black_map` data structure which inherits from `r
 2. **ValueType**: specifies the type of the value mapped to the key.
 
 3. **ComparatorType**: a function that determines the comparing operator between keys in the `pair_node`. By default this operator is set to < .
-
-4. **AllocatorT**: specifies how to allocate in memory by default it is `global_allocator`.
 
    ​
 
@@ -51,40 +48,39 @@ This container is build on `red_black_map` data structure which inherits from `r
    #### Constructor
 
    ```c++
-   red_black_map(const ComparatorType& compare_function, 
-                  const AllocatorT& allocator = AllocatorT());
-   red_black_map(const AllocatorT& allocator = AllocatorT());
-   red_black_map(std::initializer_list<T> list,
-                  const ComparatorType& compare_function = ComparatorType(),
-                  const AllocatorT& allocator = AllocatorT());
+   red_black_tree(const ComparatorType& compare_function, 
+                  memory_context_t* context = platform.global_memory);
+   red_black_tree(memory_context_t* context = platform.global_memory);
+   red_black_tree(std::initializer_list<T> list,
+         			const ComparatorType& compare_function = ComparatorType(),
+         			memory_context_t* context = platform.global_memory);
    red_black_map(const red_black_map& other);
    red_black_map(const red_black_map& other,
                   const ComparatorType& compare_function);
-   red_black_map(const red_black_map& other,
-   			const AllocatorT& allocator);
-   red_black_map(const red_black_map& other,
-   			const AllocatorT& allocator,
-   			const ComparatorType& compare_function);
+   red_black_tree(const red_black_tree& other,
+         			memory_context_t* context);
+   red_black_tree(const red_black_tree& other,
+         			memory_context_t* context,
+         			const ComparatorType& compare_function);
    red_black_map(red_black_map&& other);
    red_black_map(red_black_map&& other, 
-                  const ComparatorType& compare_function);
-   red_black_tree(red_black_tree&& other, const AllocatorT& allocator);
-   red_black_tree(red_black_tree&& other, 
-                  const AllocatorT& allocator,
-                  const ComparatorType& compare_function); 
+                   const ComparatorType& compare_function);
+   red_black_tree(red_black_tree&& other, memory_context_t* context);
+   red_black_tree(red_black_tree&& other, memory_context_t* context,
+        			const ComparatorType& compare_function);
    ```
 
-   1. A constructor that builds the `red_black_map` a.k.a `tree_map` with the provided function comparison and allocator.
-   2. A constructor that builds the `red_black_map` a.k.a `tree_map` with the provided allocator.
-   3. A constructor that initializes `red_black_map` with the provided `initializer_list` using the provided `compare_function`  to compare between elements and `allocator` to allocate nodes.
+   1. A constructor that builds the `red_black_map` a.k.a `tree_map` with the provided function comparison and memory context.
+   2. A constructor that builds the `red_black_map` a.k.a `tree_map` with the provided memory context.
+   3. A constructor that initializes `red_black_map` with the provided `initializer_list` using the provided `compare_function`  to compare between elements and `context` to allocate nodes.
    4. A copy constructor.
    5. A copy constructor that accepts another comparator function.
-   6. A copy constructor that accepts another allocator.
-   7. A copy constructor that accepts another comparator function and another allocator.
+   6. A copy constructor that accepts another memory context.
+   7. A copy constructor that accepts another comparator function and another memory context.
    8. A move constructor.
    9. A move constructor that accepts another comparator function.
-   10. A move constructor that accepts another allocator.
-   11. A move constructor that accepts another comparator function and another allocator.
+   10. A move constructor that accepts another memory context.
+   11. A move constructor that accepts another comparator function and another memory context.
 
    #### operator[]
 
@@ -121,8 +117,6 @@ This container is build on `red_black_map` data structure which inherits from `r
    ```
 
     Removes node of the specified `key`from the tree. 
-
-   ​
 
    #### lookup
 

@@ -29,6 +29,7 @@
 #include <cpprelude/string.h>
 #include <string>
 #include <sstream>
+#include <cpprelude/stream.h>
 
 #include <cpprelude/hash_array.h>
 #include <unordered_map>
@@ -49,7 +50,7 @@ cpprelude::arena_t arena(MEGABYTES(100));
 usize
 bm_dynamic_array(workbench* bench, usize limit)
 {
-	memory_watcher_t w("dynamic_array");
+	memory_watcher w("dynamic_array");
 
 	dynamic_array<usize> array;
 	
@@ -65,7 +66,7 @@ bm_dynamic_array(workbench* bench, usize limit)
 usize
 bm_custom_dynamic_array(workbench* bench, usize limit)
 {
-	memory_watcher_t w();
+	memory_watcher w();
 
 	arena.free_all();
 	dynamic_array<usize> array(arena.context());
@@ -1023,6 +1024,41 @@ bm_custom_string_create(workbench* bench, usize limit)
 	return str;
 }
 
+std::string
+bm_std_stream(workbench* bench, usize limit)
+{
+	usize arr_size = (rand() % 1000) + 1000;
+	char* arr = new char[arr_size];
+	gen_random(arr, arr_size - 1);
+	std::string arr_str(arr, arr_size);
+
+	bench->watch.start();
+	std::stringstream str;
+	str << arr_str;
+	bench->watch.stop();
+
+	delete[] arr;
+	return str.str();
+}
+
+usize
+bm_stream(workbench* bench, usize limit)
+{
+	usize arr_size = (rand() % 1000) + 1000;
+	char* arr = new char[arr_size];
+	gen_random(arr, arr_size - 1);
+	auto arr_slice = make_slice(arr, arr_size);
+	string arr_str(arr_slice);
+
+	bench->watch.start();
+	memory_stream str;
+	write_str(str, arr_str);
+	bench->watch.stop();
+
+	delete[] arr;
+	return str.size();
+}
+
 void
 do_benchmark()
 {
@@ -1131,6 +1167,11 @@ do_benchmark()
 		CPPRELUDE_BENCHMARK(bm_std_string_create, limit),
 		CPPRELUDE_BENCHMARK(bm_string_create, limit),
 		CPPRELUDE_BENCHMARK(bm_custom_string_create, limit)
+	});
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_stream, limit),
+		CPPRELUDE_BENCHMARK(bm_stream, limit)
 	});
 
 	std::cout << std::endl;

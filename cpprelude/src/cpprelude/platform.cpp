@@ -44,9 +44,25 @@ namespace cpprelude
 	platform_t::virtual_free(slice<byte>& data)
 	{
 		#if defined(OS_WINDOWS)
-			return VirtualFree(data.ptr, data.size, MEM_RELEASE) != NULL;
+			return VirtualFree(data.ptr, 0, MEM_RELEASE) != NULL;
 		#elif defined(OS_LINUX)
 			return munmap(data.ptr, data.size) == 0;
+		#endif
+	}
+
+	bool
+	platform_t::virtual_free(slice<byte>&& data)
+	{
+		return virtual_free(data);
+	}
+
+	void
+	platform_t::print_memory_report() const
+	{
+#ifdef DEBUG
+		println(std::cout,
+			"allocation count = ", allocation_count, "\n",
+			"allocation size = ", allocation_size);
 		#endif
 	}
 
@@ -141,7 +157,7 @@ namespace cpprelude
 	_init_platform()
 	{
 		//declare platform stuff
-		static memory_context_t _global_memory;
+		static memory_context _global_memory;
 		static platform_t _platform;
 
 		//setup the memory
@@ -155,6 +171,12 @@ namespace cpprelude
 		_platform.allocation_count = 0;
 		_platform.allocation_size = 0;
 		_platform.RAM_SIZE = _get_ram_size();
+
+		//windows setup stuff
+		#if defined(OS_WINDOWS)
+			//set the console mode to support utf8
+			SetConsoleOutputCP(CP_UTF8);
+		#endif
 
 		//return the created platform
 		return _platform;

@@ -7,13 +7,11 @@
 #### Template interface
 
 ```c++
-template<typename T, typename AllocatorT = global_allocator>
+template<typename T>
 struct stack_array;
 ```
 
 1. **T**: specifies the type of stack elements.
-
-2. **AllocatorT**: specifies how to allocate in memory by default it is `global_allocator`.
 
    ​
 
@@ -32,21 +30,20 @@ struct stack_array;
    #### Constructor
 
    ```c++
-   stack_array(const AllocatorT& allocator = AllocatorT());
-   stack_array(usize count, 
-               const AllocatorT& allocator = AllocatorT());
+   stack_array(memory_context_t* context = platform.global_memory);
+   stack_array(usize count, memory_context_t* context = platform.global_memory);
    stack_array(const stack_array&);
-   stack_array(const stack_array& other, const AllocatorT& allocator);
+   stack_array(const stack_array& other, memory_context_t* context);
    stack_array(stack_array&&);
-   stack_array(stack_array&& other, const AllocatorT& allocator);
+   stack_array(stack_array&& other, memory_context_t* context);
    ```
 
-   1. A constructor that builds the container with the provided allocator.
-   2. A constructor that initializes the array size by `count` and allocates using the provided allocator.
+   1. A constructor that builds the container with the provided memory context.
+   2. A constructor that initializes the array size by `count` and allocates using the provided memory context.
    3. A copy constructor.
-   4. A copy constructor that accepts another allocator.
+   4. A copy constructor that accepts another memory context.
    5. A move constructor.
-   6. A move constructor that accepts another allocator.
+   6. A move constructor that accepts another memory context.
 
    #### Member data
 

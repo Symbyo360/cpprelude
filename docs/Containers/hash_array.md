@@ -9,15 +9,13 @@
 ```c++
 template<typename keyType,
 		 typename valueType,
-		 typename hashType = hash<keyType>,
-		 typename AllocatorT = global_allocator>
+		 typename hashType = hash<keyType>>
 struct hash_array;
 ```
 
 1. **keyType**: specifics key type.
 2. **valueType**: specifics value type.
 3. **hashType**: specifics the hash functor to use with the specified key.
-4. **AllocatorT**: specifics the type of allocator which will be used.
 
 #### Alias Interface
 
@@ -44,10 +42,10 @@ using const_value_view = const_view<const_hash_array_value_iterator<value_type>>
 ### Interface
 #### Constructor
 ```C++
-hash_array(const AllocatorT& allocator = AllocatorT());
+hash_array(memory_context_t* context = platform.global_memory)
 ```
 
-1. A Constructor that builds a hash array given an allocator.
+1. A Constructor that builds a hash array given an memory context.
 
 #### insert
 
