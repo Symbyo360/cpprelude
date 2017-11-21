@@ -12,33 +12,33 @@ namespace cpprelude
 		u32 data;
 
 		API bool
-		operator==(const rune& other) const;
+			operator==(const rune& other) const;
 
 		API bool
-		operator!=(const rune& other) const;
+			operator!=(const rune& other) const;
 
 		API bool
-		operator<(const rune& other) const;
+			operator<(const rune& other) const;
 
 		API bool
-		operator>(const rune& other) const;
+			operator>(const rune& other) const;
 
 		API bool
-		operator<=(const rune& other) const;
+			operator<=(const rune& other) const;
 
 		API bool
-		operator>=(const rune& other) const;
+			operator>=(const rune& other) const;
 	};
 
 	inline static std::ostream&
-	operator<<(std::ostream& out,const rune& c)
+		operator<<(std::ostream& out, const rune& c)
 	{
 		out << reinterpret_cast<const char*>(&c.data);
 		return out;
 	}
 
 	inline static std::wostream&
-	operator<<(std::wostream& out, const rune& c)
+		operator<<(std::wostream& out, const rune& c)
 	{
 		out << reinterpret_cast<const char*>(&c.data);
 		return out;
@@ -51,25 +51,25 @@ namespace cpprelude
 		API rune_iterator(const byte* ptr);
 
 		API rune_iterator&
-		operator++();
+			operator++();
 
 		API rune_iterator
-		operator++(int);
+			operator++(int);
 
 		API rune_iterator&
-		operator--();
+			operator--();
 
 		API rune_iterator
-		operator--(int);
+			operator--(int);
 
 		API bool
-		operator==(const rune_iterator& other) const;
+			operator==(const rune_iterator& other) const;
 
 		API bool
-		operator!=(const rune_iterator& other) const;
+			operator!=(const rune_iterator& other) const;
 
 		API rune
-		operator*() const;
+			operator*() const;
 
 		API operator const byte*() const;
 	};
@@ -78,6 +78,7 @@ namespace cpprelude
 	{
 		using iterator = rune_iterator;
 		using const_iterator = rune_iterator;
+
 		slice<byte> _data;
 		mutable usize _count = static_cast<usize>(-1);
 		memory_context* _context = platform.global_memory;
@@ -91,85 +92,82 @@ namespace cpprelude
 
 		API string(const string&);
 		API string(const string&, memory_context* context);
-		API string(const char* data, memory_context_t* context = platform.global_memory);
-		API string(const slice<byte>& data, memory_context_t* context = platform.global_memory);
-		API string(slice<byte>&& data, memory_context_t* context = platform.global_memory);
 
 		API string&
-		operator=(const string&);
+			operator=(const string&);
 
 		API string&
-		operator=(const char* data);
+			operator=(const char* data);
 
 		API string(string&&);
 		API string(string&&, memory_context* context);
 
 		API string&
-		operator=(string&&);
+			operator=(string&&);
 
 		API ~string();
 
 		API usize
-		count() const;
+			count() const;
 
 		API usize
-		size() const;
+			size() const;
 
 		API usize
-		capacity() const;
+			capacity() const;
 
 		API bool
-		empty() const;
+			empty() const;
 
 		API const byte*
-		data() const;
+			data() const;
 
 		API byte
-		operator[](usize index) const;
+			operator[](usize index) const;
 
 		API bool
-		operator==(const string& str) const;
+			operator==(const string& str) const;
 
 		API bool
-		operator!=(const string& str) const;
+			operator!=(const string& str) const;
 
 		API bool
-		operator<(const string& str) const;
+			operator<(const string& str) const;
 
 		API bool
-		operator>(const string& str) const;
+			operator>(const string& str) const;
 
 		API bool
-		operator<=(const string& str) const;
+			operator<=(const string& str) const;
 
 		API bool
-		operator>=(const string& str) const;
+			operator>=(const string& str) const;
 
 		API const_iterator
-		begin() const;
+			begin() const;
 
 		API const_iterator
-		cbegin() const;
+			cbegin() const;
 
 		API const_iterator
-		end() const;
+			end() const;
 
 		API const_iterator
-		cend() const;
+			cend() const;
 	};
 
 	API cpprelude::string
-	operator"" _cs(const char* str, usize str_count);
+		operator"" _cs(const char* str, usize str_count);
 
 	inline static std::ostream&
-	operator<<(std::ostream& out,const cpprelude::string& str)
+		operator<<(std::ostream& out, const cpprelude::string& str)
 	{
 		out << reinterpret_cast<const char*>(str._data.ptr);
 		return out;
 	}
 
 	inline static std::wostream&
-	operator<<(std::wostream& out, const cpprelude::string& str)
+		operator<<(std::wostream& out, const cpprelude::string& str)
 	{
 		out << reinterpret_cast<const char*>(str._data.ptr);
 		return out;

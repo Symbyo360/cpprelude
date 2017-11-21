@@ -1,7 +1,8 @@
 ﻿#include "benchmark.h"
+#include <cpprelude/tree_map.h>
 
 int
-mainc(int argc, char** argv)
+main(int argc, char** argv)
 {
 	do_benchmark();
 
