@@ -43,6 +43,8 @@ namespace cpprelude
 	bool
 		platform_t::virtual_free(slice<byte>& data)
 	{
+<<<<<<< HEAD
+=======
 #if defined(OS_WINDOWS)
 		return VirtualFree(data.ptr, 0, MEM_RELEASE) != NULL;
 #elif defined(OS_LINUX)
@@ -59,6 +61,7 @@ namespace cpprelude
 	void
 		platform_t::print_memory_report() const
 	{
+>>>>>>> 4e4077a... add test cases for stl algorithms
 #ifdef DEBUG
 		println(std::cout,
 			"allocation count = ", allocation_count, "\n",

@@ -149,9 +149,15 @@ namespace cpprelude
 
 	template<typename T>
 	void
+<<<<<<< HEAD
+	move_slice(slice<T>& dst, slice<T>& src, usize count = 0)
+	{
+		if(count == 0)
+=======
 		move_slice(slice<T>& dst, slice<T>& src, usize count = 0)
 	{
 		if (count == 0)
+>>>>>>> 4e4077a... add test cases for stl algorithms
 			count = src.count();
 
 		std::memmove(dst.ptr, src.ptr, count * sizeof(T));
@@ -159,9 +165,16 @@ namespace cpprelude
 
 	template<typename T>
 	void
+<<<<<<< HEAD
+	move_slice(slice<T>&& dst, slice<T>& src, usize count = 0)
+	{
+		move_slice(dst, src, count);
+	}
+}
+=======
 		move_slice(slice<T>&& dst, slice<T>& src, usize count = 0)
 	{
 		move_slice(dst, src, count);
 	}
-	}
 }
+>>>>>>> 4e4077a... add test cases for stl algorithms
