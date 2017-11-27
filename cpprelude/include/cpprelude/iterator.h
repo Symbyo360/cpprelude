@@ -3,6 +3,7 @@
 #include "cpprelude/defines.h"
 #include "cpprelude/memory.h"
 #include <ostream>
+#include <iterator>
 
 namespace cpprelude
 {
@@ -166,10 +167,9 @@ namespace cpprelude
 		}
 
 		sequential_iterator<T>
-		operator+(difference_type offset)const
+		operator+(difference_type offset) const
 		{
-			sequential_iterator<T> temp = *this;
-			return temp._element + offset;
+			return _element + offset;
 		}
 	
 		sequential_iterator<T>&
@@ -197,8 +197,7 @@ namespace cpprelude
 		sequential_iterator<T>
 		operator-(difference_type offset)
 		{
-			sequential_iterator<T> temp = *this;
-			return temp._element - offset;
+			return _element - offset;
 		}
 
 		difference_type
@@ -746,7 +745,7 @@ namespace cpprelude
 		}
 
 		bucket_array_iterator
-		operator+(difference_type offset)const
+		operator+(difference_type offset) const
 		{
 			auto temp = *this;
 			return temp += offset;
@@ -1299,15 +1298,15 @@ namespace cpprelude
 		}
 	};
 
-	template<typename key_type, typename T>
+	template<typename TKey, typename TValue>
 	struct const_hash_array_iterator
 	{
 		using iterator_category = std::forward_iterator_tag;
-		using value_type = const T;  
+		using value_type = const TValue;  
 		using difference_type = isize;
-		using pointer = const T*;
-		using reference = const T&;
-		sequential_iterator<const key_type> key_it;
+		using pointer = const TValue*;
+		using reference = const TValue&;
+		sequential_iterator<const TKey> key_it;
 		sequential_iterator<const value_type> value_it;
 		sequential_iterator<const u8> _flag_it;
 		usize _capacity;
@@ -1315,11 +1314,11 @@ namespace cpprelude
 		const_hash_array_iterator()
 		{_capacity = 0;}
 
-		const_hash_array_iterator(const key_type* key, const value_type* value, const u8* flag, usize capacity)
+		const_hash_array_iterator(const TKey* key, const TValue* value, const u8* flag, usize capacity)
 			:key_it(key), value_it(value), _flag_it(flag), _capacity(capacity)
 		{}
 
-		const_hash_array_iterator(const hash_array_iterator<key_type, value_type>& other)
+		const_hash_array_iterator(const hash_array_iterator<TKey, TValue>& other)
 			:key_it(other.key_it),
 			 value_it(other.value_it),
 			 _flag_it(other._flag_it),
@@ -1367,7 +1366,7 @@ namespace cpprelude
 		}
 
 		bool
-		operator==(const hash_array_iterator<key_type, value_type>& other) const
+		operator==(const hash_array_iterator<TKey, TValue>& other) const
 		{
 			return _flag_it 	== other._flag_it &&
 				   key_it 		== other.key_it   &&
@@ -1376,7 +1375,7 @@ namespace cpprelude
 		}
 
 		bool
-		operator!=(const hash_array_iterator<key_type, value_type>& other) const
+		operator!=(const hash_array_iterator<TKey, TValue>& other) const
 		{
 			return !operator==(other);
 		}
@@ -1396,25 +1395,25 @@ namespace cpprelude
 			return !operator==(other);
 		}
 
-		const key_type&
+		const TKey&
 		operator*() const
 		{
 			return *key_it;
 		}
 
-		const key_type&
+		const TKey&
 		key() const
 		{
 			return *key_it;
 		}
 
-		const value_type&
+		const TValue&
 		value() const
 		{
 			return *value_it;
 		}
 
-		const value_type*
+		const TValue*
 		operator->() const
 		{
 			return value_it;
