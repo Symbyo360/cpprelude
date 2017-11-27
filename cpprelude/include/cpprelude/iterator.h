@@ -2,7 +2,6 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/memory.h"
-
 #include <ostream>
 
 namespace cpprelude
@@ -125,10 +124,15 @@ namespace cpprelude
 
 	template<typename T>
 	struct sequential_iterator
-	{
+	{	
+		using iterator_category = std::random_access_iterator_tag;
+		using value_type = T;
+		using difference_type = isize;
+		using pointer = T*;
+		using reference = T&;		
 		T* _element;
 		using data_type = T;
-
+		
 		sequential_iterator()
 			:_element(nullptr)
 		{}
@@ -136,6 +140,7 @@ namespace cpprelude
 		sequential_iterator(T* ptr)
 			:_element(ptr)
 		{}
+
 
 		sequential_iterator<T>&
 		operator++()
@@ -152,6 +157,21 @@ namespace cpprelude
 			return result;
 		}
 
+	
+		sequential_iterator<T>&
+		operator+=(difference_type offset)
+		{
+			_element += offset;
+			return *this;	
+		}
+
+		sequential_iterator<T>
+		operator+(difference_type offset)const
+		{
+			sequential_iterator<T> temp = *this;
+			return temp._element + offset;
+		}
+	
 		sequential_iterator<T>&
 		operator--()
 		{
@@ -167,6 +187,26 @@ namespace cpprelude
 			return result;
 		}
 
+		sequential_iterator<T>&
+		operator-=(difference_type offset)
+		{
+			_element -= offset;
+			return *this;
+		}
+
+		sequential_iterator<T>
+		operator-(difference_type offset)
+		{
+			sequential_iterator<T> temp = *this;
+			return temp._element - offset;
+		}
+
+		difference_type
+		operator-(const sequential_iterator<T>& other) const
+		{
+			return _element - other._element;
+		}
+
 		bool
 		operator==(const sequential_iterator<T>& other) const
 		{
@@ -177,6 +217,30 @@ namespace cpprelude
 		operator!=(const sequential_iterator<T>& other) const
 		{
 			return !operator==(other);
+		}
+
+		bool
+		operator<(const sequential_iterator<T>& other) const
+		{
+			return _element < other._element;
+		}
+
+		bool
+		operator>(const sequential_iterator<T>& other) const
+		{
+			return other._element < _element;
+		}
+
+		bool 
+		operator<=(const sequential_iterator<T>& other) const
+		{
+			return !(other._element < _element);
+		}
+
+		bool
+		operator>=(const sequential_iterator<T>& other) const
+		{
+			return !(other._element > _element);
 		}
 
 		const T&
@@ -212,6 +276,13 @@ namespace cpprelude
 		{
 			return _element;
 		}
+
+		T&
+		operator[](difference_type offset)
+		{
+			return _element[offset];				
+		}
+
 	};
 
 	template<typename T>
@@ -220,6 +291,11 @@ namespace cpprelude
 	template<typename T>
 	struct forward_iterator
 	{
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = T;
+		using difference_type = isize;
+		using pointer = T*;
+		using reference = T&;	
 		using data_type = T;
 		details::single_node<T>* _node;
 
@@ -300,6 +376,11 @@ namespace cpprelude
 	template<typename T>
 	struct const_forward_iterator
 	{
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = const T;
+		using difference_type = isize;
+		using pointer = const T*;
+		using reference = const T&;	
 		using data_type = const T;
 		const details::single_node<T>* _node;
 
@@ -375,6 +456,11 @@ namespace cpprelude
 	template<typename T>
 	struct bidirectional_iterator
 	{
+		using iterator_category = std::bidirectional_iterator_tag;
+		using value_type = T;
+		using difference_type = isize;
+		using pointer = T*;
+		using reference = T&;
 		using data_type = T;
 		details::double_node<T>* _node;
 
@@ -476,7 +562,12 @@ namespace cpprelude
 
 	template<typename T>
 	struct const_bidirectional_iterator
-	{
+	{		
+		using iterator_category = std::bidirectional_iterator_tag;
+		using value_type = const T;
+		using difference_type = isize;
+		using pointer = const T*;
+		using reference = const T&;	
 		using data_type = T;
 		const details::double_node<T>* _node;
 
@@ -574,6 +665,11 @@ namespace cpprelude
 	template<typename T, usize bucket_size>
 	struct bucket_array_iterator
 	{
+		using iterator_category = std::random_access_iterator_tag;
+		using value_type = T;
+		using difference_type = isize;
+		using pointer = T*;
+		using reference = T&;	
 		using data_type = T;
 		T** _bucket_it;
 		T* _element_it;
@@ -629,6 +725,34 @@ namespace cpprelude
 		}
 
 		bucket_array_iterator&
+		operator+=(difference_type offset)
+		{
+			difference_type actual_offset = offset + _index;
+			if (actual_offset >= 0 && actual_offset < (difference_type)bucket_size)
+			{
+				_index += offset;
+				_element_it += offset;
+			}
+			else
+			{
+				difference_type _bucket_offset = actual_offset > 0 ? actual_offset / (difference_type) bucket_size : 
+						-(difference_type)((-actual_offset - 1) / bucket_size) - 1;
+				_bucket_it += _bucket_offset;
+				_index = actual_offset - _bucket_offset * bucket_size;
+				_element_it = *_bucket_it + _index;
+			}
+		
+			return *this;
+		}
+
+		bucket_array_iterator
+		operator+(difference_type offset)const
+		{
+			auto temp = *this;
+			return temp += offset;
+		}
+
+		bucket_array_iterator&
 		operator--()
 		{
 			if(_index != 0)
@@ -666,6 +790,31 @@ namespace cpprelude
 			return result;
 		}
 
+		bucket_array_iterator&
+		operator-=(difference_type offset)
+		{
+			return *this += -offset;
+		}
+
+		bucket_array_iterator
+		operator-(difference_type offset)
+		{
+			auto temp = *this;
+			return temp -= offset ;
+		}
+
+		difference_type
+		operator-(const bucket_array_iterator& other) const
+		{
+			return bucket_size * (_bucket_it - other._bucket_it - 1) + _index + (bucket_size - other._index);
+		}
+
+		difference_type
+		operator-(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return bucket_size * (_bucket_it - other._bucket_it - 1) + _index + (bucket_size - other._index);
+		}
+
 		bool
 		operator==(const bucket_array_iterator& other) const
 		{
@@ -674,7 +823,7 @@ namespace cpprelude
 
 		bool
 		operator!=(const bucket_array_iterator& other) const
-		{
+		{		
 			return !operator==(other);
 		}
 
@@ -690,6 +839,54 @@ namespace cpprelude
 			return !operator==(other);
 		}
 
+		bool
+		operator<(const bucket_array_iterator& other) const
+		{
+			return other - *this > 0;
+		}
+
+		bool
+		operator>(const bucket_array_iterator& other) const
+		{
+			return other < *this;
+		}
+
+		bool
+		operator<=(const bucket_array_iterator& other) const
+		{
+			return !(other > *this);
+		}
+
+		bool
+		operator>=(const bucket_array_iterator& other) const
+		{
+			return !(other < *this);
+		}
+
+		bool
+		operator<(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return other - *this > 0;
+		}
+
+		bool
+		operator>(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return other < *this;
+		}
+
+		bool
+		operator<=(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return !(other > *this);
+		}
+
+		bool
+		operator>=(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return !(other < *this);
+		}
+		
 		const T&
 		operator*() const
 		{
@@ -713,11 +910,23 @@ namespace cpprelude
 		{
 			return &(*_element_it);
 		}
+
+		T&
+		operator[](difference_type offset)
+		{
+			return *(*this += offset);
+		}
+
 	};
 
 	template<typename T, usize bucket_size>
 	struct const_bucket_array_iterator
 	{
+		using iterator_category = std::random_access_iterator_tag;
+		using value_type = const T;
+		using difference_type = isize;
+		using pointer = const T*;
+		using reference = const T&;	
 		using data_type = T;
 		const T** _bucket_it;
 		const T* _element_it;
@@ -779,6 +988,34 @@ namespace cpprelude
 		}
 
 		const_bucket_array_iterator&
+		operator+=(difference_type offset)
+		{
+			difference_type actual_offset = _index + offset;
+			if (actual_offset >= 0 && actual_offset < (difference_type)bucket_size)
+			{
+				_index += offset;
+				_element_it += offset;
+			}
+			else
+			{
+				difference_type _bucket_offset = actual_offset > 0 ? actual_offset / (difference_type) bucket_size :
+					-(difference_type)((-actual_offset - 1) / bucket_size) - 1;
+				_bucket_it += _bucket_offset;
+				_index = actual_offset - _bucket_offset * bucket_size;
+				_element_it = *_bucket_it + _index;
+			}
+
+			return *this;
+		}
+
+		const_bucket_array_iterator
+		operator+(difference_type offset)const
+		{
+			auto temp = *this;
+			return temp += offset;
+		}
+
+		const_bucket_array_iterator&
 		operator--()
 		{
 			if(_index != 0)
@@ -816,6 +1053,31 @@ namespace cpprelude
 			return result;
 		}
 
+		const_bucket_array_iterator&
+		operator-=(difference_type offset)
+		{
+			return *this += -offset;
+		}
+
+		const_bucket_array_iterator
+		operator-(difference_type offset)
+		{
+			auto temp = *this;
+			return temp -= offset ;
+		}
+
+		difference_type
+		operator-(const bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return bucket_size * (_bucket_it - other._bucket_it - 1) + _index + (bucket_size - other._index);
+		}
+
+		difference_type
+		operator-(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return bucket_size * (_bucket_it - other._bucket_it - 1) + _index + (bucket_size - other._index);
+		}
+
 		bool
 		operator==(const bucket_array_iterator<T, bucket_size>& other) const
 		{
@@ -829,15 +1091,63 @@ namespace cpprelude
 		}
 
 		bool
-		operator==(const const_bucket_array_iterator& other) const
+		operator==(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
 			return _element_it == other._element_it;
 		}
 
 		bool
-		operator!=(const const_bucket_array_iterator& other) const
+		operator!=(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
 			return !operator==(other);
+		}
+
+		bool
+		operator<(const bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return other - *this > 0;
+		}
+
+		bool
+		operator>(const bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return other < *this;
+		}
+
+		bool
+		operator<=(const bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return !(other > *this);
+		}
+
+		bool
+		operator>=(const bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return !(other < *this);
+		}
+
+		bool
+		operator<(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return other - *this > 0;
+		}
+
+		bool
+		operator>(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return other < *this;
+		}
+
+		bool
+		operator<=(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return !(other > *this);
+		}
+
+		bool
+		operator>=(const const_bucket_array_iterator<T, bucket_size>& other) const
+		{
+			return !(other < *this);
 		}
 
 		const T&
@@ -851,14 +1161,25 @@ namespace cpprelude
 		{
 			return &(*_element_it);
 		}
+
+		const T&
+		operator[](difference_type offset) const
+		{
+			return *(*this += offset);
+		}
 	};
 
-	template<typename key_type, typename value_type>
+	template<typename key_type, typename T>
 	struct const_hash_array_iterator;
 
-	template<typename key_type, typename value_type>
+	template<typename key_type, typename T>
 	struct hash_array_iterator
 	{
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = T;
+		using difference_type = isize;
+		using pointer = T*;
+		using reference = T&;
 		sequential_iterator<const key_type> key_it;
 		sequential_iterator<value_type> value_it;
 		sequential_iterator<u8> _flag_it;
@@ -929,7 +1250,7 @@ namespace cpprelude
 		bool
 		operator==(const const_hash_array_iterator<key_type, value_type>& other) const
 		{
-			return _flag_it 	== other._flag_it &&
+			return _flag_it 	== other._flag_it  &&
 				   key_it 		== other.key_it   &&
 				   value_it 	== other.value_it &&
 				   _capacity	== other._capacity;
@@ -978,9 +1299,14 @@ namespace cpprelude
 		}
 	};
 
-	template<typename key_type, typename value_type>
+	template<typename key_type, typename T>
 	struct const_hash_array_iterator
 	{
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = const T;  
+		using difference_type = isize;
+		using pointer = const T*;
+		using reference = const T&;
 		sequential_iterator<const key_type> key_it;
 		sequential_iterator<const value_type> value_it;
 		sequential_iterator<const u8> _flag_it;
@@ -1098,6 +1424,11 @@ namespace cpprelude
 	template<typename key_type>
 	struct hash_array_key_iterator
 	{
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = key_type;  
+		using difference_type = isize;
+		using pointer = key_type*;
+		using reference = key_type&;
 		sequential_iterator<const key_type> key_it;
 		sequential_iterator<const u8> _flag_it;
 		usize _capacity;
@@ -1178,9 +1509,14 @@ namespace cpprelude
 		}
 	};
 
-	template<typename value_type>
+	template<typename T>
 	struct hash_array_value_iterator
 	{
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = T;  
+		using difference_type = isize;
+		using pointer = T*;
+		using reference = T&;
 		sequential_iterator<value_type> value_it;
 		sequential_iterator<u8> _flag_it;
 		usize _capacity;
@@ -1279,9 +1615,14 @@ namespace cpprelude
 		}
 	};
 
-	template<typename value_type>
+	template<typename T>
 	struct const_hash_array_value_iterator
 	{
+		using iterator_category = std::forward_iterator_tag;
+		using value_type = const T;  
+		using difference_type = isize;
+		using pointer = const T*;
+		using reference = const T&;
 		sequential_iterator<const value_type> value_it;
 		sequential_iterator<const u8> _flag_it;
 		usize _capacity;
@@ -1328,9 +1669,9 @@ namespace cpprelude
 
 			return result;
 		}
-
+		
 		bool
-		operator==(const const_hash_array_value_iterator& other) const
+		operator==(const const_hash_array_value_iterator<value_type>& other) const
 		{
 			return _flag_it 	== other._flag_it &&
 				   value_it 	== other.value_it &&
@@ -1338,7 +1679,7 @@ namespace cpprelude
 		}
 
 		bool
-		operator!=(const const_hash_array_value_iterator& other) const
+		operator!=(const const_hash_array_value_iterator<value_type>& other) const
 		{
 			return !operator==(other);
 		}
@@ -1472,6 +1813,11 @@ namespace cpprelude
 	template<typename T>
 	struct red_black_tree_iterator
 	{
+		using iterator_category = std::bidirectional_iterator_tag;
+		using value_type = T;
+		using difference_type = isize;
+		using pointer = T*;
+		using reference = T&;
 		using data_type = const T;
 		using node_type = const details::red_black_tree_node<T>;
 

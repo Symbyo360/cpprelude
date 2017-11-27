@@ -13,6 +13,13 @@ project "cpprelude"
 		buildoptions {"-std=c++14", "-Wall", "-fno-rtti", "-fno-exceptions"}
 		linkoptions {"-pthread"}
 
+<<<<<<< HEAD
+	filter "action:vs*"
+		buildoptions {"-utf-8"}
+
+	filter "action:vs2017"
+		systemversion(win10_sdk_version())
+=======
 	elseif os.istarget("windows") then
 
 		if os.getversion().majorversion == 10.0 then
@@ -24,12 +31,7 @@ project "cpprelude"
 		filter "action:vs*"
 			files {"tools/vs/cpprelude.natvis"}
 	end
-
-	filter "action:vs*"
-		buildoptions {"-utf-8"}
-
-	filter "action:vs2017"
-		systemversion(win10_sdk_version())
+>>>>>>> master
 
 	filter "configurations:debug"
 		targetsuffix "d"
