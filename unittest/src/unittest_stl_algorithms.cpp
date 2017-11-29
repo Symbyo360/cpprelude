@@ -4,8 +4,8 @@
 #include <cpprelude/dynamic_array.h>
 #include <cpprelude/hash_array.h>
 #include <cpprelude/tree_map.h>
+#include <cpprelude/array.h>
 #include <algorithm>
-#include <vector>
 #include "catch.hpp"
 
 using namespace cpprelude;
@@ -387,7 +387,6 @@ TEST_CASE("hash array stl test", "[hash_array stl]")
 	//i.e: remove operation can not be performed on hash arrays
 	hash_array<i32, i32> h_arr;
 	hash_array<i32, byte> ch_arr;
-	std::vector<int> v;
 
 	SECTION("Case 01")
 	{
@@ -408,8 +407,8 @@ TEST_CASE("hash array stl test", "[hash_array stl]")
 	//Set operations
 	SECTION("Case 03")
 	{
-		v = {'a', 'b', 'c', 'f', 'h', 'x'};
-		for(int i = 0; i < v.size(); ++i)
+		array<int, 6> v = {'a', 'b', 'c', 'f', 'h', 'x'};
+		for(int i = 0; i < v.count(); ++i)
 			ch_arr[i] = v[i];
 
 		hash_array<i32, byte> str_tree2;

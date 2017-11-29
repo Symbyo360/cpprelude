@@ -133,7 +133,7 @@ namespace cpprelude
 		using reference = T&;		
 		T* _element;
 		using data_type = T;
-		
+
 		sequential_iterator()
 			:_element(nullptr)
 		{}
@@ -141,7 +141,6 @@ namespace cpprelude
 		sequential_iterator(T* ptr)
 			:_element(ptr)
 		{}
-
 
 		sequential_iterator<T>&
 		operator++()
@@ -157,7 +156,6 @@ namespace cpprelude
 			_element++;
 			return result;
 		}
-
 	
 		sequential_iterator<T>&
 		operator+=(difference_type offset)
@@ -734,10 +732,15 @@ namespace cpprelude
 			}
 			else
 			{
-				difference_type _bucket_offset = actual_offset > 0 ? actual_offset / (difference_type) bucket_size : 
-						-(difference_type)((-actual_offset - 1) / bucket_size) - 1;
-				_bucket_it += _bucket_offset;
-				_index = actual_offset - _bucket_offset * (difference_type)bucket_size;
+				difference_type bucket_offset;
+				
+				if (actual_offset > 0)
+					bucket_offset = actual_offset / (difference_type)bucket_size;
+				else
+					bucket_offset = -(difference_type)((-actual_offset - 1) / bucket_size) - 1;
+
+				_bucket_it += bucket_offset;
+				_index = actual_offset - bucket_offset * (difference_type)bucket_size;
 				_element_it = *_bucket_it + _index;
 			}
 		

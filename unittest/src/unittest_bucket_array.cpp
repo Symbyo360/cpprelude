@@ -216,7 +216,7 @@ TEST_CASE("bucket_array test", "[bucket_array]")
 		while (count--)
 		{
 			CHECK(*it == i++);
-			it = cpprelude::next(it);
+			it = next(it);
 		}
 
 		CHECK(it == array.end());
@@ -471,16 +471,16 @@ TEST_CASE("bucket_array test", "[bucket_array]")
 
 		auto it = array.begin();
 		CHECK(it == array.begin());
-		it = cpprelude::next(it);
+		it = next(it);
 		CHECK(it != array.begin());
-		it =  cpprelude::prev(it);
+		it =  prev(it);
 		CHECK(it == array.begin());
 
-		it = cpprelude::next(it);
-		it = cpprelude::next(it);
-		it = cpprelude::next(it);
+		it = next(it);
+		it = next(it);
+		it = next(it);
 		CHECK(it != array.begin());
-		it = cpprelude::next(it);
+		it = next(it);
 		CHECK(it == array.end());
 	}
 
