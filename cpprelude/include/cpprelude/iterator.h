@@ -726,7 +726,7 @@ namespace cpprelude
 		bucket_array_iterator&
 		operator+=(difference_type offset)
 		{
-			difference_type actual_offset = offset + _index;
+			const difference_type actual_offset = offset + _index;
 			if (actual_offset >= 0 && actual_offset < (difference_type)bucket_size)
 			{
 				_index += offset;
@@ -737,7 +737,7 @@ namespace cpprelude
 				difference_type _bucket_offset = actual_offset > 0 ? actual_offset / (difference_type) bucket_size : 
 						-(difference_type)((-actual_offset - 1) / bucket_size) - 1;
 				_bucket_it += _bucket_offset;
-				_index = actual_offset - _bucket_offset * bucket_size;
+				_index = actual_offset - _bucket_offset * (difference_type)bucket_size;
 				_element_it = *_bucket_it + _index;
 			}
 		
@@ -841,7 +841,8 @@ namespace cpprelude
 		bool
 		operator<(const bucket_array_iterator& other) const
 		{
-			return other - *this > 0;
+			return (_bucket_it == other._bucket_it) ? (_index < other._index)
+													: (_bucket_it < other._bucket_it);
 		}
 
 		bool
@@ -853,19 +854,20 @@ namespace cpprelude
 		bool
 		operator<=(const bucket_array_iterator& other) const
 		{
-			return !(other > *this);
+			return !(other < *this);
 		}
 
 		bool
 		operator>=(const bucket_array_iterator& other) const
 		{
-			return !(other < *this);
+			return !(other > *this);
 		}
 
 		bool
 		operator<(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return other - *this > 0;
+			return (_bucket_it == other._bucket_it) ? (_index < other._index)
+													: (_bucket_it < other._bucket_it);
 		}
 
 		bool
@@ -877,13 +879,13 @@ namespace cpprelude
 		bool
 		operator<=(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return !(other > *this);
+			return !(other < *this);
 		}
 
 		bool
 		operator>=(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return !(other < *this);
+			return !(other > *this);
 		}
 		
 		const T&
@@ -913,7 +915,7 @@ namespace cpprelude
 		T&
 		operator[](difference_type offset)
 		{
-			return *(*this += offset);
+			return *(*this + offset);
 		}
 
 	};
@@ -989,7 +991,7 @@ namespace cpprelude
 		const_bucket_array_iterator&
 		operator+=(difference_type offset)
 		{
-			difference_type actual_offset = _index + offset;
+			const difference_type actual_offset = _index + offset;
 			if (actual_offset >= 0 && actual_offset < (difference_type)bucket_size)
 			{
 				_index += offset;
@@ -1000,7 +1002,7 @@ namespace cpprelude
 				difference_type _bucket_offset = actual_offset > 0 ? actual_offset / (difference_type) bucket_size :
 					-(difference_type)((-actual_offset - 1) / bucket_size) - 1;
 				_bucket_it += _bucket_offset;
-				_index = actual_offset - _bucket_offset * bucket_size;
+				_index = actual_offset - _bucket_offset * (difference_type)bucket_size;
 				_element_it = *_bucket_it + _index;
 			}
 
@@ -1104,7 +1106,8 @@ namespace cpprelude
 		bool
 		operator<(const bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return other - *this > 0;
+			return (_bucket_it == other._bucket_it) ? (_index < other._index)
+													: (_bucket_it < other._bucket_it);
 		}
 
 		bool
@@ -1116,19 +1119,20 @@ namespace cpprelude
 		bool
 		operator<=(const bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return !(other > *this);
+			return !(other < *this);
 		}
 
 		bool
 		operator>=(const bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return !(other < *this);
+			return !(other > *this);
 		}
 
 		bool
 		operator<(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return other - *this > 0;
+			return (_bucket_it == other._bucket_it) ? (_index < other._index)
+													: (_bucket_it < other._bucket_it);
 		}
 
 		bool
@@ -1140,13 +1144,13 @@ namespace cpprelude
 		bool
 		operator<=(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return !(other > *this);
+			return !(other < *this);
 		}
 
 		bool
 		operator>=(const const_bucket_array_iterator<T, bucket_size>& other) const
 		{
-			return !(other < *this);
+			return !(other > *this);
 		}
 
 		const T&
@@ -1164,7 +1168,7 @@ namespace cpprelude
 		const T&
 		operator[](difference_type offset) const
 		{
-			return *(*this += offset);
+			return *(*this + offset);
 		}
 	};
 

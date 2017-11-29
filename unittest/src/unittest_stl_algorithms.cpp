@@ -5,6 +5,7 @@
 #include <cpprelude/hash_array.h>
 #include <cpprelude/tree_map.h>
 #include <algorithm>
+#include <vector>
 #include "catch.hpp"
 
 using namespace cpprelude;
@@ -123,9 +124,7 @@ TEST_CASE("dynamic array stl test", "[dynamic_array stl]")
 	{
 		arr = { 1, 3, 5, 7, 9, 13, 20, 140 };
 		dynamic_array<i32> d = { 3, 5, 9 };
-
 		CHECK(std::includes(arr.begin(), arr.end(), d.begin(), d.end()));
-
 		d = {4, 15, 100};
 	    CHECK_FALSE(std::includes(arr.begin(), arr.end(), d.begin(), d.end()));
 	}
@@ -215,7 +214,7 @@ TEST_CASE("bucket array stl test", "[bucket_array stl]")
 
 	SECTION("Case 09")
 	{
-		b_arr = { 5, 6, 4, 3, 2, 6, 7, 9, 3 };
+		b_arr = {5, 6, 4, 3, 2, 6, 7, 9, 3};
 		std::nth_element(b_arr.begin(), b_arr.begin() + b_arr.count() / 2, b_arr.end());
 		CHECK(b_arr[b_arr.count() / 2] == 5 );
 	}
