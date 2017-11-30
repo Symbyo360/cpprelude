@@ -443,7 +443,6 @@ bm_merge_sort(workbench* bench, usize limit)
 		cpprelude::merge_sort(array.begin(), array.count());
 	bench->watch.stop();
 }
-
 void
 bm_std_stable_sort(workbench* bench, usize limit)
 {
@@ -455,6 +454,23 @@ bm_std_stable_sort(workbench* bench, usize limit)
 
 	for(cpprelude::usize i = 0; i < limit; ++i)
 		array.push_back(distribution(generator));
+
+	bench->watch.start();
+		std::stable_sort(array.begin(), array.end());
+	bench->watch.stop();
+}
+
+void
+bm_cppr_stable_sort(workbench* bench, usize limit)
+{
+	std::random_device device;
+	std::mt19937 generator(device());
+	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
+
+	cpprelude::dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(distribution(generator));
 
 	bench->watch.start();
 		std::stable_sort(array.begin(), array.end());
@@ -497,6 +513,23 @@ bm_std_sort(workbench* bench, usize limit)
 }
 
 void
+bm_cppr_sort(workbench* bench, usize limit)
+{
+	std::random_device device;
+	std::mt19937 generator(device());
+	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
+
+	cpprelude::dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(distribution(generator));
+
+	bench->watch.start();
+		std::sort(array.begin(), array.end());
+	bench->watch.stop();
+}
+
+void
 bm_heap_sort(workbench* bench, usize limit)
 {
 	std::random_device device;
@@ -524,6 +557,24 @@ bm_std_heap_sort(workbench* bench, usize limit)
 
 	for(cpprelude::usize i = 0; i < limit; ++i)
 		array.push_back(distribution(generator));
+
+	bench->watch.start();
+		std::make_heap(array.begin(), array.end());
+		std::sort_heap(array.begin(), array.end());
+	bench->watch.stop();
+}
+
+void
+bm_cppr_heap_sort(workbench* bench, usize limit)
+{
+	std::random_device device;
+	std::mt19937 generator(device());
+	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
+
+	cpprelude::dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(distribution(generator));
 
 	bench->watch.start();
 		std::make_heap(array.begin(), array.end());
@@ -596,7 +647,6 @@ bm_unordered_map(workbench* bench, usize limit)
 void
 bm_hash_map(workbench* bench, usize limit)
 {
-	
 	hash_array<usize, usize> array;
 
 	bench->watch.start();
@@ -1128,6 +1178,7 @@ do_benchmark()
 	
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_std_stable_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_cppr_stable_sort, limit),
 		CPPRELUDE_BENCHMARK(bm_merge_sort, limit)
 	});
 
@@ -1135,6 +1186,7 @@ do_benchmark()
 	
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_std_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_cppr_sort, limit),
 		CPPRELUDE_BENCHMARK(bm_quick_sort, limit)
 	});
 
@@ -1142,6 +1194,7 @@ do_benchmark()
 	
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_std_heap_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_cppr_heap_sort, limit),
 		CPPRELUDE_BENCHMARK(bm_heap_sort, limit)
 	});
 

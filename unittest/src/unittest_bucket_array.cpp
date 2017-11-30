@@ -473,7 +473,7 @@ TEST_CASE("bucket_array test", "[bucket_array]")
 		CHECK(it == array.begin());
 		it = next(it);
 		CHECK(it != array.begin());
-		it = prev(it);
+		it =  prev(it);
 		CHECK(it == array.begin());
 
 		it = next(it);

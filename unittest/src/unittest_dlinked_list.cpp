@@ -476,7 +476,7 @@ TEST_CASE("dlinked_list test", "[dlinked_list]")
 
 		auto it = array.begin();
 		CHECK(it == array.begin());
-		it = next(it);
+		it = cpprelude:: next(it);
 		CHECK(it != array.begin());
 		it = prev(it);
 		CHECK(it == array.begin());
