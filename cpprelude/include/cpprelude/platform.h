@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cpprelude/defines.h"
+#include "cpprelude/api.h"
 #include "cpprelude/memory.h"
 #include "cpprelude/memory_context.h"
 #include "cpprelude/heap.h"
@@ -17,13 +18,13 @@ namespace cpprelude
 
 		~platform_t();
 
-		API slice<byte>
+		API_CPPR slice<byte>
 		virtual_alloc(void* address_hint, usize size);
 
-		API bool
+		API_CPPR bool
 		virtual_free(slice<byte>& data);
 
-		API bool
+		API_CPPR bool
 		virtual_free(slice<byte>&& data);
 
 		template<typename T>
@@ -61,20 +62,20 @@ namespace cpprelude
 			global_memory->realloc(data, count);
 		}
 
-		API void
+		API_CPPR void
 		print_memory_report() const;
 	};
 
-	API extern platform_t& platform;
+	API_CPPR extern platform_t& platform;
 
 	//print stuff
 
 	namespace helper
 	{
-		API void
+		API_CPPR void
 		__acquire_print_lock();
 
-		API void
+		API_CPPR void
 		__release_print_lock();
 
 		template<typename TStream>

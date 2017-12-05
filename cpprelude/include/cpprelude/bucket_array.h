@@ -14,7 +14,7 @@ namespace cpprelude
 		constexpr usize
 		default_size(usize element_size)
 		{
-			return MAX(KILOBYTES(256)/element_size, 1);
+			return KILOBYTES(256)/element_size > 1 ? KILOBYTES(256)/element_size : 1;
 		}
 	}
 

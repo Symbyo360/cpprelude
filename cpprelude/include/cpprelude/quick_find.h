@@ -1,27 +1,25 @@
 #pragma once
 #include "cpprelude/defines.h"
+#include "cpprelude/api.h"
 #include "cpprelude/dynamic_array.h"
-
 
 namespace cpprelude
 {
-	
-	struct API quick_find
+	struct quick_find
 	{
 		dynamic_array<usize> _nodes;
 
-		quick_find();
+		API_CPPR quick_find();
 
-		quick_find(usize count);
+		API_CPPR quick_find(usize count);
 
-		bool
+		API_CPPR bool
 		is_connected(usize x, usize y);
 
-		void
+		API_CPPR void
 		connect(usize x, usize y);
 
-		usize
+		API_CPPR usize
 		count() const;
-		
 	};
 }

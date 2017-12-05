@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cpprelude/defines.h"
+#include "cpprelude/api.h"
 #include "cpprelude/dynamic_array.h"
 #include "cpprelude/memory_context.h"
 #include "cpprelude/platform.h"
@@ -177,7 +178,7 @@ namespace cpprelude
 
 #undef trivial_hash
 
-	API usize
+	API_CPPR usize
 	hash_bytes(const void* ptr, usize len, usize seed = 0xc70f6907UL);
 
 	template<>

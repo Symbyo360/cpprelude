@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cpprelude/defines.h"
+#include "cpprelude/api.h"
 #include "cpprelude/memory.h"
 
 namespace cpprelude
@@ -20,13 +21,13 @@ namespace cpprelude
 		//free list
 		free_node_t *free_list = nullptr;
 
-		API slice<byte>
+		API_CPPR slice<byte>
 		alloc(usize count);
 
-		API void
+		API_CPPR void
 		realloc(slice<byte>& data, usize new_count);
 
-		API void
+		API_CPPR void
 		free(slice<byte>& data);
 	};
 }

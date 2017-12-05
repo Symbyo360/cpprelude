@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cpprelude/defines.h"
+#include "cpprelude/api.h"
 #include "cpprelude/memory.h"
 #include "cpprelude/platform.h"
 #include <ostream>
@@ -11,22 +12,22 @@ namespace cpprelude
 	{
 		u32 data;
 
-		API bool
+		API_CPPR bool
 		operator==(const rune& other) const;
 
-		API bool
+		API_CPPR bool
 		operator!=(const rune& other) const;
 
-		API bool
+		API_CPPR bool
 		operator<(const rune& other) const;
 
-		API bool
+		API_CPPR bool
 		operator>(const rune& other) const;
 
-		API bool
+		API_CPPR bool
 		operator<=(const rune& other) const;
 
-		API bool
+		API_CPPR bool
 		operator>=(const rune& other) const;
 	};
 
@@ -48,30 +49,30 @@ namespace cpprelude
 	{
 		const byte *_ptr = nullptr;
 
-		API rune_iterator(const byte* ptr);
+		API_CPPR rune_iterator(const byte* ptr);
 
-		API rune_iterator&
+		API_CPPR rune_iterator&
 		operator++();
 
-		API rune_iterator
+		API_CPPR rune_iterator
 		operator++(int);
 
-		API rune_iterator&
+		API_CPPR rune_iterator&
 		operator--();
 
-		API rune_iterator
+		API_CPPR rune_iterator
 		operator--(int);
 
-		API bool
+		API_CPPR bool
 		operator==(const rune_iterator& other) const;
 
-		API bool
+		API_CPPR bool
 		operator!=(const rune_iterator& other) const;
 
-		API rune
+		API_CPPR rune
 		operator*() const;
 
-		API operator const byte*() const;
+		API_CPPR operator const byte*() const;
 	};
 
 	struct string
@@ -83,80 +84,80 @@ namespace cpprelude
 		mutable usize _count = static_cast<usize>(-1);
 		memory_context* _context = platform.global_memory;
 
-		API string();
-		API string(memory_context* context);
-		API explicit string(usize size, memory_context* context = platform.global_memory);
-		API string(const char* data, memory_context* context = platform.global_memory);
-		API string(const slice<byte>& data, memory_context* context = platform.global_memory);
-		API string(slice<byte>&& data, memory_context* context = platform.global_memory);
+		API_CPPR string();
+		API_CPPR string(memory_context* context);
+		API_CPPR explicit string(usize size, memory_context* context = platform.global_memory);
+		API_CPPR string(const char* data, memory_context* context = platform.global_memory);
+		API_CPPR string(const slice<byte>& data, memory_context* context = platform.global_memory);
+		API_CPPR string(slice<byte>&& data, memory_context* context = platform.global_memory);
 
-		API string(const string&);
-		API string(const string&, memory_context* context);
+		API_CPPR string(const string&);
+		API_CPPR string(const string&, memory_context* context);
 
-		API string&
+		API_CPPR string&
 		operator=(const string&);
 
-		API string&
+		API_CPPR string&
 		operator=(const char* data);
 
-		API string(string&&);
-		API string(string&&, memory_context* context);
+		API_CPPR string(string&&);
+		API_CPPR string(string&&, memory_context* context);
 
-		API string&
+		API_CPPR string&
 		operator=(string&&);
 
-		API ~string();
+		API_CPPR ~string();
 
-		API usize
+		API_CPPR usize
 		count() const;
 
-		API usize
+		API_CPPR usize
 		size() const;
 
-		API usize
+		API_CPPR usize
 		capacity() const;
 
-		API bool
+		API_CPPR bool
 		empty() const;
 
-		API const byte*
+		API_CPPR const byte*
 		data() const;
 
-		API byte
+		API_CPPR byte
 		operator[](usize index) const;
 
-		API bool
+		API_CPPR bool
 		operator==(const string& str) const;
 
-		API bool
+		API_CPPR bool
 		operator!=(const string& str) const;
 
-		API bool
+		API_CPPR bool
 		operator<(const string& str) const;
 
-		API bool
+		API_CPPR bool
 		operator>(const string& str) const;
 
-		API bool
+		API_CPPR bool
 		operator<=(const string& str) const;
 
-		API bool
+		API_CPPR bool
 		operator>=(const string& str) const;
 
-		API const_iterator
+		API_CPPR const_iterator
 		begin() const;
 
-		API const_iterator
+		API_CPPR const_iterator
 		cbegin() const;
 
-		API const_iterator
+		API_CPPR const_iterator
 		end() const;
 
-		API const_iterator
+		API_CPPR const_iterator
 		cend() const;
 	};
 
-	API cpprelude::string
+	API_CPPR cpprelude::string
 	operator"" _cs(const char* str, usize str_count);
 
 	inline static std::ostream&

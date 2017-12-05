@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cpprelude/defines.h"
+#include "cpprelude/api.h"
 #include "cpprelude/platform.h"
 
 namespace cpprelude
@@ -11,22 +12,22 @@ namespace cpprelude
 		usize _a_allocation_size = 0, _b_allocation_size = 0;
 		const char* name = nullptr;
 
-		API memory_watcher(const char* scope_name = nullptr);
-		API ~memory_watcher();
+		API_CPPR memory_watcher(const char* scope_name = nullptr);
+		API_CPPR ~memory_watcher();
 
-		API void
+		API_CPPR void
 		begin_watching();
 
-		API void
+		API_CPPR void
 		end_watching();
 
-		API usize
+		API_CPPR usize
 		delta_alive_allocations() const;
 
-		API usize
+		API_CPPR usize
 		delta_size() const;
 
-		API void
+		API_CPPR void
 		print_report() const;
 	};
 }

@@ -27,11 +27,11 @@ project "cpprelude"
 
 	filter "configurations:debug"
 		targetsuffix "d"
-		defines {"DEBUG", "COMPILE_DYNAMIC_LIB"}
+		defines {"DEBUG", "CPPR_DLL"}
 		symbols "On"
 
 	filter "configurations:release"
-		defines {"NDEBUG", "COMPILE_DYNAMIC_LIB"}
+		defines {"NDEBUG", "CPPR_DLL"}
 		optimize "On"
 
 	filter "platforms:x86"

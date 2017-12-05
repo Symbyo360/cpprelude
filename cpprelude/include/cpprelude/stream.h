@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cpprelude/defines.h"
+#include "cpprelude/api.h"
 #include "cpprelude/platform.h"
 #include "cpprelude/memory_context.h"
 #include "cpprelude/string.h"
@@ -18,13 +19,13 @@ namespace cpprelude
 		write_func _write = nullptr;
 		read_func _read = nullptr;
 
-		API usize
+		API_CPPR usize
 		write(const slice<byte>& data);
 
-		API usize
+		API_CPPR usize
 		read(slice<byte>& data);
 
-		API usize
+		API_CPPR usize
 		read(slice<byte>&& data);
 	};
 
@@ -188,49 +189,49 @@ namespace cpprelude
 		memory_context* _context = platform.global_memory;
 		stream_trait _trait;
 
-		API memory_stream();
-		API ~memory_stream();
+		API_CPPR memory_stream();
+		API_CPPR ~memory_stream();
 
 		memory_stream(const memory_stream&) = delete;
 
 		memory_stream&
 		operator=(const memory_stream&) = delete;
 
-		API memory_stream(memory_stream&& other);
+		API_CPPR memory_stream(memory_stream&& other);
 
-		API memory_stream&
+		API_CPPR memory_stream&
 		operator=(memory_stream&& other);
 
-		API operator stream_trait*();
+		API_CPPR operator stream_trait*();
 
-		API usize
+		API_CPPR usize
 		size() const;
 
-		API usize
+		API_CPPR usize
 		capacity() const;
 
-		API usize
+		API_CPPR usize
 		write_capacity() const;
 
-		API usize
+		API_CPPR usize
 		read_position() const;
 
-		API usize
+		API_CPPR usize
 		read_capacity() const;
 
-		API bool
+		API_CPPR bool
 		empty() const;
 
-		API void
+		API_CPPR void
 		clear();
 
-		API slice<byte>
+		API_CPPR slice<byte>
 		decay();
 
-		API slice<byte>
+		API_CPPR slice<byte>
 		decay_continuous();
 
-		API string
+		API_CPPR string
 		string_decay();
 	};
 
@@ -257,34 +258,34 @@ namespace cpprelude
 		string name;
 		stream_trait _trait;
 
-		API file_stream();
-		API ~file_stream();
+		API_CPPR file_stream();
+		API_CPPR ~file_stream();
 
 		file_stream(const file_stream&) = delete;
 
 		file_stream&
 		operator=(const file_stream&) = delete;
 
-		API file_stream(file_stream&& other);
+		API_CPPR file_stream(file_stream&& other);
 
-		API file_stream&
+		API_CPPR file_stream&
 		operator=(file_stream&& other);
 
-		API operator stream_trait*();
+		API_CPPR operator stream_trait*();
 
-		API bool
+		API_CPPR bool
 		valid() const;
 
-		API usize
+		API_CPPR usize
 		size() const;
 
-		API usize
+		API_CPPR usize
 		read_position() const;
 	};
 
-	API file_stream
+	API_CPPR file_stream
 	open_file(const string& filename, IO_MODE openmode, bool binary = true);
 
-	API file_stream
+	API_CPPR file_stream
 	open_file(string&& filename, IO_MODE openmode, bool binary = true);
 }

@@ -8,27 +8,13 @@
     #define OS_LINUX
 #endif
 
-#ifdef OS_WINDOWS
-#ifdef COMPILE_DYNAMIC_LIB
-    #define API __declspec(dllexport)
-#elif STATIC_LIB
-	#define API 
-#else
-	#define API __declspec(dllimport)
-#endif
-#endif
-
-#ifdef OS_LINUX
-    #define API
-#endif
-
 #define BYTES(amount) (amount)
 #define KILOBYTES(amount) (BYTES(amount) * 1024ULL)
 #define MEGABYTES(amount) (KILOBYTES(amount) * 1024ULL)
 #define GIGABYTES(amount) (MEGABYTES(amount) * 1024ULL)
 
-#define MAX(a, b) a > b ? a : b
-#define MIN(a, b) a > b ? b : a
+// #define MAX(a, b) a > b ? a : b
+// #define MIN(a, b) a > b ? b : a
 
 namespace cpprelude {
 	//type definitions

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "cpprelude/defines.h"
+#include "cpprelude/api.h"
 #include "cpprelude/memory.h"
 #include "cpprelude/memory_context.h"
 #include "cpprelude/platform.h"
@@ -14,13 +15,13 @@ namespace cpprelude
 		memory_context _context;
 		bool _uses_virtual_memory;
 
-		API arena_t(usize size, bool use_virtual_memory = true);
-		API ~arena_t();
+		API_CPPR arena_t(usize size, bool use_virtual_memory = true);
+		API_CPPR ~arena_t();
 
-		API memory_context*
+		API_CPPR memory_context*
 		context();
 
-		API void
+		API_CPPR void
 		free_all();
 
 		template<typename T>

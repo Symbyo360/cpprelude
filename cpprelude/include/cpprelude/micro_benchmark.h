@@ -1,10 +1,12 @@
 #pragma once
 
 #include "cpprelude/defines.h"
+#include "cpprelude/api.h"
 #include "cpprelude/dynamic_array.h"
 #include "cpprelude/algorithm.h"
 #include "cpprelude/string.h"
 #include <ostream>
+#include <sstream>
 #include <algorithm>
 #include <cmath>
 #include <iomanip>
@@ -14,37 +16,37 @@
 
 namespace cpprelude
 {
-	struct API stopwatch
+	struct stopwatch
 	{
 		std::chrono::time_point<std::chrono::high_resolution_clock> _start, _end;
 
-		void
+		API_CPPR void
 		start();
 
-		void
+		API_CPPR void
 		stop();
 
-		r64
+		API_CPPR r64
 		seconds() const;
 
-		r64
+		API_CPPR r64
 		milliseconds() const;
 
-		r64
+		API_CPPR r64
 		microseconds() const;
 
-		r64
+		API_CPPR r64
 		nanoseconds() const;
 	};
 
-	struct API workbench
+	struct workbench
 	{
 		stopwatch watch;
 		const char* name;
 		std::function<void(workbench*)> _proc;
 	};
 
-	struct API benchmark_stats
+	struct benchmark_stats
 	{
 		const char* name = nullptr;
 		r64 min = std::numeric_limits<r64>::max(),
@@ -98,7 +100,7 @@ namespace cpprelude
 		return result;
 	}
 
-	#define CPPRELUDE_BENCHMARK(proc, ...) cpprelude::make_benchmark(#proc, proc, __VA_ARGS__)
+	#define CPPRELUDE_BENCHMARK(proc, ...) cpprelude::make_benchmark(#proc, proc, ## __VA_ARGS__)
 
 	namespace details
 	{
