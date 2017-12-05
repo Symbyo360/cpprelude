@@ -102,7 +102,7 @@ TEST_CASE("dlinked_list test", "[dlinked_list]")
 
 		CHECK(array.count() == 64);
 
-		dlinked_list<i32> array2(tmp::move(array));
+		dlinked_list<i32> array2(std::move(array));
 
 		usize i_ = 64 - 1;
 		for(i32 i = 0; i < 64; ++i)
@@ -130,7 +130,7 @@ TEST_CASE("dlinked_list test", "[dlinked_list]")
 
 		CHECK(array.count() == 64);
 
-		array2 = tmp::move(array);
+		array2 = std::move(array);
 
 		usize i_ = 64 - 1;
 		for(i32 i = 0; i < 64; ++i)
@@ -344,17 +344,17 @@ TEST_CASE("dlinked_list test", "[dlinked_list]")
 	{
 		CHECK(array.count() == 0);
 
-		for(i32 i = 0; i < 64; ++i)
+		for(usize i = 0; i < 64; ++i)
 			array.insert_back(i);
 
 		CHECK(array.count() == 64);
 
-		dlinked_list<i32> array2(tmp::move(array));
+		dlinked_list<i32> array2(std::move(array));
 
-		for(i32 i = 0; i < 64; ++i)
+		for(usize i = 0; i < 64; ++i)
 			CHECK(array2[i] == i);
 
-		for(i32 i = 0; i < array.count(); ++i)
+		for(usize i = 0; i < array.count(); ++i)
 			CHECK(array[i] == i);
 
 		CHECK(array2.count() != array.count());
@@ -379,7 +379,7 @@ TEST_CASE("dlinked_list test", "[dlinked_list]")
 
 		CHECK(array.count() == 64);
 
-		array2 = tmp::move(array);
+		array2 = std::move(array);
 
 		for(i32 i = 0; i < 64; ++i)
 			CHECK(array2[i] == i);
@@ -476,7 +476,7 @@ TEST_CASE("dlinked_list test", "[dlinked_list]")
 
 		auto it = array.begin();
 		CHECK(it == array.begin());
-		it = next(it);
+		it = cpprelude:: next(it);
 		CHECK(it != array.begin());
 		it = prev(it);
 		CHECK(it == array.begin());
@@ -517,5 +517,86 @@ TEST_CASE("dlinked_list test", "[dlinked_list]")
 		usize i = 1;
 		for(auto number: array)
 			CHECK(number == i++);
+	}
+
+	SECTION("Case 29")
+	{
+		array.insert_front({1, 2, 3, 4, 5, 6});
+
+		for(auto it = array.begin(); it != array.end(); ++it)
+		{
+			array.insert_after(it, 0);
+			++it;
+		}
+
+		for(auto it = array.begin(); it != array.end(); ++it)
+		{
+			CHECK(*it != 0);
+			++it;
+			CHECK(*it == 0);
+		}
+	}
+
+	SECTION("Case 30")
+	{
+		array.insert_front({1, 2, 3, 4, 5, 6});
+
+		for(auto it = array.begin(); it != array.end(); ++it)
+		{
+			array.insert_before(it, 0);
+		}
+
+		for(auto it = array.begin(); it != array.end(); ++it)
+		{
+			CHECK(*it == 0);
+			++it;
+			CHECK(*it != 0);
+		}
+	}
+
+	SECTION("Case 31")
+	{
+		array.insert_front({ 1, 2, 3, 4, 5, 6 });
+
+		auto it = array.begin();
+		array.remove(it);
+		
+		usize i = 2;
+		for (auto it = array.begin(); it != array.end(); ++it)
+		{
+			CHECK(*it == i);
+			++i;
+		}
+	}
+
+	SECTION("Case 32")
+	{
+		array.insert_front({ 1, 2, 3, 4, 5, 6 });
+
+		auto it = array.begin();
+		array.remove(it);
+
+		it = --array.end();
+		array.remove(it);
+
+		usize i = 2;
+		for (auto it = array.begin(); it != array.end(); ++it)
+		{
+			CHECK(*it == i);
+			++i;
+		}
+
+		it = ++(++array.begin());
+		array.remove(it);
+
+		i = 2;
+		for (auto it = array.begin(); it != array.end(); ++it)
+		{
+			if (i == 4)
+				++i;
+			CHECK(*it == i);
+			++i;
+		}
+
 	}
 }

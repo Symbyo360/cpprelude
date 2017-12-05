@@ -8,7 +8,7 @@
 
 ```c++
 template<typename T,
-		 typename ComparatorType = tmp::default_less_than<T>,
+		 typename ComparatorType = default_less_than<T>,
 		 typename AllocatorT = global_allocator>
 using tree_set = red_black_tree<T, ComparatorType, AllocatorT>;
 ```

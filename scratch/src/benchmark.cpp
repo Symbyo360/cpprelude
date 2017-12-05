@@ -29,744 +29,701 @@
 #include <cpprelude/string.h>
 #include <string>
 #include <sstream>
+#include <cpprelude/stream.h>
 
 #include <cpprelude/hash_array.h>
 #include <unordered_map>
 #include <cpprelude/tree_map.h>
 #include <map>
 
+#include <cpprelude/allocator.h>
+
 #include <iostream>
+#include <cpprelude/micro_benchmark.h>
+#include <cpprelude/memory_watcher.h>
 
 using namespace cpprelude;
 
-void
-benchmark_dynamic_array(cpprelude::usize limit)
+cpprelude::arena_t arena(MEGABYTES(100));
+
+//Vector like container
+usize
+bm_dynamic_array(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	memory_watcher w("dynamic_array");
 
-	stopwatch w;
+	dynamic_array<usize> array;
+	
+	bench->watch.start();
+	for(usize i = 0; i < limit; ++i)
+		array.insert_back(rand());
 
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::dynamic_array<cpprelude::usize> array;
+	bench->watch.stop();
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_back(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark dynamic_array" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	return *array.begin();
 }
 
-void
-benchmark_custom_dynamic_array(cpprelude::usize limit)
+usize
+bm_custom_dynamic_array(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	memory_watcher w();
 
-	cpprelude::slice<cpprelude::ubyte> mem_block;
-	auto arena_allocator = cpprelude::make_arena_allocator(MEGABYTES(25), mem_block);
+	arena.free_all();
+	dynamic_array<usize> array(arena.context());
 
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::dynamic_array<cpprelude::usize, cpprelude::linear_allocator> array(arena_allocator);
+	bench->watch.start();
+	for (usize i = 0; i < limit; ++i)
+		array.insert_back(rand());
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_back(i);
-		w.stop();
+	bench->watch.stop();
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark dynamic_array custom allocator" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-	std::cout << "alive allocation: " << arena_allocator._alloc_count << std::endl;
-
-	cpprelude::virtual_free(mem_block);
+	return *array.begin();
 }
 
-void
-benchmark_slinked_list(cpprelude::usize limit)
+usize
+bm_vector(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	std::vector<usize> array;
+	bench->watch.start();
 
-	stopwatch w;
+	for(usize i = 0; i < limit; ++i)
+		array.push_back(rand());
 
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::slinked_list<cpprelude::usize> array;
+	bench->watch.stop();
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_front(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark slinked_list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	return *array.begin();
 }
 
-void
-benchmark_custom_slinked_list(cpprelude::usize limit)
+//single linked list containers
+usize
+bm_slinked_list(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	slinked_list<usize> array;
+	bench->watch.start();
 
-	cpprelude::slice<cpprelude::ubyte> mem_block;
-	auto arena_allocator = cpprelude::make_arena_allocator(MEGABYTES(25), mem_block);
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::slinked_list<cpprelude::usize, cpprelude::linear_allocator> array(arena_allocator);
+	for(usize i = 0; i < limit; ++i)
+		array.insert_front(rand());
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_front(i);
-		w.stop();
+	bench->watch.stop();
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark custom slinked_list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-	std::cout << "alive allocation: " << arena_allocator._alloc_count << std::endl;
-
-	cpprelude::virtual_free(mem_block);
+	return *array.begin();
 }
 
-void
-benchmark_dlinked_list(cpprelude::usize limit)
+usize
+bm_custom_slinked_list(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	arena.free_all();
 
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::dlinked_list<cpprelude::usize> array;
+	slinked_list<usize> array(arena.context());
+	bench->watch.start();
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_back(i);
-		w.stop();
+	for (usize i = 0; i < limit; ++i)
+		array.insert_front(rand());
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
+	bench->watch.stop();
 
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark dlinked_list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	return *array.begin();
 }
 
-void
-benchmark_custom_dlinked_list(cpprelude::usize limit)
+usize
+bm_forward_list(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	std::forward_list<usize> array;
+	bench->watch.start();
 
-	cpprelude::slice<cpprelude::ubyte> mem_block;
-	auto arena_allocator = cpprelude::make_arena_allocator(MEGABYTES(25), mem_block);
-	stopwatch w;
+	for(usize i = 0; i < limit; ++i)
+		array.push_front(rand());
 
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::dlinked_list<cpprelude::usize, cpprelude::linear_allocator> array(arena_allocator);
+	bench->watch.stop();
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_back(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark custom dlinked_list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-	std::cout << "alive allocation: " << arena_allocator._alloc_count << std::endl;
-
-	cpprelude::virtual_free(mem_block);
+	return *array.begin();
 }
 
-void
-benchmark_stack_array(cpprelude::usize limit)
+//double linked list container
+usize
+bm_dlinked_list(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	dlinked_list<usize> array;
+	bench->watch.start();
 
-	stopwatch w;
+	for(usize i = 0; i < limit; ++i)
+		array.insert_front(rand());
 
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::stack_array<cpprelude::usize> array;
+	bench->watch.stop();
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.push(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark stack_array" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	return *array.begin();
 }
 
-void
-benchmark_custom_stack_array(cpprelude::usize limit)
+usize
+bm_custom_dlinked_list(workbench* bench, usize limit)
 {
-	cpprelude::slice<cpprelude::ubyte> mem_block;
-	auto arena_allocator = cpprelude::make_arena_allocator(MEGABYTES(25), mem_block);
+	arena.free_all();
 
-	stopwatch w;
+	dlinked_list<usize> array(arena.context());
+	bench->watch.start();
 
-	{
-		cpprelude::stack_array<cpprelude::usize, cpprelude::linear_allocator> array(arena_allocator);
+	for (usize i = 0; i < limit; ++i)
+		array.insert_front(rand());
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.push(i);
-		w.stop();
-	}
+	bench->watch.stop();
 
-	std::cout << "benchmark custom stack_array" << std::endl;
-	std::cout << "seconds: " << w.seconds() << std::endl;
-	std::cout << "milliseconds: " << w.milliseconds() << std::endl;
-	std::cout << "microseconds: " << w.microseconds() << std::endl;
-	std::cout << "nanoseconds: " << w.nanoseconds() << std::endl;
-	std::cout << "alive allocation: " << arena_allocator._alloc_count << std::endl;
-
-	cpprelude::virtual_free(mem_block);
+	return *array.begin();
 }
 
-void
-benchmark_stack_list(cpprelude::usize limit)
+usize
+bm_list(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	std::list<usize> array;
+	bench->watch.start();
 
-	stopwatch w;
+	for(usize i = 0; i < limit; ++i)
+		array.push_front(rand());
 
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::stack_list<cpprelude::usize> array;
+	bench->watch.stop();
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.push(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark stack_list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	return *array.begin();
 }
 
-void
-benchmark_custom_stack_list(cpprelude::usize limit)
+//stack containers
+usize
+bm_stack_array(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	stack_array<usize> array;
+	bench->watch.start();
 
-	cpprelude::slice<cpprelude::ubyte> mem_block;
-	auto arena_allocator = cpprelude::make_arena_allocator(MEGABYTES(25), mem_block);
+	for(usize i = 0; i < limit; ++i)
+		array.push(rand());
 
-	stopwatch w;
+	bench->watch.stop();
 
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::stack_list<cpprelude::usize, cpprelude::linear_allocator> array(arena_allocator);
-
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.push(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark custom stack_list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-	std::cout << "alive allocation: " << arena_allocator._alloc_count << std::endl;
-
-	cpprelude::virtual_free(mem_block);
+	return array.top();
 }
 
-void
-benchmark_queue_list(cpprelude::usize limit)
+usize
+bm_custom_stack_array(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	arena.free_all();
 
-	stopwatch w;
+	stack_array<usize> array(arena.context());
+	bench->watch.start();
 
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::queue_list<cpprelude::usize> array;
+	for (usize i = 0; i < limit; ++i)
+		array.push(rand());
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.enqueue(i);
-		w.stop();
+	bench->watch.stop();
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark queue_list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	return array.top();
 }
 
-void
-benchmark_custom_queue_list(cpprelude::usize limit)
+usize
+bm_stack_list(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	stack_list<usize> array;
+	bench->watch.start();
 
-	cpprelude::slice<cpprelude::ubyte> mem_block;
-	auto arena_allocator = cpprelude::make_arena_allocator(MEGABYTES(25), mem_block);
+	for(usize i = 0; i < limit; ++i)
+		array.push(rand());
 
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::queue_list<cpprelude::usize, cpprelude::linear_allocator> array(arena_allocator);
+	bench->watch.stop();
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.enqueue(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark custom queue_list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-	std::cout << "alive allocation: " << arena_allocator._alloc_count << std::endl;
-
-	cpprelude::virtual_free(mem_block);
+	return array.top();
 }
 
-void
-benchmark_queue_array(cpprelude::usize limit)
+usize
+bm_custom_stack_list(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	arena.free_all();
 
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::queue_array<cpprelude::usize> array;
+	stack_list<usize> array(arena.context());
+	bench->watch.start();
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.enqueue(i);
-		w.stop();
+	for (usize i = 0; i < limit; ++i)
+		array.push(rand());
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
+	bench->watch.stop();
 
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark queue_array" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	return array.top();
 }
 
-void
-benchmark_priority_queue(cpprelude::usize limit)
+usize
+bm_stack(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	std::stack<usize> array;
+	bench->watch.start();
 
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::priority_queue<cpprelude::usize>  array;
+	for(usize i = 0; i < limit; ++i)
+		array.push(rand());
 
-		w.start();
-		for (cpprelude::usize i = 0; i < limit; ++i)
-			array.enqueue(i);
-		w.stop();
+	bench->watch.stop();
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark priority_queue" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	return array.top();
 }
 
-void
-benchmark_custom_queue_array(cpprelude::usize limit)
+//queue containers
+usize
+bm_queue_array(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	queue_array<usize> array;
 
-	cpprelude::slice<cpprelude::ubyte> mem_block;
-	auto arena_allocator = cpprelude::make_arena_allocator(MEGABYTES(25), mem_block);
+	bench->watch.start();
 
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::queue_array<cpprelude::usize, 128, cpprelude::linear_allocator> array(arena_allocator);
+	for(usize i = 0; i < limit; ++i)
+		array.enqueue(rand());
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.enqueue(i);
-		w.stop();
+	bench->watch.stop();
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark custom queue_array" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-	std::cout << "alive allocation: " << arena_allocator._alloc_count << std::endl;
-
-	cpprelude::virtual_free(mem_block);
+	return array.front();
 }
 
-void
-benchmark_bucket_array(cpprelude::usize limit)
+usize
+bm_custom_queue_array(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	arena.free_all();
 
-	stopwatch w;
+	queue_array<usize> array(arena.context());
 
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::bucket_array<cpprelude::usize> array;
+	bench->watch.start();
 
-		w.start();
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_back(i);
-		w.stop();
+	for (usize i = 0; i < limit; ++i)
+		array.enqueue(rand());
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
+	bench->watch.stop();
 
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark bucket_array" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	return array.front();
 }
 
-void
-benchmark_merge_sort(cpprelude::usize limit)
+usize
+bm_queue_list(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	queue_list<usize> array;
 
+	bench->watch.start();
+	for(usize i = 0; i < limit; ++i)
+		array.enqueue(rand());
+
+	bench->watch.stop();
+
+	return array.front();
+}
+
+usize
+bm_custom_queue_list(workbench* bench, usize limit)
+{
+	arena.free_all();
+
+	queue_list<usize> array(arena.context());
+
+	bench->watch.start();
+	for (usize i = 0; i < limit; ++i)
+		array.enqueue(rand());
+
+	bench->watch.stop();
+
+	return array.front();
+}
+
+usize
+bm_queue(workbench* bench, usize limit)
+{
+	std::queue<usize> array;
+
+	bench->watch.start();
+	for(usize i = 0; i < limit; ++i)
+		array.push(rand());
+
+	bench->watch.stop();
+
+	return array.front();
+}
+
+//priority queue containers
+usize
+bm_priority_queue(workbench* bench, usize limit)
+{
+	priority_queue<usize> array;
+
+	bench->watch.start();
+	for(usize i = 0; i < limit; ++i)
+		array.enqueue(rand());
+
+	bench->watch.stop();
+
+	return array.front();
+}
+
+usize
+bm_custom_priority_queue(workbench* bench, usize limit)
+{
+	arena.free_all();
+
+	priority_queue<usize> array(arena.context());
+
+	bench->watch.start();
+	for (usize i = 0; i < limit; ++i)
+		array.enqueue(rand());
+
+	bench->watch.stop();
+
+	return array.front();
+}
+
+usize
+bm_std_priority_queue(workbench* bench, usize limit)
+{
+	std::priority_queue<usize> array;
+
+	bench->watch.start();
+	for(usize i = 0; i < limit; ++i)
+		array.push(rand());
+
+	bench->watch.stop();
+
+	return array.top();
+}
+
+//deque containers
+usize
+bm_bucket_array(workbench* bench, usize limit)
+{
+	bucket_array<usize> array;
+
+	bench->watch.start();
+	for(usize i = 0; i < limit; ++i)
+		array.insert_back(rand());
+
+	bench->watch.stop();
+
+	return *array.begin();
+}
+
+usize
+bm_custom_bucket_array(workbench* bench, usize limit)
+{
+	arena.free_all();
+
+	bucket_array<usize> array(arena.context());
+
+	bench->watch.start();
+	for (usize i = 0; i < limit; ++i)
+		array.insert_back(rand());
+
+	bench->watch.stop();
+
+	return *array.begin();
+}
+
+usize
+bm_deque(workbench* bench, usize limit)
+{
+	std::deque<usize> array;
+
+	bench->watch.start();
+	for(usize i = 0; i < limit; ++i)
+		array.push_back(rand());
+
+	bench->watch.stop();
+
+	return *array.begin();
+}
+
+//merge_sort
+void
+bm_merge_sort(workbench* bench, usize limit)
+{
 	std::random_device device;
 	std::mt19937 generator(device());
 	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
 
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::dynamic_array<cpprelude::usize> array;
+	cpprelude::dynamic_array<cpprelude::usize> array;
 
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_back(distribution(generator));
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(distribution(generator));
 
-		w.start();
+	bench->watch.start();
 		cpprelude::merge_sort(array.begin(), array.count());
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark merge_sort" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	bench->watch.stop();
 }
-
 void
-benchmark_quick_sort(cpprelude::usize limit)
+bm_std_stable_sort(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
 	std::random_device device;
 	std::mt19937 generator(device());
 	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
 
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::dynamic_array<cpprelude::usize> array;
+	std::vector<cpprelude::usize> array;
 
-		for (cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_back(distribution(generator));
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.push_back(distribution(generator));
 
-		w.start();
+	bench->watch.start();
+		std::stable_sort(array.begin(), array.end());
+	bench->watch.stop();
+}
+
+void
+bm_cppr_stable_sort(workbench* bench, usize limit)
+{
+	std::random_device device;
+	std::mt19937 generator(device());
+	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
+
+	cpprelude::dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(distribution(generator));
+
+	bench->watch.start();
+		std::stable_sort(array.begin(), array.end());
+	bench->watch.stop();
+}
+
+//quick sort
+void
+bm_quick_sort(workbench* bench, usize limit)
+{
+	std::random_device device;
+	std::mt19937 generator(device());
+	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
+
+	cpprelude::dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(distribution(generator));
+
+	bench->watch.start();
 		cpprelude::quick_sort(array.begin(), array.count());
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark quick_sort" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	bench->watch.stop();
 }
 
 void
-benchmark_insertion_sort(cpprelude::usize limit)
+bm_std_sort(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
 	std::random_device device;
 	std::mt19937 generator(device());
 	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
 
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::dynamic_array<cpprelude::usize> array;
+	std::vector<cpprelude::usize> array;
 
-		for (cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_back(distribution(generator));
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.push_back(distribution(generator));
 
-		w.start();
-		cpprelude::insertion_sort(array.begin(), array.count());
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark insertion_sort" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	bench->watch.start();
+		std::sort(array.begin(), array.end());
+	bench->watch.stop();
 }
 
 void
-benchmark_heap_sort(cpprelude::usize limit)
+bm_cppr_sort(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
 	std::random_device device;
 	std::mt19937 generator(device());
 	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
 
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::dynamic_array<cpprelude::usize> array;
+	cpprelude::dynamic_array<cpprelude::usize> array;
 
-		for (cpprelude::usize i = 0; i < limit; ++i)
-			array.insert_back(distribution(generator));
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(distribution(generator));
 
-		w.start();
+	bench->watch.start();
+		std::sort(array.begin(), array.end());
+	bench->watch.stop();
+}
+
+void
+bm_heap_sort(workbench* bench, usize limit)
+{
+	std::random_device device;
+	std::mt19937 generator(device());
+	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
+
+	cpprelude::dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(distribution(generator));
+
+	bench->watch.start();
 		cpprelude::heap_sort(array.begin(), array.count());
-		w.stop();
+	bench->watch.stop();
+}
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
+void
+bm_std_heap_sort(workbench* bench, usize limit)
+{
+	std::random_device device;
+	std::mt19937 generator(device());
+	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
+
+	std::vector<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.push_back(distribution(generator));
+
+	bench->watch.start();
+		std::make_heap(array.begin(), array.end());
+		std::sort_heap(array.begin(), array.end());
+	bench->watch.stop();
+}
+
+void
+bm_cppr_heap_sort(workbench* bench, usize limit)
+{
+	std::random_device device;
+	std::mt19937 generator(device());
+	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
+
+	cpprelude::dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(distribution(generator));
+
+	bench->watch.start();
+		std::make_heap(array.begin(), array.end());
+		std::sort_heap(array.begin(), array.end());
+	bench->watch.stop();
+}
+
+void
+bm_hash_array(workbench* bench, usize limit)
+{
+	hash_array<usize, usize> array;
+
+	bench->watch.start();
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		array.insert(i, i+9);
 	}
 
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		auto it = array.lookup(i);
+		array.remove(it);
+	}
+	bench->watch.stop();
+	return;
+}
 
+void
+bm_custom_hash_array(workbench* bench, usize limit)
+{
+	arena.free_all();
 
-	std::cout << "benchmark heap_sort" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+	hash_array<usize, usize> array(arena.context());
+
+	bench->watch.start();
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		array.insert(i, i + 9);
+	}
+
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		auto it = array.lookup(i);
+		array.remove(it);
+	}
+	bench->watch.stop();
+	return;
+}
+
+void
+bm_unordered_map(workbench* bench, usize limit)
+{
+	std::unordered_map<usize, usize> array;
+
+	bench->watch.start();
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		array.emplace(i, i+9);
+	}
+
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		auto it = array.find(i);
+		array.erase(it);
+	}
+	bench->watch.stop();
+	return;
+}
+
+void
+bm_hash_map(workbench* bench, usize limit)
+{
+	hash_array<usize, usize> array;
+
+	bench->watch.start();
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		array.insert(i, i + 9);
+	}
+
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		auto it = array.lookup(i);
+		array.remove(it);
+	}
+	bench->watch.stop();
+	return;
+}
+
+void
+bm_tree_map(workbench* bench, usize limit)
+{
+	tree_map<usize, usize> array;
+
+	bench->watch.start();
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		array.insert(i, i+9);
+	}
+
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		auto it = array.lookup(i);
+		array.remove(it);
+	}
+	bench->watch.stop();
+	return;
+}
+
+void
+bm_custom_tree_map(workbench* bench, usize limit)
+{
+	arena.free_all();
+
+	tree_map<usize, usize> array(arena.context());
+
+	bench->watch.start();
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		array.insert(i, i + 9);
+	}
+
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		auto it = array.lookup(i);
+		array.remove(it);
+	}
+	bench->watch.stop();
+	return;
+}
+
+void
+bm_map(workbench* bench, usize limit)
+{
+	std::map<usize, usize> array;
+
+	bench->watch.start();
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		array.emplace(i, i+9);
+	}
+
+	for (cpprelude::usize i = 0; i < limit; ++i)
+	{
+		auto it = array.find(i);
+		array.erase(it);
+	}
+	bench->watch.stop();
+	return;
 }
 
 template<typename semaphore_t>
@@ -786,7 +743,7 @@ semaphore_thread_give_func(semaphore_t* sema, cpprelude::usize limit)
 }
 
 void
-benchmark_binary_semaphore(cpprelude::usize limit)
+check_binary_semaphore(cpprelude::usize limit)
 {
 	cpprelude::binary_semaphore sema;
 	auto give_func = semaphore_thread_give_func<cpprelude::binary_semaphore>;
@@ -813,12 +770,12 @@ benchmark_binary_semaphore(cpprelude::usize limit)
 	t5.join();
 	t6.join();
 
-	std::cout << "benchmark binary_semaphore" << std::endl;
+	std::cout << "check binary_semaphore" << std::endl;
 	std::cout << "counter: " << sema._counter << std::endl;
 }
 
 void
-benchmark_count_semaphore(cpprelude::usize limit)
+check_count_semaphore(cpprelude::usize limit)
 {
 	cpprelude::count_semaphore<1024> sema;
 	auto give_func = semaphore_thread_give_func<cpprelude::count_semaphore<1024>>;
@@ -845,7 +802,7 @@ benchmark_count_semaphore(cpprelude::usize limit)
 	t5.join();
 	t6.join();
 
-	std::cout << "benchmark count_semaphore" << std::endl;
+	std::cout << "check count_semaphore" << std::endl;
 	std::cout << "counter: " << sema._counter << std::endl;
 }
 
@@ -895,7 +852,7 @@ thread_unique_enqueue_func(
 }
 
 void
-benchmark_thread_unique(cpprelude::usize limit)
+check_thread_unique(cpprelude::usize limit)
 {
 	cpprelude::thread_unique<cpprelude::queue_array<int>> job_queue;
 	auto enqueue_func = thread_unique_enqueue_func;
@@ -922,7 +879,7 @@ benchmark_thread_unique(cpprelude::usize limit)
 	t5.join();
 	t6.join();
 
-	std::cout << "benchmark thread_unique" << std::endl;
+	std::cout << "check thread_unique" << std::endl;
 	std::cout << "empty: " << job_queue.value.empty() << std::endl;
 	std::cout << "count: " << job_queue.value.count() << std::endl;
 }
@@ -940,7 +897,7 @@ thread_multi_reader_read_func(
 			if(array->value.empty())
 			{
 				array->read_release(context);
-				std::this_thread::sleep_for(std::chrono::duration<float, std::micro>(10));
+				std::this_thread::sleep_for(std::chrono::duration<usize, std::micro>(10));
 				continue;
 			}
 
@@ -996,7 +953,7 @@ thread_multi_reader_remove_func(
 			else
 			{
 				array->write_release(context);
-				std::this_thread::sleep_for(std::chrono::duration<float, std::micro>(10));
+				std::this_thread::sleep_for(std::chrono::duration<usize, std::micro>(10));
 
 				continue;
 			}
@@ -1008,7 +965,7 @@ cpprelude::thread_multi_reader<cpprelude::dynamic_array<int>>
 thread_multi_reader_job_queue;
 
 void
-benchmark_thread_multi_reader(cpprelude::usize limit)
+check_thread_multi_reader(cpprelude::usize limit)
 {
 	static bool read_done = false;
 
@@ -1049,633 +1006,242 @@ benchmark_thread_multi_reader(cpprelude::usize limit)
 	t5.join();
 	t6.join();
 
-	std::cout << "benchmark thread_multi_reader" << std::endl;
+	std::cout << "check thread_multi_reader" << std::endl;
 	std::cout << "empty: " << thread_multi_reader_job_queue.value.empty() << std::endl;
 	std::cout << "count: " << thread_multi_reader_job_queue.value.count() << std::endl;
 }
 
-void
-benchmark_hash_array(cpprelude::usize limit)
+void gen_random(char *s, const int len) {
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    for (int i = 0; i < len; ++i) {
+        s[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+    }
+
+    s[len] = 0;
+}
+
+std::string
+bm_std_string_create(workbench* bench, usize limit)
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
+	usize arr_size = (rand()%1000) + 1000;
+	char* arr = new char[arr_size];
+	gen_random(arr, arr_size-1);
 
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::hash_array<usize, usize> array;
+	bench->watch.start();
+		std::string str;
+		str = arr;
+	bench->watch.stop();
 
-		w.start();
-		for (cpprelude::usize i = 0; i < limit; ++i)
-		{
-			array.insert(i, i+9);
-		}
+	delete[] arr;
+	return str;
+}
 
-		for (cpprelude::usize i = 0; i < limit; ++i)
-		{
-			auto it = array.lookup(i);
-			array.remove(it);
-		}
-		w.stop();
+string
+bm_string_create(workbench* bench, usize limit)
+{
+	usize arr_size = (rand()%1000) + 1000;
+	char* arr = new char[arr_size];
+	gen_random(arr, arr_size-1);
 
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
+	bench->watch.start();
+		string str;
+		str = arr;
+	bench->watch.stop();
 
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
+	delete[] arr;
+	return str;
+}
 
-	std::cout << "benchmark hash_array" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
+string
+bm_custom_string_create(workbench* bench, usize limit)
+{
+	arena.free_all();
+
+	usize arr_size = (rand() % 1000) + 1000;
+	char* arr = new char[arr_size];
+	gen_random(arr, arr_size - 1);
+
+	bench->watch.start();
+	string str(arena.context());
+	str = arr;
+	bench->watch.stop();
+
+	delete[] arr;
+	return str;
+}
+
+std::string
+bm_std_stream(workbench* bench, usize limit)
+{
+	usize arr_size = (rand() % 1000) + 1000;
+	char* arr = new char[arr_size];
+	gen_random(arr, arr_size - 1);
+	std::string arr_str(arr, arr_size);
+
+	bench->watch.start();
+	std::stringstream str;
+	str << arr_str;
+	bench->watch.stop();
+
+	delete[] arr;
+	return str.str();
+}
+
+usize
+bm_stream(workbench* bench, usize limit)
+{
+	usize arr_size = (rand() % 1000) + 1000;
+	char* arr = new char[arr_size];
+	gen_random(arr, arr_size - 1);
+	auto arr_slice = make_slice(arr, arr_size);
+	string arr_str(arr_slice);
+
+	bench->watch.start();
+	memory_stream str;
+	write_str(str, arr_str);
+	bench->watch.stop();
+
+	delete[] arr;
+	return str.size();
 }
 
 void
-benchmark_tree_map(cpprelude::usize limit)
+do_benchmark()
 {
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		cpprelude::tree_map<usize, bool> tree;
-
-		w.start();
-		for (cpprelude::usize i = 0; i < limit; ++i)
-		{
-			tree.insert(i, true);
-		}
-
-		for (cpprelude::usize i = 0; i < limit; ++i)
-		{
-			auto it = tree.lookup(i);
-			tree.remove(it);
-		}
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark tree_map" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-
-//STD
-
-void
-benchmark_vector(std::size_t limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::vector<std::size_t> array;
-
-		w.start();
-		for(std::size_t i = 0; i < limit; ++i)
-			array.push_back(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark vector" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_stack(std::size_t limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::stack<std::size_t> array;
-
-		w.start();
-		for(std::size_t i = 0; i < limit; ++i)
-			array.push(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark stack" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_list(std::size_t limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::list<std::size_t> array;
-
-		w.start();
-		for(std::size_t i = 0; i < limit; ++i)
-			array.push_front(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_deque(std::size_t limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::deque<std::size_t> array;
-
-		w.start();
-		for(std::size_t i = 0; i < limit; ++i)
-			array.push_back(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark deque" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_forward_list(std::size_t limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::forward_list<std::size_t> array;
-
-		w.start();
-		for(std::size_t i = 0; i < limit; ++i)
-			array.push_front(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark forward_list" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_queue(std::size_t limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::queue<std::size_t> array;
-
-		w.start();
-		for(std::size_t i = 0; i < limit; ++i)
-			array.push(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark queue" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_std_sort(cpprelude::usize limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	std::random_device device;
-	std::mt19937 generator(device());
-	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
-
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::vector<cpprelude::usize> array;
-
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.push_back(distribution(generator));
-
-		w.start();
-		std::sort(array.begin(), array.end());
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark std::sort" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_std_stable_sort(cpprelude::usize limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	std::random_device device;
-	std::mt19937 generator(device());
-	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
-
-	stopwatch w;
-	for(cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::vector<cpprelude::usize> array;
-
-		for(cpprelude::usize i = 0; i < limit; ++i)
-			array.push_back(distribution(generator));
-
-		w.start();
-		std::stable_sort(array.begin(), array.end());
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark std::stable_sort" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_std_priority_queue(cpprelude::usize limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::priority_queue<cpprelude::usize>  array;
-
-		w.start();
-		for (cpprelude::usize i = 0; i < limit; ++i)
-			array.push(i);
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark std::priority_queue" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_std_heap_sort(cpprelude::usize limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	std::random_device device;
-	std::mt19937 generator(device());
-	std::uniform_int_distribution<cpprelude::usize> distribution(0, limit);
-
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::vector<cpprelude::usize> array;
-
-		for (cpprelude::usize i = 0; i < limit; ++i)
-			array.push_back(distribution(generator));
-
-		w.start();
-		std::make_heap(array.begin(), array.end());
-		std::sort_heap(array.begin(), array.end());
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-
-	std::cout << "benchmark std::sort_heap" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_std_unordered_map(cpprelude::usize limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::unordered_map<usize, usize> array;
-
-		w.start();
-		for (cpprelude::usize i = 0; i < limit; ++i)
-		{
-			array.insert({i, i+9});
-		}
-
-		for (cpprelude::usize i = 0; i < limit; ++i)
-		{
-			auto it = array.find(i);
-			array.erase(it);
-		}
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark unordered_map" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark_std_map(cpprelude::usize limit)
-{
-	double avg_sec = 0, avg_milli = 0, avg_micro = 0, avg_nano = 0;
-
-	stopwatch w;
-	for (cpprelude::usize j = 0; j < 100; ++j)
-	{
-		std::map<usize, bool> tree;
-
-		w.start();
-		for (cpprelude::usize i = 0; i < limit; ++i)
-		{
-			tree.insert({i, true});
-		}
-
-		for (cpprelude::usize i = 0; i < limit; ++i)
-		{
-			auto it = tree.find(i);
-			tree.erase(it);
-		}
-		w.stop();
-
-		avg_sec += w.seconds();
-		avg_milli += w.milliseconds();
-		avg_micro += w.microseconds();
-		avg_nano += w.nanoseconds();
-	}
-
-	avg_sec /= 100;
-	avg_milli /= 100;
-	avg_micro /= 100;
-	avg_nano /= 100;
-
-	std::cout << "benchmark map" << std::endl;
-	std::cout << "seconds: " << avg_sec << std::endl;
-	std::cout << "milliseconds: " << avg_milli << std::endl;
-	std::cout << "microseconds: " << avg_micro << std::endl;
-	std::cout << "nanoseconds: " << avg_nano << std::endl;
-}
-
-void
-benchmark()
-{
-	cpprelude::usize limit = 10000;
+	cpprelude::usize limit = 100;
 
 	std::cout << "\nBENCHMARK START\n" << std::endl;
 
-	benchmark_vector(limit);
-	std::cout << std::endl;
-	benchmark_dynamic_array(limit);
-	std::cout << std::endl;
-	benchmark_custom_dynamic_array(limit);
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_vector, limit),
+		CPPRELUDE_BENCHMARK(bm_dynamic_array, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_dynamic_array, limit)
+	});
 
-	std::cout <<"============================================================"<< std::endl;
+	std::cout << std::endl << std::endl;
 
-	benchmark_stack(limit);
-	std::cout << std::endl;
-	benchmark_stack_array(limit);
-	std::cout << std::endl;
-	benchmark_stack_list(limit);
-	std::cout << std::endl;
-	benchmark_custom_stack_array(limit);
-	std::cout << std::endl;
-	benchmark_custom_stack_list(limit);
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_forward_list, limit),
+		CPPRELUDE_BENCHMARK(bm_slinked_list, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_slinked_list, limit)
+	});
 
-	std::cout <<"============================================================"<< std::endl;
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_list, limit),
+		CPPRELUDE_BENCHMARK(bm_dlinked_list, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_dlinked_list, limit)
+	});
 
-	benchmark_forward_list(limit);
-	std::cout << std::endl;
-	benchmark_slinked_list(limit);
-	std::cout << std::endl;
-	benchmark_custom_slinked_list(limit);
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_stack, limit),
+		CPPRELUDE_BENCHMARK(bm_stack_array, limit),
+		CPPRELUDE_BENCHMARK(bm_stack_list, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_stack_array, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_stack_list, limit)
+	});
 
-	std::cout <<"============================================================"<< std::endl;
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_queue, limit),
+		CPPRELUDE_BENCHMARK(bm_queue_array, limit),
+		CPPRELUDE_BENCHMARK(bm_queue_list, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_queue_array, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_queue_list, limit)
+	});
 
-	benchmark_list(limit);
-	std::cout << std::endl;
-	benchmark_deque(limit);
-	std::cout << std::endl;
-	benchmark_dlinked_list(limit);
-	std::cout << std::endl;
-	benchmark_custom_dlinked_list(limit);
-	std::cout << std::endl;
-	benchmark_bucket_array(limit);
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_priority_queue, limit),
+		CPPRELUDE_BENCHMARK(bm_priority_queue, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_priority_queue, limit),
+	});
 
-	std::cout <<"============================================================"<< std::endl;
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_deque, limit),
+		CPPRELUDE_BENCHMARK(bm_bucket_array, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_bucket_array, limit)
+	});
 
-	benchmark_queue(limit);
-	std::cout << std::endl;
-	benchmark_queue_list(limit);
-	std::cout << std::endl;
-	benchmark_custom_queue_list(limit);
-	std::cout << std::endl;
-	benchmark_queue_array(limit);
-	std::cout << std::endl;
-	benchmark_custom_queue_array(limit);
-	std::cout << std::endl;
-	benchmark_priority_queue(limit);
-	std::cout << std::endl;
-	benchmark_std_priority_queue(limit);
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_stable_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_cppr_stable_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_merge_sort, limit)
+	});
 
-	std::cout <<"============================================================"<< std::endl;
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_cppr_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_quick_sort, limit)
+	});
 
-	benchmark_hash_array(limit);
-	std::cout << std::endl;
-	benchmark_std_unordered_map(limit);
-	std::cout << std::endl;
-	benchmark_tree_map(limit);
-	std::cout << std::endl;
-	benchmark_std_map(limit);
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_heap_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_cppr_heap_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_heap_sort, limit)
+	});
 
-	std::cout <<"============================================================"<< std::endl;
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_unordered_map, limit),
+		CPPRELUDE_BENCHMARK(bm_hash_array, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_hash_array, limit)
+	});
 
-	benchmark_std_sort(limit);
-	std::cout << std::endl;
-	benchmark_std_stable_sort(limit);
-	std::cout << std::endl;
-	benchmark_merge_sort(limit);
-	std::cout << std::endl;
-	benchmark_quick_sort(limit);
-	std::cout << std::endl;
-	benchmark_heap_sort(limit);
-	std::cout << std::endl;
-	benchmark_std_heap_sort(limit);
+	std::cout << std::endl << std::endl;
+	
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_map, limit),
+		CPPRELUDE_BENCHMARK(bm_tree_map, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_tree_map, limit)
+	});
 
-	std::cout << "\nnext size = 1/10 of original benchmark size\n" << std::endl;
+	std::cout << std::endl << std::endl;
 
-	benchmark_insertion_sort(limit/10);
-	std::cout << std::endl;
-	benchmark_binary_semaphore(limit/10);
-	std::cout << std::endl;
-	benchmark_count_semaphore(limit/10);
-	std::cout << std::endl;
-	benchmark_thread_unique(limit/10);
-	std::cout << std::endl;
-	benchmark_thread_multi_reader(limit/10);
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_string_create, limit),
+		CPPRELUDE_BENCHMARK(bm_string_create, limit),
+		CPPRELUDE_BENCHMARK(bm_custom_string_create, limit)
+	});
 
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_stream, limit),
+		CPPRELUDE_BENCHMARK(bm_stream, limit)
+	});
+
+	std::cout << std::endl;
+
+	check_binary_semaphore(limit/10);
+
+	std::cout << std::endl;
+
+	check_count_semaphore(limit/10);
+
+	std::cout << std::endl;
+
+	check_thread_unique(limit/10);
+
+	std::cout << std::endl;
+
+	check_thread_multi_reader(limit/10);
 
 	std::cout << "\nBENCHMARK END\n" << std::endl;
 }

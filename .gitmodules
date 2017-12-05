@@ -1,0 +1,4 @@
+[submodule "unittest/deps/Catch"]
+	path = unittest/deps/Catch
+	url = git@github.com:philsquared/Catch.git
+	branch = master

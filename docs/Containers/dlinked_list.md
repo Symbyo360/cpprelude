@@ -7,12 +7,11 @@
 #### Template Interface
 
 ```c++
-template<typename T, typename AllocatorT = global_allocator>
+template<typename T>
 struct dlinked_list;
 ```
 
 1. **T**: specifics element type.
-2. **AllocatorT**: specifics the type of the allocator the `dlinked_list` will use.
 
 #### Alias Interface
 
@@ -33,22 +32,22 @@ using node_type = details::double_node<T>;
 #### Constructor
 
 ```c++
-dlinked_list(const AllocatorT& allocator = AllocatorT());
-dlinked_list(std::initializer_list<T> list, const AllocatorT& allocator = AllocatorT());
-dlinked_list(usize count, const T& fill_value, const AllocatorT& allocator = AllocatorT());
+dlinked_list(memory_context_t* context = platform.global_memory);
+dlinked_list(std::initializer_list<T> list, memory_context_t* context = platform.global_memory);
+dlinked_list(usize count, const T& fill_value, memory_context_t* context = platform.global_memory);
 dlinked_list(const dlinked_list<T>& other);
-dlinked_list(const dlinked_list<T>& other, const AllocatorT& allocator);
+dlinked_list(const dlinked_list<T>& other, memory_context_t* context);
 dlinked_list(dlinked_list<T>&& other);
-dlinked_list(dlinked_list<T>&& other, const AllocatorT& allocator);
+dlinked_list(dlinked_list<T>&& other, memory_context_t* context);
 ```
 
-1. A constructor that builds the container with the provided allocator.
-2. A constructor that initializes the container with the provided `initializer_list` using the provided allocator.
+1. A constructor that builds the container with the provided memory context.
+2. A constructor that initializes the container with the provided `initializer_list` using the provided memory context.
 3. A constructor that initializes the container with the provided `count` and fills it with the provided `fill_value`.
 4. A copy constructor.
-5. A copy constructor that accepts another allocator.
+5. A copy constructor that accepts another memory context.
 6. A move constructor.
-7. A move constructor that accepts another allocator.
+7. A move constructor that accepts another memory context.
 
 #### count
 
@@ -104,11 +103,14 @@ Returns the element at the `index` position.
 void insert_front(std::initializer_list<T> list);
 void insert_front(const T& value);
 void insert_front(T&& value);
+template<typename ... TArgs>
+void emplace_front(TArgs&& ... args);
 ```
 
 1. Inserts the list at the front of the container.
 2. Inserts the element value at the front of the container.
 3. Inserts the element value at the front of the container.
+4. Emplaces the element (in-place) at the front of the container.
 
 #### insert_back
 
@@ -116,12 +118,35 @@ void insert_front(T&& value);
 void insert_back(std::initializer_list<T> list);
 void insert_back(const T& value);
 void insert_back(T&& value);
+template<typename ... TArgs>
+void emplace_back(TArgs&& ... args);
 ```
 
 1. Inserts the list at the back of the container.
 2. Inserts the element value at the back of the container.
 3. Inserts the element value at the back of the container.
+4. Emplaces the element (in-place) at the back of the container.
 
+#### insert_after
+```c++
+template<typename ... TArgs>
+void emplace_after(const iterator& it, TArgs&& ... args);
+void insert_after(const iterator& it, const T& value);
+void insert_after(const iterator& it, T&& value);
+```
+
+Given a valid iterator (pointing to an element) the container will place the provided element after it.
+
+#### insert_before
+```c++
+template<typename ... TArgs>
+void emplace_before(const iterator& it, TArgs&& ... args);
+void insert_before(const iterator& it, const T& value);
+void insert_before(const iterator& it, T&& value);
+```
+
+Given a valid iterator (pointing to an element) the container will place the provided element before it.
+ 
 #### remove_front
 
 ```c++

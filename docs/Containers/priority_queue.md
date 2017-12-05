@@ -7,15 +7,13 @@
 #### Template interface
 
 ```c++
-template<typename T, typename Comparator = tmp::default_less_than<T>, typename AllocatorT = global_allocator>
+template<typename T, typename Comparator = default_less_than<T>>
 struct priority_queue;
 ```
 
 1. **T**: specifies the type of queue elements.
 
-2. **Comparator**: determines the comparing operator which will set this queue to always output its first element to the minimum or always to the maximum or as the user specifies. By default it is a min-queue. 
-
-3. **AllocatorT**: specifies how to allocate in memory by default it is `global_allocator`.
+2. **Comparator**: determines the comparing operator which will set this queue to always output its first element to the minimum or always to the maximum or as the user specifies. By default it is a min-queue.
 
    ​
 
@@ -55,6 +53,29 @@ struct priority_queue;
    ​
 
    ### Interface
+
+   #### Constructor
+   ```C++
+   priority_queue(Comparator compare_function = Comparator(), 
+   			    memory_context_t* context = platform.global_memory);
+   priority_queue(usize count, Comparator compare_function = Comparator(), 
+   				memory_context_t* context = platform.global_memory);
+   priority_queue(const priority_queue& other, Comparator compare_function = Comparator(), 					memory_context_t* context = platform.global_memory);
+   priority_queue(priority_queue&& other, Comparator compare_function, 
+                   memory_context_t* context);
+   priority_queue(std::initializer_list<T> list, Comparator compare_function = Comparator(), 					memory_context_t* context = platform.global_memory);
+
+   template<typename iterator_type>
+   priority_queue(iterator_type it, usize count, Comparator compare_function = Comparator(), 					memory_context_t* context = platform.global_memory);
+   priority_queue(const dynamic_array<T>& arr, Comparator compare_function = Comparator(), 					memory_context_t* context = platform.global_memory)
+   ```
+   1. Given a comparator and a memory context, it constructs a priority queue.
+   2. Given a count, a comparator and a memory context, it constructs a priority queue.
+   3. Given another priority queue, a comparator and a memory context, it copies the provided priority queue.
+   4. Given another priority queue, a comparator and a memory context, it moves the provided priority queue.
+   5. Given a list of elements, a comparator and a memory context, it constructs a priority queue with the given elements.
+   6. Given an iterator, a count, a comparator and a memory context, it constructs a priority queue with the given range.
+   7. Given a dynamic array, a comparator and a memory context, it constructs a priority queue with the given array.
 
    #### enqueue
 

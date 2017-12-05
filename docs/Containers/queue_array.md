@@ -8,16 +8,13 @@
 
 ```c++
 template<typename T,
-		 usize buffer_size = details::default_size(sizeof(T)),
-		 typename AllocatorT = global_allocator>
+		 usize buffer_size = details::default_size(sizeof(T))>
 struct queue_array;
 ```
 
 1. **T**: specifies the type of queue elements.
 
 2. **buffer_size**: determines number of elements that queue can hold.
-
-3. **AllocatorT**: specifies how to allocate in memory by default it is `global_allocator`.
 
    ​
 
@@ -36,10 +33,10 @@ struct queue_array;
    #### Constructor
 
    ```c++
-   queue_array(const AllocatorT& allocator = AllocatorT());
+         queue_array(memory_context_t* context = platform.global_memory);
    ```
 
-   A constructor that builds the container with the provided allocator.
+   A constructor that builds the container with the provided memory context.
 
    #### Member data
 

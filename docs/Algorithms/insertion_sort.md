@@ -5,7 +5,7 @@
 ### Function signature
 
 ```c++
-template<typename iterator_type, typename Comparator = tmp::default_less_than<typename iterator_type::data_type>>
+template<typename iterator_type, typename Comparator = default_less_than<typename iterator_type::data_type>>
 void
 insertion_sort(iterator_type begin_it, usize count, 
                Comparator less_than = Comparator())
@@ -17,7 +17,7 @@ This function compares elements using operator < by default. Otherwise it can be
 
 1. `begin_it`: is an iterator of a template type `iterator_type`. It points to the first element in the range of data.
 2. `count`: is a number of `usize` type that specifies number of elements starting from iterator `start`.
-3. `less_than`: is a function that accepts two elements. It compares them and return true or false. This parameter is by default uses `tmp::default_less_than`.
+3. `less_than`: is a function that accepts two elements. It compares them and return true or false. This parameter is by default uses `default_less_than`.
 
 #### Return value
 

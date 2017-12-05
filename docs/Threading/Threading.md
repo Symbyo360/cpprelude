@@ -12,20 +12,20 @@ struct binary_semaphore;
 #### take
 ```c++
 isize take();
-isize wait_take(r32 micros = 0);
+isize wait_take();
 ```
 
 1. tries to take a ticket from this semaphore and returns its id. If it fails, then it returns -1.
-2. tries to take a ticket from this semaphore. If it fails, then it sleeps for the provided amount of micros and tries again. If micros is 0, then it will not sleep.
+2. tries to take a ticket from this semaphore. If it fails, then it yields and tries again.
 
 #### give
 ```c++
 isize give();
-isize wait_give(r32 micros = 0);
+isize wait_give();
 ```
 
 1. tries to give a ticket back to this semaphore and returns its id. If it fails, then it returns -1
-2. tries to give a ticket back to this semaphore and returns its id. If it fails, then it will sleep for the provided amount of micros and tries again. If micros is 0, then it will not sleep.
+2. tries to give a ticket back to this semaphore and returns its id. If it fails, then it yields and tries again.
 
 #### available
 ```c++
@@ -46,20 +46,20 @@ struct count_semaphore;
 #### take
 ```c++
 isize take();
-isize wait_take(r32 micros = 0);
+isize wait_take();
 ```
 
 1. tries to take a ticket from this semaphore and returns its id. If it fails, then it returns -1.
-2. tries to take a ticket from this semaphore. If it fails, then it sleeps for the provided amount of micros and tries again. If micros is 0, then it will not sleep.
+2. tries to take a ticket from this semaphore. If it fails, then it yields and tries again.
 
 #### give
 ```c++
 isize give();
-isize wait_give(r32 micros = 0);
+isize wait_give();
 ```
 
 1. tries to give a ticket back to this semaphore and returns its id. If it fails, then it returns -1.
-2. tries to give a ticket back to this semaphore and returns its id. If it fails, then it will sleep for the provided amount of micros and tries again. If micros is 0, then it will not sleep.
+2. tries to give a ticket back to this semaphore and returns its id. If it fails, then it yields and tries again.
 
 #### available
 ```c++
@@ -81,29 +81,29 @@ struct thread_unique;
 
 #### read
 ```c++
-bool read(thread_context& context, r32 micros = 0);
+bool read(thread_context& context);
 ```
 
-Gives the current thread a read permission in the provided context. If it fails due to other thread having the access, then it will sleep for the provided micros. If micros is 0, then it will not sleep.
+Gives the current thread a read permission in the provided context. If it fails due to other thread having the access, then it yields and tries again.
 
 #### read_release
 ```c++
-bool read_release(thread_context& context, r32 micros = 0);
+bool read_release(thread_context& context);
 ```
 
-Release the read access of the calling thread in the provided context. If it fails, then it will sleep for the amount of the provided micros. If micros is 0, then it will not sleep.
+Release the read access of the calling thread in the provided context. If it fails, then it yields and tries again.
 
 #### write
 ```c++
-bool write(thread_context& context, r32 micros = 0);
+bool write(thread_context& context);
 ```
-Gives the current thread a write permission in the provided context. If it fails due to other thread having the access, then it will sleep for the provided micros. If micros is 0, then it will not sleep.
+Gives the current thread a write permission in the provided context. If it fails due to other thread having the access, then it yields and tries again.
 
 #### write_release
 ```c++
-bool write_release(thread_context& context, r32 micros = 0);
+bool write_release(thread_context& context);
 ```
-Release the write access of the calling thread in the provided context. If it fails, then it will sleep for the amount of the provided micros. If micros is 0, then it will not sleep.
+Release the write access of the calling thread in the provided context. If it fails, then it yields and tries again.
 
 #### new_context
 ```c++
@@ -126,29 +126,29 @@ struct thread_multi_reader;
 
 #### read
 ```c++
-bool read(thread_context& context, r32 micros = 0);
+bool read(thread_context& context);
 ```
 
-Gives the current thread a read permission in the provided context. If it fails due to other thread having the access, then it will sleep for the provided micros. If micros is 0, then it will not sleep.
+Gives the current thread a read permission in the provided context. If it fails due to other thread having the access, then it yields and tries again.
 
 #### read_release
 ```c++
-bool read_release(thread_context& context, r32 micros = 0);
+bool read_release(thread_context& context);
 ```
 
-Release the read access of the calling thread in the provided context. If it fails, then it will sleep for the amount of the provided micros. If micros is 0, then it will not sleep.
+Release the read access of the calling thread in the provided context. If it fails, then it yields and tries again.
 
 #### write
 ```c++
-bool write(thread_context& context, r32 micros = 0);
+bool write(thread_context& context);
 ```
-Gives the current thread a write permission in the provided context. If it fails due to other thread having the access, then it will sleep for the provided micros. If micros is 0, then it will not sleep.
+Gives the current thread a write permission in the provided context. If it fails due to other thread having the access, then it yields and tries again.
 
 #### write_release
 ```c++
-bool write_release(thread_context& context, r32 micros = 0);
+bool write_release(thread_context& context);
 ```
-Release the write access of the calling thread in the provided context. If it fails, then it will sleep for the amount of the provided micros. If micros is 0 then it will not sleep.
+Release the write access of the calling thread in the provided context. If it fails, then it yields and tries again.
 
 #### new_context
 ```c++
