@@ -4,75 +4,206 @@
 #include "cpprelude/api.h"
 #include "cpprelude/memory.h"
 #include "cpprelude/platform.h"
-#include <ostream>
+#include "cpprelude/io.h"
+#include "cpprelude/bufio.h"
 
 namespace cpprelude
 {
+	inline static usize
+	_strlen(const byte *it, usize limit = -1)
+	{
+		if (limit == 0 || it == nullptr)
+			return 0;
+
+		usize result = 0;
+		while(*it++ != 0 && result < limit)
+			++result;
+		return result;
+	}
+
 	struct rune
 	{
 		u32 data;
 
-		API_CPPR bool
-		operator==(const rune& other) const;
+		rune()
+			:data(0)
+		{}
 
-		API_CPPR bool
-		operator!=(const rune& other) const;
+		rune(u32 c)
+			:data(c)
+		{}
 
-		API_CPPR bool
-		operator<(const rune& other) const;
+		bool
+		operator==(const rune& other) const
+		{
+			return data == other.data;
+		}
 
-		API_CPPR bool
-		operator>(const rune& other) const;
+		bool
+		operator!=(const rune& other) const
+		{
+			return data != other.data;
+		}
 
-		API_CPPR bool
-		operator<=(const rune& other) const;
+		bool
+		operator<(const rune& other) const
+		{
+			return data < other.data;
+		}
 
-		API_CPPR bool
-		operator>=(const rune& other) const;
+		bool
+		operator>(const rune& other) const
+		{
+			return data > other.data;
+		}
+
+		bool
+		operator<=(const rune& other) const
+		{
+			return data <= other.data;
+		}
+
+		bool
+		operator>=(const rune& other) const
+		{
+			return data >= other.data;
+		}
 	};
 
-	inline static std::ostream&
-	operator<<(std::ostream& out,const rune& c)
+	inline static usize
+	print_str(io_trait *trait, const rune &c)
 	{
-		out << reinterpret_cast<const char*>(&c.data);
-		return out;
+		byte *ptr = (byte*)(&c);
+		usize size = _strlen(ptr);
+		return trait->write(make_slice<byte>(ptr, size));
 	}
 
-	inline static std::wostream&
-	operator<<(std::wostream& out, const rune& c)
+	inline static usize
+	print_str(bufout_trait *trait, const rune &c)
 	{
-		out << reinterpret_cast<const char*>(&c.data);
-		return out;
+		byte *ptr = (byte*)(&c);
+		usize size = _strlen(ptr);
+		return trait->write(make_slice<byte>(ptr, size));
 	}
 
 	struct rune_iterator
 	{
 		const byte *_ptr = nullptr;
 
-		API_CPPR rune_iterator(const byte* ptr);
+		rune_iterator(const byte* ptr)
+			:_ptr(ptr)
+		{}
 
-		API_CPPR rune_iterator&
-		operator++();
+		rune_iterator&
+		operator++()
+		{
+			i8 data = *_ptr;
+			if(data == 0)
+				return *this;
 
-		API_CPPR rune_iterator
-		operator++(int);
+			++_ptr;
+			while(*_ptr)
+			{
+				if((*_ptr & 0xC0) == 0x80)
+					++_ptr;
+				else
+					break;
+			}
+			return *this;
+		}
 
-		API_CPPR rune_iterator&
-		operator--();
+		rune_iterator
+		operator++(int)
+		{
+			if(*_ptr == 0)
+				return *this;
+			
+			auto result = *this;
+			++_ptr;
+			while(*_ptr)
+			{
+				if((*_ptr & 0xC0) == 0x80)
+					++_ptr;
+				else
+					break;
+			}
+			return result;
+		}
 
-		API_CPPR rune_iterator
-		operator--(int);
+		rune_iterator&
+		operator--()
+		{
+			--_ptr;
+			while(*_ptr)
+			{
+				if((*_ptr & 0xC0) == 0x80)
+					--_ptr;
+				else
+					break;
+			}
+			return *this;
+		}
 
-		API_CPPR bool
-		operator==(const rune_iterator& other) const;
+		rune_iterator
+		operator--(int)
+		{
+			auto result = *this;
+			--_ptr;
+			while(*_ptr)
+			{
+				if((*_ptr & 0xC0) == 0x80)
+					--_ptr;
+				else
+					break;
+			}
+			return result;
+		}
 
-		API_CPPR bool
-		operator!=(const rune_iterator& other) const;
+		bool
+		operator==(const rune_iterator& other) const
+		{
+			return _ptr == other._ptr;
+		}
 
-		API_CPPR rune
-		operator*() const;
+		bool
+		operator!=(const rune_iterator& other) const
+		{
+			return _ptr != other._ptr;
+		}
 
-		API_CPPR operator const byte*() const;
+		rune
+		operator*() const
+		{
+			if (_ptr == nullptr || *_ptr == 0)
+				return rune(0);
+
+			const byte* ptr = _ptr;
+
+			// byte result[sizeof(rune)] = {0};
+			rune result_rune = 0;
+			byte* result = (byte*)&result_rune.data;
+			u8 ix = 0;
+			result[ix] = *ptr;
+
+			++ix;
+			++ptr;
+			while(*ptr)
+			{
+				if ((*ptr & 0xC0) == 0x80)
+					result[ix] = *ptr;
+				else
+					break;
+				++ptr;
+				++ix;
+			}
+
+			return result_rune;
+		}
+
+		operator const byte*() const
+		{
+			return _ptr;
+		}
 	};
 
 	struct string
@@ -82,14 +213,14 @@ namespace cpprelude
 
 		slice<byte> _data;
 		mutable usize _count = static_cast<usize>(-1);
-		memory_context* _context = platform.global_memory;
+		memory_context* _context = platform->global_memory;
 
 		API_CPPR string();
 		API_CPPR string(memory_context* context);
-		API_CPPR explicit string(usize size, memory_context* context = platform.global_memory);
-		API_CPPR string(const char* data, memory_context* context = platform.global_memory);
-		API_CPPR string(const slice<byte>& data, memory_context* context = platform.global_memory);
-		API_CPPR string(slice<byte>&& data, memory_context* context = platform.global_memory);
+		API_CPPR explicit string(usize size, memory_context* context = platform->global_memory);
+		API_CPPR string(const char* data, memory_context* context = platform->global_memory);
+		API_CPPR string(const slice<byte>& data, memory_context* context = platform->global_memory);
+		API_CPPR string(slice<byte>&& data, memory_context* context = platform->global_memory);
 
 		API_CPPR string(const string&);
 		API_CPPR string(const string&, memory_context* context);
@@ -155,22 +286,143 @@ namespace cpprelude
 
 		API_CPPR const_iterator
 		cend() const;
+
+		API_CPPR void
+		concat(const string& other);
+
+		API_CPPR string
+		substr(usize start, usize size, memory_context *context = nullptr);
+
+		API_CPPR string
+		substr(rune_iterator begin, rune_iterator end, memory_context *context = nullptr);
+
+		API_CPPR string
+		view(usize start, usize size) const;
+
+		API_CPPR string
+		view(rune_iterator begin, rune_iterator end) const;
+
+		API_CPPR bool
+		is_view() const;
+
+		API_CPPR slice<byte>
+		decay();
+
+		API_CPPR slice<byte>
+		decay_continuous();
 	};
 
 	API_CPPR cpprelude::string
 	operator"" _cs(const char* str, usize str_count);
 
-	inline static std::ostream&
-	operator<<(std::ostream& out,const cpprelude::string& str)
+	inline static usize
+	print_bin(io_trait *trait, const cpprelude::string& str)
 	{
-		out << reinterpret_cast<const char*>(str._data.ptr);
-		return out;
+		//remove the last null from the string when printing it
+		byte *ptr = str._data.ptr;
+		usize size = _strlen(ptr, str._data.size);
+
+		return trait->write(make_slice<byte>(ptr, size));
 	}
 
-	inline static std::wostream&
-	operator<<(std::wostream& out, const cpprelude::string& str)
+	inline static usize
+	print_bin(bufout_trait *trait, const cpprelude::string& str)
 	{
-		out << reinterpret_cast<const char*>(str._data.ptr);
-		return out;
+		//remove the last null from the string when printing it
+		byte *ptr = str._data.ptr;
+		usize size = _strlen(ptr, str._data.size);
+
+		return trait->write(make_slice<byte>(ptr, size));
+	}
+
+
+	inline static usize
+	print_bin(io_trait *trait, const char* str)
+	{
+		return trait->write(make_slice((byte*)str, _strlen(str)));
+	}
+
+	inline static usize
+	print_bin(bufout_trait *trait, const char* str)
+	{
+		return trait->write(make_slice((byte*)str, _strlen(str)));
+	}
+
+
+	inline static usize
+	print_str(io_trait *trait, const cpprelude::string& str)
+	{
+		//remove the last null from the string when printing it
+		byte *ptr = str._data.ptr;
+		usize size = _strlen(ptr, str._data.size);
+
+		return trait->write(make_slice<byte>(ptr, size));
+	}
+
+	inline static usize
+	print_str(bufout_trait *trait, const cpprelude::string& str)
+	{
+		//remove the last null from the string when printing it
+		byte *ptr = str._data.ptr;
+		usize size = _strlen(ptr, str._data.size);
+
+		return trait->write(make_slice<byte>(ptr, size));
+	}
+
+
+	inline static usize
+	print_str(io_trait *trait, const char* str)
+	{
+		return trait->write(make_slice((byte*)str, _strlen(str)));
+	}
+
+	inline static usize
+	print_str(bufout_trait *trait, const char* str)
+	{
+		return trait->write(make_slice((byte*)str, _strlen(str)));
+	}
+
+
+	inline static usize
+	scan_bin(io_trait *trait, cpprelude::string& str)
+	{
+		auto result = trait->read(str._data.view_bytes(0, str._data.size - 1));
+		str._data[result] = 0;
+		return result ;
+	}
+
+	inline static usize
+	scan_bin(bufin_trait *trait, cpprelude::string& str)
+	{
+		auto result = trait->read(str._data.view_bytes(0, str._data.size - 1));
+		str._data[result] = 0;
+		return result ;
+	}
+
+
+	inline static usize
+	scan_bin(io_trait *trait, cpprelude::string&& str)
+	{
+		return scan_bin(trait, str);
+	}
+
+	inline static usize
+	scan_bin(bufin_trait *trait, cpprelude::string&& str)
+	{
+		return scan_bin(trait, str);
+	}
+
+	inline static usize
+	scan_str(io_trait *trait, cpprelude::string& str)
+	{
+		auto result = trait->read(str._data.view_bytes(0, str._data.size - 1));
+		str._data[result] = 0;
+		return result;
+	}
+
+	inline static usize
+	scan_str(io_trait *trait, cpprelude::string&& str)
+	{
+		return scan_str(trait, str);
 	}
 }

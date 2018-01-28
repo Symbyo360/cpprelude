@@ -30,6 +30,7 @@
 #include <string>
 #include <sstream>
 #include <cpprelude/stream.h>
+#include <cpprelude/fmt.h>
 
 #include <cpprelude/hash_array.h>
 #include <unordered_map>
@@ -66,7 +67,7 @@ bm_dynamic_array(workbench* bench, usize limit)
 usize
 bm_custom_dynamic_array(workbench* bench, usize limit)
 {
-	memory_watcher w();
+	memory_watcher w;
 
 	arena.free_all();
 	dynamic_array<usize> array(arena.context());
@@ -1102,7 +1103,7 @@ bm_stream(workbench* bench, usize limit)
 
 	bench->watch.start();
 	memory_stream str;
-	write_str(str, arr_str);
+	vprints(str, arr_str);
 	bench->watch.stop();
 
 	delete[] arr;
@@ -1221,6 +1222,8 @@ do_benchmark()
 		CPPRELUDE_BENCHMARK(bm_string_create, limit),
 		CPPRELUDE_BENCHMARK(bm_custom_string_create, limit)
 	});
+
+	std::cout << std::endl << std::endl;
 
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_std_stream, limit),

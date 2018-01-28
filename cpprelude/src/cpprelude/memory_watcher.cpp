@@ -1,4 +1,7 @@
 #include "cpprelude/memory_watcher.h"
+#include "cpprelude/fmt.h"
+#include "cpprelude/platform.h"
+#include "cpprelude/string.h"
 
 namespace cpprelude
 {
@@ -21,15 +24,15 @@ namespace cpprelude
 	void
 	memory_watcher::begin_watching()
 	{
-		_a_alive_allocations = platform.allocation_count;
-		_a_allocation_size = platform.allocation_size;
+		_a_alive_allocations = platform->allocation_count;
+		_a_allocation_size = platform->allocation_size;
 	}
 
 	void
 	memory_watcher::end_watching()
 	{
-		_b_alive_allocations = platform.allocation_count;
-		_b_allocation_size = platform.allocation_size;
+		_b_alive_allocations = platform->allocation_count;
+		_b_allocation_size = platform->allocation_size;
 	}
 
 	usize
@@ -49,7 +52,7 @@ namespace cpprelude
 	{
 		if(delta_alive_allocations() != 0)
 		{
-			println(std::cout, "memory_watcher ", name,
+			println_err("memory_watcher ", name,
 					"{alive allocations: ", delta_alive_allocations(),
 					", size: ", delta_size(), "}");
 		}

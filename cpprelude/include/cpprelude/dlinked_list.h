@@ -26,15 +26,15 @@ namespace cpprelude
 
 		node_type *_head, *_tail;
 		usize _count;
-		memory_context *_context = platform.global_memory;
+		memory_context *_context = platform->global_memory;
 
-		dlinked_list(memory_context* context = platform.global_memory)
+		dlinked_list(memory_context* context = platform->global_memory)
 			:_head(nullptr), _tail(nullptr), _count(0), _context(context)
 		{
 			_init_sentinels();
 		}
 
-		dlinked_list(std::initializer_list<T> list, memory_context* context = platform.global_memory)
+		dlinked_list(std::initializer_list<T> list, memory_context* context = platform->global_memory)
 			:_head(nullptr), _tail(nullptr), _count(0), _context(context)
 		{
 			_init_sentinels();
@@ -43,7 +43,7 @@ namespace cpprelude
 				insert_back(value);
 		}
 
-		dlinked_list(usize count, const T& fill_value, memory_context* context = platform.global_memory)
+		dlinked_list(usize count, const T& fill_value, memory_context* context = platform->global_memory)
 			:_head(nullptr), _tail(nullptr), _count(0), _context(context)
 		{
 			_init_sentinels();
@@ -417,7 +417,8 @@ namespace cpprelude
 			_tail->prev = it;
 		}
 
-		void remove(iterator it)
+		void
+		remove(iterator it)
 		{
 			auto node = it._node;
 			auto prev_node = node->prev;
@@ -525,7 +526,7 @@ namespace cpprelude
 		slice<node_type>
 		decay()
 		{
-			slice<node_type> result(_head);
+			slice<node_type> result(_head, sizeof(node_type));
 
 			_head = nullptr;
 			_tail = nullptr;
