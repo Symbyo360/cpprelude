@@ -1,4 +1,5 @@
 #include "cpprelude/allocator.h"
+#include "cpprelude/error.h"
 #include <algorithm>
 
 namespace cpprelude
@@ -9,7 +10,10 @@ namespace cpprelude
 		arena_t* self = (arena_t*)(self_);
 
 		if(self->_allocation_head + size > self->_memory.size)
-			return slice<byte>();
+		{
+			panic(concat("arena couldn't perform allocator(remaining size = ",
+				  self->_memory.size - self->_allocation_head, ")"));
+		}
 
 		slice<byte> result = make_slice(self->_memory.ptr + self->_allocation_head, size);
 		self->_allocation_head += size;
@@ -50,9 +54,9 @@ namespace cpprelude
 	arena_t::arena_t(usize size, bool use_virtual_memory)
 	{
 		if(use_virtual_memory)
-			_memory = platform.virtual_alloc(nullptr, size);
+			_memory = platform->virtual_alloc(nullptr, size);
 		else
-			_memory = platform.alloc<byte>(size);
+			_memory = platform->alloc<byte>(size);
 
 		_allocation_head = 0;
 		_context._self = this;
@@ -67,9 +71,9 @@ namespace cpprelude
 		if(_memory.valid())
 		{
 			if(_uses_virtual_memory)
-				platform.virtual_free(_memory);
+				platform->virtual_free(_memory);
 			else
-				platform.free(_memory);
+				platform->free(_memory);
 		}
 		_allocation_head = 0;
 	}

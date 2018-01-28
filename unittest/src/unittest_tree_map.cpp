@@ -655,7 +655,7 @@ TEST_CASE("tree_map test", "[tree_map]")
 		//using [] to change value at key 1
 		tree[1] = "44";
 		//searching for that key and printing its value
-		auto h = tree.lookup(1);
+		auto _ = tree.lookup(1);
 		//std::cout << h.value() << std::endl;    
 		//Applying insert-lambda function by calling inorder_traverse
 		std::string aa = "AA";

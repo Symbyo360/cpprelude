@@ -14,8 +14,16 @@ namespace cpprelude
 		using data_type = T;
 		bucket_array<T, buffer_size> _list;
 
-		queue_array(memory_context* context = platform.global_memory)
+		queue_array(memory_context* context = platform->global_memory)
 			:_list(context)
+		{}
+
+		queue_array(const queue_array& other, memory_context *context)
+			:_list(other._list, context)
+		{}
+
+		queue_array(queue_array&& other, memory_context *context)
+			:_list(std::move(other._list), context)
 		{}
 
 		template<typename ... TArgs>
