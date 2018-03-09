@@ -1,3 +1,5 @@
+require "doc"
+
 -- [[ function returning the sdk version of windows 10 --]]
 function win10_sdk_version()
 	cmd_file = io.popen("reg query \"HKEY_LOCAL_MACHINE\\SOFTWARE\\Microsoft\\Windows Kits\\Installed Roots\" | C:\\Windows\\System32\\find.exe \"10.0\"", 'r')

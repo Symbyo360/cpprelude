@@ -1,7 +1,11 @@
 #include "benchmark.h"
 #include "stopwatch.h"
+#define CXXOPTS_NO_RTTI
+//#define BENCHPRESS_CONFIG_MAIN
+#include <benchpress.hpp>
 
 #include <cpprelude/dynamic_array.h>
+#include <cpprelude/v5/dynamic_array.h>
 #include <vector>
 
 #include <cpprelude/stack_array.h>
@@ -82,6 +86,20 @@ bm_custom_dynamic_array(workbench* bench, usize limit)
 }
 
 usize
+bm_v5_dynamic_array(workbench* bench, usize limit)
+{
+	Dynamic_Array<usize> array;
+
+	bench->watch.start();
+	for(usize i = 0; i < limit; ++i)
+		array.insert_back(rand());
+
+	bench->watch.stop();
+
+	return array.back();
+}
+
+usize
 bm_vector(workbench* bench, usize limit)
 {
 	std::vector<usize> array;
@@ -94,6 +112,71 @@ bm_vector(workbench* bench, usize limit)
 
 	return *array.begin();
 }
+
+//looping
+usize
+bm_dynamic_array_iterating(workbench* bench, usize limit)
+{
+	usize result = rand();
+	dynamic_array<usize> array;
+
+	bench->watch.start();
+	array.reserve(limit);
+	for(usize i = 0; i < limit; ++i)
+		array.insert_back(result + i);
+
+	for(const auto& number: array)
+	{
+		if(result % 2 == 0)
+			result += number;
+	}
+
+	bench->watch.stop();
+
+	return result;
+}
+
+usize
+bm_vector_iterating(workbench* bench, usize limit)
+{
+	usize result = rand();
+	std::vector<usize> array;
+
+	bench->watch.start();
+	array.reserve(limit);
+	for(usize i = 0; i < limit; ++i)
+		array.push_back(result + i);
+
+	for(const auto& number: array)
+	{
+		if(result % 2 == 0)
+			result += number;
+	}
+
+	bench->watch.stop();
+	return result;
+}
+
+usize
+bm_v5_dynamic_array_iterating(workbench* bench, usize limit)
+{
+	usize result = rand();
+	Dynamic_Array<usize> array;
+
+	bench->watch.start();
+	array.reserve(limit);
+	for(usize i = 0; i < limit; ++i)
+		array.insert_back(result + i);
+
+	for(auto range = array.all(); !range.empty(); range.pop_front())
+		if(result % 2 == 0)
+			result += range.front();
+
+	bench->watch.stop();
+
+	return result;
+}
+
 
 //single linked list containers
 usize
@@ -1063,135 +1146,144 @@ bm_stream(workbench* bench, usize limit)
 void
 do_benchmark()
 {
-	cpprelude::usize limit = 100;
+	cpprelude::usize limit = 10000;
 
 	std::cout << "\nBENCHMARK START\n" << std::endl;
 
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_vector, limit),
 		CPPRELUDE_BENCHMARK(bm_dynamic_array, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_dynamic_array, limit)
+		CPPRELUDE_BENCHMARK(bm_custom_dynamic_array, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_dynamic_array, limit)
 	});
 
 	std::cout << std::endl << std::endl;
 
 	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_forward_list, limit),
-		CPPRELUDE_BENCHMARK(bm_slinked_list, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_slinked_list, limit)
+		CPPRELUDE_BENCHMARK(bm_vector_iterating, limit),
+		CPPRELUDE_BENCHMARK(bm_dynamic_array_iterating, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_dynamic_array_iterating, limit)
 	});
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
+
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_forward_list, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_slinked_list, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_slinked_list, limit)
+	// });
+
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_list, limit),
-		CPPRELUDE_BENCHMARK(bm_dlinked_list, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_dlinked_list, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_list, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_dlinked_list, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_dlinked_list, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_stack, limit),
-		CPPRELUDE_BENCHMARK(bm_stack_array, limit),
-		CPPRELUDE_BENCHMARK(bm_stack_list, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_stack_array, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_stack_list, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_stack, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_stack_array, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_stack_list, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_stack_array, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_stack_list, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_queue, limit),
-		CPPRELUDE_BENCHMARK(bm_queue_array, limit),
-		CPPRELUDE_BENCHMARK(bm_queue_list, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_queue_array, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_queue_list, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_queue, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_queue_array, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_queue_list, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_queue_array, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_queue_list, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_std_priority_queue, limit),
-		CPPRELUDE_BENCHMARK(bm_priority_queue, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_priority_queue, limit),
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_std_priority_queue, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_priority_queue, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_priority_queue, limit),
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_deque, limit),
-		CPPRELUDE_BENCHMARK(bm_bucket_array, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_bucket_array, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_deque, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_bucket_array, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_bucket_array, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_std_stable_sort, limit),
-		CPPRELUDE_BENCHMARK(bm_merge_sort, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_std_stable_sort, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_merge_sort, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_std_sort, limit),
-		CPPRELUDE_BENCHMARK(bm_quick_sort, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_std_sort, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_quick_sort, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_std_heap_sort, limit),
-		CPPRELUDE_BENCHMARK(bm_heap_sort, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_std_heap_sort, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_heap_sort, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_unordered_map, limit),
-		CPPRELUDE_BENCHMARK(bm_hash_array, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_hash_array, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_unordered_map, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_hash_array, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_hash_array, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 	
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_map, limit),
-		CPPRELUDE_BENCHMARK(bm_tree_map, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_tree_map, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_map, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_tree_map, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_tree_map, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_std_string_create, limit),
-		CPPRELUDE_BENCHMARK(bm_string_create, limit),
-		CPPRELUDE_BENCHMARK(bm_custom_string_create, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_std_string_create, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_string_create, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_custom_string_create, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_std_stream, limit),
-		CPPRELUDE_BENCHMARK(bm_stream, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_std_stream, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_stream, limit)
+	// });
 
-	std::cout << std::endl;
+	// std::cout << std::endl;
 
-	check_binary_semaphore(limit/10);
+	// check_binary_semaphore(limit/10);
 
-	std::cout << std::endl;
+	// std::cout << std::endl;
 
-	check_count_semaphore(limit/10);
+	// check_count_semaphore(limit/10);
 
-	std::cout << std::endl;
+	// std::cout << std::endl;
 
-	check_thread_unique(limit/10);
+	// check_thread_unique(limit/10);
 
-	std::cout << std::endl;
+	// std::cout << std::endl;
 
-	check_thread_multi_reader(limit/10);
+	// check_thread_multi_reader(limit/10);
 
 	std::cout << "\nBENCHMARK END\n" << std::endl;
 }
