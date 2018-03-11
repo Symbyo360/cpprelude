@@ -1,117 +1,221 @@
 #pragma once
 
 #include "cpprelude/defines.h"
+#include "cpprelude/v5/ranges.h"
 #include <cassert>
 
 namespace cpprelude
 {
+	/**
+	 * [[markdown]]
+	 * #Memory
+	 * This file has a reprsentation of the memory primitives used through out cpprelude.
+	 */
+
 	namespace internal
 	{
 		struct Memory_Header
 		{
 			usize size;
-			u8 alignment;
-			u8 adjustment;
+			void* malloc_ptr;
 		};
 	}
 
 	template<typename T>
 	struct Slice;
 
+	/**
+	 * @brief      Represent an owner pointer to a block of memory
+	 *
+	 * @tparam     T     Type of the underlying memory
+	 */
 	template<typename T>
-	struct Owner
+	struct Basic_Owner
 	{
+		/**
+		 * Range Type of this container
+		 */
 		using Range_Type = Slice<T>;
+		/**
+		 * Const Range Type of this container
+		 */
+		using Const_Range_Type = Slice<const T>;
 
+		/**
+		 * Pointer to the underlying block of memory
+		 */
 		T* ptr;
 
-		Owner(T* value = nullptr)
+		/**
+		 * @brief      Constructs an owner to the provided pointer
+		 *
+		 * @param      value  a pointer to the underlying block of memory
+		 */
+		Basic_Owner(T* value = nullptr)
 			:ptr(value)
 		{}
 
-		Owner(const Owner&) = delete;
+		/**
+		 * @brief      An Basic_Owner is not a copyable type so the copy constructor is deleted
+		 */
+		Basic_Owner(const Basic_Owner&) = delete;
 
-		Owner(Owner&& other)
+		/**
+		 * @brief      Move Constructs an owner from another owner
+		 *
+		 * @param[in]  other  The other owner to steal the pointer from
+		 */
+		Basic_Owner(Basic_Owner&& other)
 			:ptr(other.ptr)
 		{
 			other.ptr = nullptr;
 		}
 
-		Owner&
-		operator=(const Owner&) = delete;
+		/**
+		 * @brief      An Basic_Owner is not a copyable type so the copy assignment operator is deleted
+		 */
+		Basic_Owner&
+		operator=(const Basic_Owner&) = delete;
 
-		Owner&
-		operator=(Owner&& other)
+		/**
+		 * @brief      Move Assigns an owner from another owner
+		 *
+		 * @param[in]  other  The other owner to steal the pointer from
+		 *
+		 * @return     This instance by reference
+		 */
+		Basic_Owner&
+		operator=(Basic_Owner&& other)
 		{
 			ptr = other.ptr;
 			other.ptr = nullptr;
 			return *this;
 		}
 
+		/**
+		 * @brief      Cast operator to a raw pointer
+		 */
 		operator T*()
 		{
 			return ptr;
 		}
 
+		/**
+		 * @brief      Cast operator to a const raw pointer
+		 */
 		operator const T*() const
 		{
 			return ptr;
 		}
 
+		/**
+		 * @brief      Dereference operator
+		 *
+		 * @return     A Pointer of type T to the underlying memory
+		 */
 		T&
 		operator*()
 		{
 			return *ptr;
 		}
 
+		/**
+		 * @brief      Dereference operator
+		 *
+		 * @return     A Const pointer of type T to the underlying memory
+		 */
 		const T&
 		operator*() const
 		{
 			return *ptr;
 		}
 
+		/**
+		 * @brief      Arrow operator
+		 *
+		 * @return     A Pointer of type T to the underlying memory
+		 */
 		T*
 		operator->()
 		{
 			return ptr;
 		}
 
+		/**
+		 * @brief      Arrow operator
+		 *
+		 * @return     A Const pointer of type T to the underlying memory
+		 */
 		const T*
 		operator->() const
 		{
 			return ptr;
 		}
 
+		/**
+		 * @brief      Subscript operator
+		 *
+		 * @param[in]  index  Index into the underlying memory
+		 *
+		 * @return     A Const reference of type T to the underlying value
+		 */
 		const T&
 		operator[](usize index) const
 		{
 			return ptr[index];
 		}
 
+		/**
+		 * @brief      Subscript operator
+		 *
+		 * @param[in]  index  Index into the underlying memory
+		 *
+		 * @return     A reference of type T to the underlying value
+		 */
 		T&
 		operator[](usize index)
 		{
 			return ptr[index];
 		}
 
+		/**
+		 * @brief      Equal compare operator
+		 *
+		 * @param[in]  other  The other owner to compare to
+		 *
+		 * @return     Whether the two values are equal
+		 */
 		bool
-		operator==(const Owner& other) const
+		operator==(const Basic_Owner& other) const
 		{
 			return ptr == ptr;
 		}
 
+		/**
+		 * @brief      Not Equal compare operator
+		 *
+		 * @param[in]  other  The other owner to compare to
+		 *
+		 * @return     Whether the two values are not equal
+		 */
 		bool
-		operator!=(const Owner& other) const
+		operator!=(const Basic_Owner& other) const
 		{
 			return !operator==(other);
 		}
 
+		/**
+		 * @return     Whether the owner is empty or not
+		 */
 		bool
 		empty() const
 		{
 			return ptr == nullptr || count() == 0;
 		}
 
+		/**
+		 * @return     The size in bytes of the underlying block of memory
+		 */
 		usize
 		size() const
 		{
@@ -119,38 +223,88 @@ namespace cpprelude
 			return _get_memory_header()->size;
 		}
 
+		/**
+		 * @return     The count of values of type T in this block of memory (size() / sizeof(T))
+		 */
 		usize
 		count() const
 		{
 			return size() / sizeof(T);
 		}
 
-		usize
-		alignment() const
-		{
-			return _get_memory_header()->alignment;
-		}
+		/**
+		 * @return     The alignement in bytes of the underlying block of memory
+		 */
+		// usize
+		// alignment() const
+		// {
+		// 	return ptr - _get_memory_header()->malloc_ptr;
+		// }
 
+		/**
+		 * @brief      Converts an owner to type T to an owner of type R
+		 *
+		 * @tparam     R     The other type to convert to
+		 *
+		 * @return     An Basic_Owner of type R
+		 */
 		template<typename R>
-		Owner<R>
+		Basic_Owner<R>
 		convert() const
 		{
-			return Owner<R>((R*)ptr);
+			return Basic_Owner<R>((R*)ptr);
 		}
 
 		//Container Interface
+
+		/**
+		 * @return     A Range of entire underlying memory block
+		 */
 		Range_Type
-		all() const
+		all()
 		{
 			return Range_Type(ptr, size());
 		}
 
+		/**
+		 * @return     A Const range of entire underlying memory block
+		 */
+		Const_Range_Type
+		all() const
+		{
+			return Const_Range_Type(ptr, size());
+		}
+
+		/**
+		 * @brief      Range of a subset of the underlying memory block
+		 *
+		 * @param[in]  start  The start index of the range subset
+		 * @param[in]  end    The end index of the range subset
+		 *
+		 * @return     A Range of values with the specified start and end
+		 */
 		Range_Type
-		range(usize start, usize end) const
+		range(usize start, usize end)
 		{
 			if(end < start)
 				end = start;
 			return Range_Type(ptr + start, (end - start) * sizeof(T));
+		}
+
+		/**
+		 * @brief      Const Range of a subset of the underlying memory block
+		 *
+		 * @param[in]  start  The start index of the range subset
+		 * @param[in]  end    The end index of the range subset
+		 *
+		 * @return     A Const Range of values with the specified start and end
+		 */
+		Const_Range_Type
+		range(usize start, usize end) const
+		{
+			if(end < start)
+				end = start;
+			return Const_Range_Type(ptr + start, (end - start) * sizeof(T));
 		}
 
 		//private functions
@@ -162,143 +316,5 @@ namespace cpprelude
 	};
 
 	template<typename T>
-	struct Slice
-	{
-		using Range_Type = Slice<T>;
-
-		T* ptr;
-		usize size;
-
-		Slice()
-			:ptr(nullptr),
-			 size(0)
-		{}
-
-		Slice(T* value, usize size_in_bytes)
-			:ptr(value),
-			 size(size_in_bytes)
-		{}
-
-		bool
-		operator==(const Slice& other) const
-		{
-			return ptr == ptr && size == other.size;
-		}
-
-		bool
-		operator!=(const Slice& other) const
-		{
-			return !operator==(other);
-		}
-
-		template<typename R>
-		Slice<R>
-		convert() const
-		{
-			return Slice<R>((R*)ptr, size);
-		}
-
-		//Container Interface
-		Range_Type&
-		all()
-		{
-			return *this;
-		}
-
-		const Range_Type
-		all() const
-		{
-			return *this;
-		}
-
-		Range_Type
-		range(usize start, usize end) const
-		{
-			if(end < start)
-				end = start;
-			return Slice<T>(ptr + start, (end - start) * sizeof(T));
-		}
-
-		Range_Type
-		byte_range(usize start_in_bytes, usize end_in_bytes) const
-		{
-			if(end_in_bytes < start_in_bytes)
-				end_in_bytes = start_in_bytes;
-
-			byte* byte_ptr = (byte*)ptr;
-			byte_ptr += start_in_bytes;
-			usize new_size = end_in_bytes - start_in_bytes;
-			return Slice<T>((T*)byte_ptr, new_size);
-		}
-
-		//Forward_Range Interface
-		bool
-		empty() const
-		{
-			return size < sizeof(T);
-		}
-
-		usize
-		count() const
-		{
-			return size / sizeof(T);
-		}
-
-		T&
-		front()
-		{
-			return *ptr;
-		}
-
-		const T&
-		front() const
-		{
-			return *ptr;
-		}
-
-		void
-		pop_front()
-		{
-			++ptr;
-			size -= sizeof(T);
-		}
-
-		//Bidirectional_Range Interface
-		T&
-		back()
-		{
-			return *(ptr + (count() - 1));
-		}
-
-		const T&
-		back() const
-		{
-			return *(ptr + (count() - 1));
-		}
-
-		void
-		pop_back()
-		{
-			size -= sizeof(T);
-		}
-
-		//Random_Access_Range Interface
-		T&
-		operator[](usize index)
-		{
-			return ptr[index];
-		}
-
-		const T&
-		operator[](usize index) const
-		{
-			return ptr[index];
-		}
-
-		bool
-		is_finite() const
-		{
-			return true;
-		}
-	};
+	using Owner = Basic_Owner<T>;
 }

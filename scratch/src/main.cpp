@@ -14,6 +14,8 @@ struct V3
 int
 main(int argc, char** argv)
 {
+	auto num = os->alloc<usize>(1);
+	os->free(num);
 	Dynamic_Array<V3> array;
 	do_benchmark();
 	return 0;

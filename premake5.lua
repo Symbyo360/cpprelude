@@ -1,4 +1,4 @@
-require "doc"
+require "docs"
 
 -- [[ function returning the sdk version of windows 10 --]]
 function win10_sdk_version()

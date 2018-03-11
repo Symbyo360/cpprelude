@@ -7,35 +7,40 @@
 #include <initializer_list>
 #include <utility>
 
-/**
- * [[markdown]]
- * this should be embeded in the file
- */
 
 namespace cpprelude
 {
 	/**
-	 * @brief      Represents a dynamic array
+	 * @brief      A Dynamic array container
 	 *
-	 * @tparam     T     type of elements in the array
+	 * @tparam     T     Values type in the dynamic array
 	 */
 	template<typename T>
 	struct Dynamic_Array
 	{
-		//not documentation comment
+		/**
+		 * Range Type of dynamic array
+		 */
 		using Range_Type = Slice<T>;
-		using data_type = T;
+		/**
+		 * Const Range Type of dynamic array
+		 */
+		using Const_Range_Type = Slice<const T>;
+		/**
+		 * Data type of the dynamic array
+		 */
+		using Data_Type = T;
 		constexpr static usize GROW_FACTOR = 2;
 		constexpr static usize STARTING_COUNT = 8;
 
 		Memory_Context* mem_context;
-		Owner<data_type> _data;
+		Owner<Data_Type> _data;
 		usize _count, _capacity;
 
 		/**
-		 * @brief      { function_description }
+		 * @brief      Constructs a dynamic array that uses the provided memory context for allocation
 		 *
-		 * @param      context  The context
+		 * @param      context  The memory context to use for allocation and freeing
 		 */
 		Dynamic_Array(Memory_Context *context = os->global_memory)
 			:mem_context(context),
@@ -44,68 +49,97 @@ namespace cpprelude
 		{}
 
 		/**
-		 * @brief      { function_description }
+		 * @brief      Constructs a dynamic array from an initializer list and memory context
 		 *
-		 * @param[in]  list     The list
-		 * @param      context  The context
+		 * @param[in]  list     A list of values to initialize the array with
+		 * @param      context  The memory context to use for allocaiton and freeing
 		 */
-		Dynamic_Array(std::initializer_list<data_type> list,
+		Dynamic_Array(std::initializer_list<Data_Type> list,
 			Memory_Context *context = os->global_memory)
 			:mem_context(context),
 			 _count(0),
 			 _capacity(0)
 		{
-			_data = mem_context->template alloc<data_type>(list.size());
+			_data = mem_context->template alloc<Data_Type>(list.size());
 			for(const auto& value: list)
 			{
-				::new (_data.ptr + _count) data_type(value);
+				::new (_data.ptr + _count) Data_Type(value);
 				++_count;
 			}
 			_capacity = _count;
 		}
 
+		/**
+		 * @brief      Constructs a dynamic array with the provided count and memory context
+		 *
+		 * @param[in]  count    The count of values that array will be initialized with
+		 * @param      context  The memory context to use for allocation and freeing
+		 */
 		Dynamic_Array(usize count, Memory_Context *context = os->global_memory)
 			:mem_context(context),
 			 _count(0)
 		{
-			_data = mem_context->template alloc<data_type>(count);
+			_data = mem_context->template alloc<Data_Type>(count);
 			for(_count = 0; _count < count; ++_count)
-				::new (_data.ptr + _count) data_type();
+				::new (_data.ptr + _count) Data_Type();
 			_capacity = count;
 		}
 
-		Dynamic_Array(usize count, const data_type& fill_value,
+		/**
+		 * @brief      Constructs a dynamic array with the provided count and fills it with the fill_value
+		 *
+		 * @param[in]  count       The count of values that array will be initialized with
+		 * @param[in]  fill_value  The fill value to initialize the array with
+		 * @param      context     The memroy context to use for allocation and freeing
+		 */
+		Dynamic_Array(usize count, const Data_Type& fill_value,
 			Memory_Context *context = os->global_memory)
 			:mem_context(context),
 			_count(0)
 		{
-			_data = mem_context->template alloc<data_type>(count);
+			_data = mem_context->template alloc<Data_Type>(count);
 			for(_count = 0; _count < count; ++_count)
-				::new (_data.ptr + _count) data_type(fill_value);
+				::new (_data.ptr + _count) Data_Type(fill_value);
 			_capacity = count;
 		}
 
-		Dynamic_Array(const Dynamic_Array<data_type>& other)
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other  The other dynamic array to copy from
+		 */
+		Dynamic_Array(const Dynamic_Array<Data_Type>& other)
 			:mem_context(other.mem_context),
 			_count(0)
 		{
-			_data = mem_context->template alloc<data_type>(other._count);
+			_data = mem_context->template alloc<Data_Type>(other._count);
 			for(_count = 0; _count < other._count; ++_count)
-				::new (_data.ptr + _count) data_type(other._data[_count]);
+				::new (_data.ptr + _count) Data_Type(other._data[_count]);
 			_capacity = other._count;
 		}
 
-		Dynamic_Array(const Dynamic_Array<data_type>& other, Memory_Context *context)
+		/**
+		 * @brief      Copy constructor with another context
+		 *
+		 * @param[in]  other    The other dynamic array to copy from
+		 * @param      context  The context to use for memory allocation and freeing
+		 */
+		Dynamic_Array(const Dynamic_Array<Data_Type>& other, Memory_Context *context)
 			:mem_context(context),
 			_count(0)
 		{
-			_data = mem_context->template alloc<data_type>(other._count);
+			_data = mem_context->template alloc<Data_Type>(other._count);
 			for(_count = 0; _count < other._count; ++_count)
-				::new (_data.ptr + _count) data_type(other._data[_count]);
+				::new (_data.ptr + _count) Data_Type(other._data[_count]);
 			_capacity = other._count;
 		}
 
-		Dynamic_Array(Dynamic_Array<data_type>&& other)
+		/**
+		 * @brief      Move constructor
+		 *
+		 * @param[in]  other  The other dynamic array to move from
+		 */
+		Dynamic_Array(Dynamic_Array<Data_Type>&& other)
 			:mem_context(other.mem_context),
 			 _data(std::move(other._data)),
 			 _count(other._count),
@@ -115,32 +149,42 @@ namespace cpprelude
 			other._capacity = 0;
 		}
 
+		/**
+		 * @brief      Destroys the dynamic array.
+		 */
 		~Dynamic_Array()
 		{
 			reset();
 		}
 
-		Dynamic_Array<data_type>&
-		operator=(const Dynamic_Array<data_type>& other)
+		/**
+		 * @brief      Copy assignment operator
+		 *
+		 * @param[in]  other  The other dynamic array to copy values from
+		 *
+		 * @return     A Reference to this dynamic array
+		 */
+		Dynamic_Array<Data_Type>&
+		operator=(const Dynamic_Array<Data_Type>& other)
 		{
 			reset();
 			mem_context = other.mem_context;
-			_data = mem_context->template alloc<data_type>(other._count);
+			_data = mem_context->template alloc<Data_Type>(other._count);
 			for(_count = 0; _count < other._count; ++_count)
-				::new (_data.ptr + _count) data_type(other._data[_count]);
+				::new (_data.ptr + _count) Data_Type(other._data[_count]);
 			_capacity = other._count;
 			return *this;
 		}
 
 		/**
-		 * @brief      move assignment operator
+		 * @brief      Move assignment operator
+		 *             
+		 * @param[in]  other  The other dynamic array to move values from
 		 *
-		 * @param[in]  <unnamed>  { parameter_description }
-		 *
-		 * @return     { description_of_the_return_value }
+		 * @return     A Reference to this dynamic array
 		 */
-		Dynamic_Array<data_type>&
-		operator=(Dynamic_Array<data_type>&& other)
+		Dynamic_Array<Data_Type>&
+		operator=(Dynamic_Array<Data_Type>&& other)
 		{
 			reset();
 			mem_context = other.mem_context;
@@ -154,9 +198,7 @@ namespace cpprelude
 		}
 
 		/**
-		 * @brief      Capacity
-		 *
-		 * @return     { description_of_the_return_value }
+		 * @return     The capacity of this dynamic array
 		 */
 		usize
 		capacity() const
@@ -165,9 +207,7 @@ namespace cpprelude
 		}
 
 		/**
-		 * @brief      { function_description }
-		 *
-		 * @return     { description_of_the_return_value }
+		 * @return     Whether the dynamic array is empty
 		 */
 		bool
 		empty() const
@@ -175,24 +215,42 @@ namespace cpprelude
 			return _count == 0;
 		}
 
+		/**
+		 * @return     The count of values in this dynamic array
+		 */
 		usize
 		count() const
 		{
 			return _count;
 		}
 
-		data_type&
+		/**
+		 * @param[in]  index  The index of the value
+		 *                    
+		 * @return     A Reference of the value
+		 */
+		Data_Type&
 		operator[](usize index)
 		{
 			return _data[index];
 		}
 
-		const data_type&
+		/**
+		 * @param[in]  index  The index of the value
+		 *                    
+		 * @return     A Const Reference of the value
+		 */
+		const Data_Type&
 		operator[](usize index) const
 		{
 			return _data[index];
 		}
 
+		/**
+		 * @brief      Ensures that the dynamic array has the capacity for the expected count
+		 *
+		 * @param[in]  expected_count  The expected count to reserve
+		 */
 		void
 		reserve(usize expected_count)
 		{
@@ -205,31 +263,47 @@ namespace cpprelude
 			_capacity = double_cap > expected_count ? double_cap : expected_count;
 			//account for the existing count in the array
 			_capacity += _count;
-			Owner<data_type> new_data = mem_context->template alloc<data_type>(_capacity);
+			Owner<Data_Type> new_data = mem_context->template alloc<Data_Type>(_capacity);
 			for(usize i = 0; i < _count; ++i)
-				::new (new_data.ptr + i) data_type(std::move(_data[i]));
-			mem_context->template free<data_type>(_data);
+				::new (new_data.ptr + i) Data_Type(std::move(_data[i]));
+			mem_context->template free<Data_Type>(_data);
 			_data = std::move(new_data);
 		}
 
+		/**
+		 * @brief      Adds the specified count of element to the back of the dynamic array
+		 *
+		 * @param[in]  additional_count  The additional count to add
+		 */
 		void
 		expand_back(usize additional_count)
 		{
 			reserve(additional_count);
 			for(usize i = _count; i < _count + additional_count; ++i)
-				::new (_data.ptr + i) data_type();
+				::new (_data.ptr + i) Data_Type();
 			_count += additional_count;
 		}
 
+		/**
+		 * @brief      Adds the specified count of element and initializes them to the provided value
+		 *
+		 * @param[in]  additional_count  The additional count to add
+		 * @param[in]  value             The value to initialize with
+		 */
 		void
-		expand_back(usize additional_count, const data_type& value)
+		expand_back(usize additional_count, const Data_Type& value)
 		{
 			reserve(additional_count);
 			for(usize i = _count; i < _count + additional_count; ++i)
-				::new (_data.ptr + i) data_type(value);
+				::new (_data.ptr + i) Data_Type(value);
 			_count += additional_count;
 		}
 
+		/**
+		 * @brief      Removes element of the back of the dynamic array and shrinks the memory
+		 *
+		 * @param[in]  shrinkage_count  The shrinkage count to remove
+		 */
 		void
 		shrink_back(usize shrinkage_count)
 		{
@@ -237,6 +311,13 @@ namespace cpprelude
 			shrink_to_fit();
 		}
 
+		/**
+		 * @brief      Adds a value to the back of the array in place
+		 *
+		 * @param[in]  args  values that will be passed to the value type constructor
+		 *
+		 * @tparam     TArgs      Variadic template type
+		 */
 		template<typename ... TArgs>
 		void
 		emplace_back(TArgs&& ... args)
@@ -250,12 +331,17 @@ namespace cpprelude
 					reserve(cap * GROW_FACTOR);
 			}
 
-			::new (_data.ptr + _count) data_type(std::forward<TArgs>(args)...);
+			::new (_data.ptr + _count) Data_Type(std::forward<TArgs>(args)...);
 			++_count;
 		}
 
+		/**
+		 * @brief      Adds a value to the back of the array
+		 *
+		 * @param[in]  value  The value to add
+		 */
 		void
-		insert_back(const data_type& value)
+		insert_back(const Data_Type& value)
 		{
 			auto cap = capacity();
 			if(_count >= cap)
@@ -266,12 +352,17 @@ namespace cpprelude
 					reserve(cap * GROW_FACTOR);
 			}
 
-			::new (_data.ptr + _count) data_type(value);
+			::new (_data.ptr + _count) Data_Type(value);
 			++_count;
 		}
 
+		/**
+		 * @brief      Adds a value to the back of the array
+		 *
+		 * @param[in]  value  The value to add
+		 */
 		void
-		insert_back(data_type&& value)
+		insert_back(Data_Type&& value)
 		{
 			auto cap = capacity();
 			if(_count >= cap)
@@ -281,10 +372,15 @@ namespace cpprelude
 				else
 					reserve(cap * GROW_FACTOR);
 			}
-			::new (_data.ptr + _count) data_type(std::move(value));
+			::new (_data.ptr + _count) Data_Type(std::move(value));
 			++_count;
 		}
 
+		/**
+		 * @brief      Removes the specified count of values from the back of the array
+		 *
+		 * @param[in]  removal_count  The removal count
+		 */
 		void
 		remove_back(usize removal_count = 1)
 		{
@@ -292,16 +388,22 @@ namespace cpprelude
 				removal_count = count();
 
 			for(usize i = _count - removal_count; i < _count; ++i)
-				_data[i].~data_type();
+				_data[i].~Data_Type();
 			_count -= removal_count;
 		}
 
+		/**
+		 * @brief      Removes all the values of the array
+		 */
 		void
 		clear()
 		{
 			remove_back(count());
 		}
 
+		/**
+		 * @brief      Removes all the values of the array and frees the memory
+		 */
 		void
 		reset()
 		{
@@ -309,66 +411,106 @@ namespace cpprelude
 				return;
 
 			for(usize i = 0; i < _count; ++i)
-				_data[i].~data_type();
+				_data[i].~Data_Type();
 
-			mem_context->template free<data_type>(_data);
+			mem_context->template free<Data_Type>(_data);
 			_count = 0;
 			_capacity = 0;
 		}
 
+		/**
+		 * @brief      Shrinks the memory of the dynamic array to fit the exact count of values inside
+		 */
 		void
 		shrink_to_fit()
 		{
 			if(_capacity == _count)
 				return;
 
-			Owner<data_type> new_data = mem_context->template alloc<data_type>(_count);
+			Owner<Data_Type> new_data = mem_context->template alloc<Data_Type>(_count);
 			for(usize i = 0; i < _count; ++i)
-				::new (new_data.ptr + i) data_type(std::move(_data[i]));
-			mem_context->template free<data_type>(_data);
+				::new (new_data.ptr + i) Data_Type(std::move(_data[i]));
+			mem_context->template free<Data_Type>(_data);
 			_data = std::move(new_data);
 			_capacity = _count;
 		}
 
+		/**
+		 * @return     Range viewing all the values in the array
+		 */
 		Range_Type
+		all()
+		{
+			return _data.all();
+		}
+
+		/**
+		 * @return     Const range viewing all the values in the array
+		 */
+		Const_Range_Type
 		all() const
 		{
 			return _data.all();
 		}
 
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Range viewing the specified values in the array
+		 */
 		Range_Type
+		range(usize start, usize end)
+		{
+			return _data.range(start, end);
+		}
+
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Const range viewing the specified values in the array
+		 */
+		Const_Range_Type
 		range(usize start, usize end) const
 		{
 			return _data.range(start, end);
 		}
 
-		data_type&
+		/**
+		 * @return     A Reference to the front value in the array
+		 */
+		Data_Type&
 		front()
 		{
 			return *_data;
 		}
 
-		const data_type&
+		/**
+		 * @return     A Const Reference to the front value in the array
+		 */
+		const Data_Type&
 		front() const
 		{
 			return *_data;
 		}
 
-		data_type&
+		/**
+		 * @return     A Reference to the back value in the array
+		 */
+		Data_Type&
 		back()
 		{
 			return *(_data.ptr + _count - 1);
 		}
 
-		const data_type&
+		/**
+		 * @return     A Const reference to the back value in the array
+		 */
+		const Data_Type&
 		back() const
 		{
 			return *(_data.ptr + _count - 1);
 		}
 	};
 }
-
-/**
- * [[markdown]]
- * this should be embeded in the file2
- */

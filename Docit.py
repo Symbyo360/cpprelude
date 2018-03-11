@@ -64,10 +64,15 @@ def clean_code_indentation(code_str):
 
 def format_comment(node):
     comment_lines = []
+    markdown_comment = is_markdown_comment(node)
     for line in node.spelling.splitlines():
         if line.find("[[markdown]]") != -1:
             continue
-        text = line[line.find("*") + 1:].strip()
+        text = ""
+        if markdown_comment:
+            text = line[line.find("*") + 1:]
+        else:
+            text = line[line.find("*") + 1:].strip()
         text = text.replace("@brief", "- **brief:**")
         text = text.replace("@param[in]", "- **param[in]:**")
         text = text.replace("@param[out]", "- **param[out]:**")
@@ -75,7 +80,7 @@ def format_comment(node):
         text = text.replace("@tparam", "- **tparam:**")
         text = text.replace("@return", "- **return:**")
 
-        if len(text) > 0:
+        if len(text) > 0 or markdown_comment:
             comment_lines.append(text)
     return "\n".join(comment_lines[1:len(comment_lines) - 1])
 
@@ -104,6 +109,15 @@ def get_markdown_decorations(node):
         decoration += "Struct"
     elif node.kind == clang.cindex.CursorKind.UNION_DECL:
         decoration += "Union"
+    elif node.kind == clang.cindex.CursorKind.FIELD_DECL:
+        decoration += "Variable"
+    elif node.kind == clang.cindex.CursorKind.TYPE_ALIAS_DECL:
+        decoration += "Typedef"
+    elif node.kind == clang.cindex.CursorKind.CONVERSION_FUNCTION:
+        decoration += "Conversion Operator"
+        return decoration
+    else:
+        decoration += str(node.kind)
 
     decoration += " `" + node.spelling + "`"
     return decoration
