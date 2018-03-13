@@ -45,14 +45,21 @@ namespace cpprelude
 		 * Pointer to the underlying block of memory
 		 */
 		T* ptr;
+		usize size_v;
+
+		Basic_Owner()
+			:ptr(nullptr),
+			 size_v(0)
+		{}
 
 		/**
 		 * @brief      Constructs an owner to the provided pointer
 		 *
 		 * @param      value  a pointer to the underlying block of memory
 		 */
-		Basic_Owner(T* value = nullptr)
-			:ptr(value)
+		Basic_Owner(T* value, usize sz)
+			:ptr(value),
+			 size_v(sz)
 		{}
 
 		/**
@@ -66,9 +73,11 @@ namespace cpprelude
 		 * @param[in]  other  The other owner to steal the pointer from
 		 */
 		Basic_Owner(Basic_Owner&& other)
-			:ptr(other.ptr)
+			:ptr(other.ptr),
+			 size_v(other.size_v)
 		{
 			other.ptr = nullptr;
+			other.size_v = 0;
 		}
 
 		/**
@@ -88,7 +97,9 @@ namespace cpprelude
 		operator=(Basic_Owner&& other)
 		{
 			ptr = other.ptr;
+			size_v = other.size_v;
 			other.ptr = nullptr;
+			other.size_v = 0;
 			return *this;
 		}
 
@@ -219,8 +230,9 @@ namespace cpprelude
 		usize
 		size() const
 		{
-			if(ptr == nullptr) return 0;
-			return _get_memory_header()->size;
+			return size_v;
+			/*if(ptr == nullptr) return 0;
+			return _get_memory_header()->size;*/
 		}
 
 		/**
@@ -252,7 +264,7 @@ namespace cpprelude
 		Basic_Owner<R>
 		convert() const
 		{
-			return Basic_Owner<R>((R*)ptr);
+			return Basic_Owner<R>((R*)ptr, size_v);
 		}
 
 		//Container Interface
@@ -316,5 +328,26 @@ namespace cpprelude
 	};
 
 	template<typename T>
-	using Owner = Basic_Owner<T>;
+	using Owner = T*;
+
+	template<typename T>
+	inline static usize
+	get_size(const Owner<T>& owner)
+	{
+		return ((usize*)owner)[-2];
+	}
+
+	template<typename T>
+	inline static usize
+	get_count(const Owner<T>& owner)
+	{
+		return ((usize*)owner)[-2] / sizeof(T);
+	}
+
+	template<typename T>
+	inline static usize
+	get_malloc_ptr(const Owner<T>& owner)
+	{
+		return ((usize*)owner)[-1];
+	}
 }

@@ -28,75 +28,70 @@ namespace cpprelude
 		return (void**)(((usize)(ptr) + header_size) &~ (alignment - 1));
 	}
 
-	Owner<byte>
+	void*
 	_old_alloc(void* _self, usize size, u8 alignment)
 	{
 		if(size == 0)
-			return nullptr;
+			return Owner<byte>();
 
-		usize* result = reinterpret_cast<usize*>(std::malloc(size + sizeof(internal::Memory_Header)));
-		result[0] = size;
-		result[1] = (usize) result;
-		return reinterpret_cast<byte*>(result + 2);
+		void** result = (void**)std::malloc(size + (2*sizeof(void*)));
+		result[0] = result;
+		result[1] = (void*)size;
+		return result + 2;
 	}
 
 	Owner<byte>
 	_global_memory_alloc(void* _self, usize size, u8 alignment)
 	{
-		OS* self = (OS*)_self;
+		return Owner<byte>();
+		// OS* self = (OS*)_self;
 
-		void** result_ptr = nullptr;
-		const usize header_size = sizeof(internal::Memory_Header);
+		// void** result_ptr = nullptr;
+		// const usize header_size = sizeof(internal::Memory_Header);
 
-		//no alignment required
-		if(alignment == 0)
-		{
-			usize* malloc_ptr = (usize*)std::malloc(size + header_size);
-			malloc_ptr[0] = size;
-			malloc_ptr[1] = (usize)malloc_ptr;
-			result_ptr = (void**)(malloc_ptr + 2);
-		}
-		else
-		{
-			usize addtional_size = 	alignment > header_size ?
-									alignment : header_size;
+		// //no alignment required
+		// if(alignment == 0)
+		// {
+		// 	usize* malloc_ptr = (usize*)std::malloc(size + header_size);
+		// 	malloc_ptr[0] = size;
+		// 	malloc_ptr[1] = (usize)malloc_ptr;
+		// 	result_ptr = (void**)(malloc_ptr + 2);
+		// }
+		// else
+		// {
+		// 	usize addtional_size = 	alignment > header_size ?
+		// 							alignment : header_size;
 
-			void* malloc_ptr = std::malloc(size + addtional_size);
+		// 	void* malloc_ptr = std::malloc(size + addtional_size);
 
-			result_ptr = _align_forward(malloc_ptr, alignment, header_size);
-			result_ptr[-1] = malloc_ptr;
-			result_ptr[-2] = (void*)size;
-		}
+		// 	result_ptr = _align_forward(malloc_ptr, alignment, header_size);
+		// 	result_ptr[-1] = malloc_ptr;
+		// 	result_ptr[-2] = (void*)size;
+		// }
 
-		#ifdef DEBUG
-		{
-			self->allocation_count += 1;
-			self->allocation_size  += size;
-		}
-		#endif
+		// #ifdef DEBUG
+		// {
+		// 	self->allocation_count += 1;
+		// 	self->allocation_size  += size;
+		// }
+		// #endif
 
-		return (byte*)result_ptr;
+		// return (byte*)result_ptr;
 	}
 
 	void
-	_global_memory_free(void* _self, const Owner<byte>& value)
+	_global_memory_free(void* _self, void* value)
 	{
-		if(value.ptr == nullptr)
-			return;
-
 		OS* self = (OS*)_self;
-
-		internal::Memory_Header *memory_header = (internal::Memory_Header*)value.ptr;
-		--memory_header;
 
 		#ifdef DEBUG
 		{
-			self->allocation_count -= 1;
-			self->allocation_size -= memory_header->size;
+			/*self->allocation_count -= 1;
+			self->allocation_size -= value.size_v;*/
 		}
 		#endif
 
-		std::free(memory_header->malloc_ptr);
+		std::free(((void**)value)[-2]);
 	}
 
 	OS*

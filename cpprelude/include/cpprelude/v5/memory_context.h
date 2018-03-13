@@ -7,8 +7,8 @@ namespace cpprelude
 {
 	struct Memory_Context
 	{
-		using alloc_func = Owner<byte>(*)(void*, usize, u8);
-		using free_func = void(*)(void*, const Owner<byte>&);
+		using alloc_func = void*(*)(void*, usize, u8);
+		using free_func = void(*)(void*, void*);
 
 		void* _self = nullptr;
 		alloc_func _alloc = nullptr;
@@ -18,15 +18,14 @@ namespace cpprelude
 		Owner<T>
 		alloc(usize count = 1, u8 alignment = 0)
 		{
-			return _alloc(_self, sizeof(T) * count, alignment).template convert<T>();
+			return (T*)(_alloc(_self, sizeof(T) * count, alignment));
 		}
 
 		template<typename T>
 		void
 		free(Owner<T>& value)
 		{
-			_free(_self, value.template convert<byte>());
-			value.ptr = nullptr;
+			_free(_self, value);
 		}
 
 		template<typename T>
