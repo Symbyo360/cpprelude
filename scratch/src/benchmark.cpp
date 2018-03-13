@@ -1124,7 +1124,7 @@ do_benchmark()
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_vector, limit),
 		CPPRELUDE_BENCHMARK(bm_v5_dynamic_array, limit)
-	});
+	}, 1000);
 
 	std::cout << std::endl << std::endl;
 
@@ -1132,7 +1132,7 @@ do_benchmark()
 		CPPRELUDE_BENCHMARK(bm_forward_list, limit),
 		CPPRELUDE_BENCHMARK(bm_slinked_list, limit),
 		CPPRELUDE_BENCHMARK(bm_v5_single_list, limit)
-	});
+	}, 1000);
 
 	std::cout << std::endl << std::endl;
 
@@ -1140,7 +1140,7 @@ do_benchmark()
 		CPPRELUDE_BENCHMARK(bm_list, limit),
 		CPPRELUDE_BENCHMARK(bm_dlinked_list, limit),
 		CPPRELUDE_BENCHMARK(bm_v5_double_list, limit)
-	});
+	}, 1000);
 
 	std::cout << "\nBENCHMARK END\n" << std::endl;
 }

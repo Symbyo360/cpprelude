@@ -44,7 +44,7 @@ namespace cpprelude
 		 */
 		template<typename T>
 		Owner<T>
-		alloc(usize count = 1, u8 alignment = alignof(T))
+		alloc(usize count = 1, u8 alignment = 0)
 		{
 			return global_memory->template alloc<T>(count, alignment);
 		}

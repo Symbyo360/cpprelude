@@ -29,25 +29,44 @@ namespace cpprelude
 	}
 
 	Owner<byte>
-	_global_memory_alloc(void* _self, usize size, u8 alignment)
+	_old_alloc(void* _self, usize size, u8 alignment)
 	{
 		if(size == 0)
 			return nullptr;
 
+		usize* result = reinterpret_cast<usize*>(std::malloc(size + sizeof(internal::Memory_Header)));
+		result[0] = size;
+		result[1] = (usize) result;
+		return reinterpret_cast<byte*>(result + 2);
+	}
+
+	Owner<byte>
+	_global_memory_alloc(void* _self, usize size, u8 alignment)
+	{
 		OS* self = (OS*)_self;
 
+		void** result_ptr = nullptr;
 		const usize header_size = sizeof(internal::Memory_Header);
-		usize addtional_size = 	alignment > header_size ?
-								alignment : header_size;
 
-		void* malloc_ptr = std::malloc(size + addtional_size);
+		//no alignment required
+		if(alignment == 0)
+		{
+			usize* malloc_ptr = (usize*)std::malloc(size + header_size);
+			malloc_ptr[0] = size;
+			malloc_ptr[1] = (usize)malloc_ptr;
+			result_ptr = (void**)(malloc_ptr + 2);
+		}
+		else
+		{
+			usize addtional_size = 	alignment > header_size ?
+									alignment : header_size;
 
-		if(malloc_ptr == nullptr)
-			return nullptr;
+			void* malloc_ptr = std::malloc(size + addtional_size);
 
-		void** aligned_ptr = _align_forward(malloc_ptr, alignment, header_size);
-		aligned_ptr[-1] = malloc_ptr;
-		aligned_ptr[-2] = (void*)size;
+			result_ptr = _align_forward(malloc_ptr, alignment, header_size);
+			result_ptr[-1] = malloc_ptr;
+			result_ptr[-2] = (void*)size;
+		}
 
 		#ifdef DEBUG
 		{
@@ -56,7 +75,7 @@ namespace cpprelude
 		}
 		#endif
 
-		return (byte*)aligned_ptr;
+		return (byte*)result_ptr;
 	}
 
 	void
@@ -92,7 +111,7 @@ namespace cpprelude
 
 		//setup the memory
 		_global_memory._self  = &_os;
-		_global_memory._alloc = _global_memory_alloc;
+		_global_memory._alloc = _old_alloc;
 		_global_memory._free  = _global_memory_free;
 
 		_os.global_memory = &_global_memory;
