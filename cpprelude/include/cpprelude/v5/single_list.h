@@ -55,16 +55,18 @@ namespace cpprelude
 		using Const_Range_Type = Forward_Range<const Node_Type>;
 
 		Memory_Context* mem_context;
-		Owner<Node_Type> _head;
+		Node_Type* _head;
 		usize _count;
 
 		Single_List(Memory_Context *context = os->global_memory)
 			:mem_context(context),
+			 _head(nullptr),
 			 _count(0)
 		{}
 
 		Single_List(std::initializer_list<Data_Type> list, Memory_Context *context = os->global_memory)
 			:mem_context(context),
+			_head(nullptr),
 			_count(0)
 		{
 			auto it = list.end();
@@ -78,6 +80,7 @@ namespace cpprelude
 
 		Single_List(usize count, const Data_Type& fill_value, Memory_Context *context = os->global_memory)
 			:mem_context(context),
+			_head(nullptr),
 			_count(0)
 		{
 			for(usize i = 0; i < count; ++i)
@@ -86,6 +89,7 @@ namespace cpprelude
 
 		Single_List(const Single_List<Data_Type>& other)
 			:mem_context(other.mem_context),
+			_head(nullptr),
 			_count(0)
 		{
 			Node_Type *node = other._head;
@@ -98,6 +102,7 @@ namespace cpprelude
 
 		Single_List(const Single_List<Data_Type>& other, Memory_Context *context = os->global_memory)
 			:mem_context(context),
+			_head(nullptr),
 			_count(0)
 		{
 			Node_Type *node = other._head;
@@ -113,6 +118,7 @@ namespace cpprelude
 			 _head(std::move(other._head)),
 			 _count(other._count)
 		{
+			other._head = nullptr;
 			other._count = 0;
 		}
 
@@ -147,6 +153,7 @@ namespace cpprelude
 			_count = other._count;
 			_head = std::move(other._head);
 
+			other._head = nullptr;
 			other._count = 0;
 			return *this;
 		}
@@ -180,30 +187,30 @@ namespace cpprelude
 		void
 		emplace_front(TArgs&& ... args)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type* new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
-			::new (&new_node->next) Owner<Node_Type>(std::move(_head));
-			_head = std::move(new_node);
+			new_node->next = _head;
+			_head = new_node;
 			++_count;
 		}
 
 		void
 		insert_front(const Data_Type& value)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type* new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(value);
-			::new (&new_node->next) Owner<Node_Type>(std::move(_head));
-			_head = std::move(new_node);
+			new_node->next = _head;
+			_head = new_node;
 			++_count;
 		}
 
 		void
 		insert_front(Data_Type&& value)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type* new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(std::move(value));
-			::new (&new_node->next) Owner<Node_Type>(std::move(_head));
-			_head = std::move(new_node);
+			new_node->next = _head;
+			_head = new_node;
 			++_count;
 		}
 
@@ -211,10 +218,10 @@ namespace cpprelude
 		void
 		emplace_after(Node_Type *it, TArgs&& ... args)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type* new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
-			::new (&new_node->next) Owner<Node_Type>(std::move(it->next));
-			it->next = std::move(new_node);
+			new_node->next = it->next;
+			it->next = new_node;
 			++_count;
 		}
 
@@ -228,10 +235,10 @@ namespace cpprelude
 		void
 		insert_after(Node_Type *it, const Data_Type& value)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type* new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(value);
-			::new (&new_node->next) Owner<Node_Type>(std::move(it->next));
-			it->next = std::move(new_node);
+			new_node->next = it->next;
+			it->next = new_node;
 			++_count;
 		}
 
@@ -244,10 +251,10 @@ namespace cpprelude
 		void
 		insert_after(Node_Type *it, Data_Type&& value)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type* new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(std::move(value));
-			::new (&new_node->next) Owner<Node_Type>(std::move(it->next));
-			it->next = std::move(new_node);
+			new_node->next = it->next;
+			it->next = new_node;
 			++_count;
 		}
 
@@ -270,7 +277,7 @@ namespace cpprelude
 
 				it->value.~T();
 
-				mem_context->template free<Node_Type>(it);
+				mem_context->template free<Node_Type>(own(it));
 
 				it = next_node;
 				--_count;

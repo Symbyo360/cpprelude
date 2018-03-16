@@ -34,8 +34,8 @@ namespace cpprelude
 		constexpr static usize STARTING_COUNT = 8;
 
 		Memory_Context* mem_context;
-		Owner<Data_Type> _data = nullptr;
-		usize _count, _capacity;
+		Owner<Data_Type> _data;
+		usize _count;
 
 		/**
 		 * @brief      Constructs a dynamic array that uses the provided memory context for allocation
@@ -44,8 +44,7 @@ namespace cpprelude
 		 */
 		Dynamic_Array(Memory_Context *context = os->global_memory)
 			:mem_context(context),
-			 _count(0),
-			 _capacity(0)
+			 _count(0)
 		{}
 
 		/**
@@ -57,16 +56,14 @@ namespace cpprelude
 		Dynamic_Array(std::initializer_list<Data_Type> list,
 			Memory_Context *context = os->global_memory)
 			:mem_context(context),
-			 _count(0),
-			 _capacity(0)
+			 _count(0)
 		{
 			_data = mem_context->template alloc<Data_Type>(list.size());
 			for(const auto& value: list)
 			{
-				::new (_data + _count) Data_Type(value);
+				::new (_data.ptr + _count) Data_Type(value);
 				++_count;
 			}
-			_capacity = _count;
 		}
 
 		/**
@@ -81,8 +78,7 @@ namespace cpprelude
 		{
 			_data = mem_context->template alloc<Data_Type>(count);
 			for(_count = 0; _count < count; ++_count)
-				::new (_data + _count) Data_Type();
-			_capacity = count;
+				::new (_data.ptr + _count) Data_Type();
 		}
 
 		/**
@@ -99,8 +95,7 @@ namespace cpprelude
 		{
 			_data = mem_context->template alloc<Data_Type>(count);
 			for(_count = 0; _count < count; ++_count)
-				::new (_data + _count) Data_Type(fill_value);
-			_capacity = count;
+				::new (_data.ptr + _count) Data_Type(fill_value);
 		}
 
 		/**
@@ -114,8 +109,7 @@ namespace cpprelude
 		{
 			_data = mem_context->template alloc<Data_Type>(other._count);
 			for(_count = 0; _count < other._count; ++_count)
-				::new (_data + _count) Data_Type(other._data[_count]);
-			_capacity = other._count;
+				::new (_data.ptr + _count) Data_Type(other._data[_count]);
 		}
 
 		/**
@@ -130,8 +124,7 @@ namespace cpprelude
 		{
 			_data = mem_context->template alloc<Data_Type>(other._count);
 			for(_count = 0; _count < other._count; ++_count)
-				::new (_data + _count) Data_Type(other._data[_count]);
-			_capacity = other._count;
+				::new (_data.ptr + _count) Data_Type(other._data[_count]);
 		}
 
 		/**
@@ -142,11 +135,9 @@ namespace cpprelude
 		Dynamic_Array(Dynamic_Array<Data_Type>&& other)
 			:mem_context(other.mem_context),
 			 _data(std::move(other._data)),
-			 _count(other._count),
-			 _capacity(other._capacity)
+			 _count(other._count)
 		{
 			other._count = 0;
-			other._capacity = 0;
 		}
 
 		/**
@@ -171,8 +162,7 @@ namespace cpprelude
 			mem_context = other.mem_context;
 			_data = mem_context->template alloc<Data_Type>(other._count);
 			for(_count = 0; _count < other._count; ++_count)
-				::new (_data + _count) Data_Type(other._data[_count]);
-			_capacity = other._count;
+				::new (_data.ptr + _count) Data_Type(other._data[_count]);
 			return *this;
 		}
 
@@ -190,10 +180,8 @@ namespace cpprelude
 			mem_context = other.mem_context;
 			_data = std::move(other._data);
 			_count = other._count;
-			_capacity = other._capacity;
 
 			other._count = 0;
-			other._capacity = 0;
 			return *this;
 		}
 
@@ -203,7 +191,7 @@ namespace cpprelude
 		usize
 		capacity() const
 		{
-			return _capacity;
+			return _data.count();
 		}
 
 		/**
@@ -255,19 +243,21 @@ namespace cpprelude
 		reserve(usize expected_count)
 		{
 			//we have enough space
-			if(_capacity - _count >= expected_count)
+			if(capacity() - _count >= expected_count)
 				return;
 
 			//double the capacity - the current count
-			usize double_cap = (_capacity * GROW_FACTOR) - _count;
-			_capacity = double_cap > expected_count ? double_cap : expected_count;
+			usize double_cap = (capacity() * GROW_FACTOR) - _count;
+			auto new_capacity = double_cap > expected_count ? double_cap : expected_count;
 			//account for the existing count in the array
-			_capacity += _count;
-			Owner<Data_Type> new_data = mem_context->template alloc<Data_Type>(_capacity);
+			new_capacity += _count;
+			Owner<Data_Type> new_data = mem_context->template alloc<Data_Type>(new_capacity);
 			for(usize i = 0; i < _count; ++i)
-				::new (new_data + i) Data_Type(std::move(_data[i]));
+				::new (new_data.ptr + i) Data_Type(std::move(_data[i]));
+
 			if(_data)
 				mem_context->template free<Data_Type>(_data);
+
 			_data = std::move(new_data);
 		}
 
@@ -281,7 +271,7 @@ namespace cpprelude
 		{
 			reserve(additional_count);
 			for(usize i = _count; i < _count + additional_count; ++i)
-				::new (_data + i) Data_Type();
+				::new (_data.ptr + i) Data_Type();
 			_count += additional_count;
 		}
 
@@ -296,7 +286,7 @@ namespace cpprelude
 		{
 			reserve(additional_count);
 			for(usize i = _count; i < _count + additional_count; ++i)
-				::new (_data + i) Data_Type(value);
+				::new (_data.ptr + i) Data_Type(value);
 			_count += additional_count;
 		}
 
@@ -332,7 +322,7 @@ namespace cpprelude
 					reserve(cap * GROW_FACTOR);
 			}
 
-			::new (_data + _count) Data_Type(std::forward<TArgs>(args)...);
+			::new (_data.ptr + _count) Data_Type(std::forward<TArgs>(args)...);
 			++_count;
 		}
 
@@ -353,7 +343,7 @@ namespace cpprelude
 					reserve(cap * GROW_FACTOR);
 			}
 
-			::new (_data + _count) Data_Type(value);
+			::new (_data.ptr + _count) Data_Type(value);
 			++_count;
 		}
 
@@ -373,7 +363,7 @@ namespace cpprelude
 				else
 					reserve(cap * GROW_FACTOR);
 			}
-			::new (_data + _count) Data_Type(std::move(value));
+			::new (_data.ptr + _count) Data_Type(std::move(value));
 			++_count;
 		}
 
@@ -408,7 +398,7 @@ namespace cpprelude
 		void
 		reset()
 		{
-			if(_data == nullptr)
+			if(!_data)
 				return;
 
 			for(usize i = 0; i < _count; ++i)
@@ -416,7 +406,6 @@ namespace cpprelude
 
 			mem_context->template free<Data_Type>(_data);
 			_count = 0;
-			_capacity = 0;
 		}
 
 		/**
@@ -425,15 +414,14 @@ namespace cpprelude
 		void
 		shrink_to_fit()
 		{
-			if(_capacity == _count)
+			if(capacity() == _count)
 				return;
 
 			Owner<Data_Type> new_data = mem_context->template alloc<Data_Type>(_count);
 			for(usize i = 0; i < _count; ++i)
-				::new (new_data + i) Data_Type(std::move(_data[i]));
+				::new (new_data.ptr + i) Data_Type(std::move(_data[i]));
 			mem_context->template free<Data_Type>(_data);
 			_data = std::move(new_data);
-			_capacity = _count;
 		}
 
 		/**
@@ -442,7 +430,7 @@ namespace cpprelude
 		Range_Type
 		all()
 		{
-			return Range_Type(_data, _count * sizeof(T));
+			return Range_Type(_data.ptr, _count * sizeof(T));
 		}
 
 		/**
@@ -451,7 +439,7 @@ namespace cpprelude
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(_data, _count * sizeof(T));
+			return Const_Range_Type(_data.ptr, _count * sizeof(T));
 		}
 
 		/**
@@ -460,23 +448,23 @@ namespace cpprelude
 		 *
 		 * @return     Range viewing the specified values in the array
 		 */
-		//Range_Type
-		//range(usize start, usize end)
-		//{
-		//	return _data.range(start, end);
-		//}
+		Range_Type
+		range(usize start, usize end)
+		{
+			return _data.range(start, end);
+		}
 
-		///**
-		// * @param[in]  start  The start index of the range
-		// * @param[in]  end    The end index of the range
-		// *
-		// * @return     Const range viewing the specified values in the array
-		// */
-		//Const_Range_Type
-		//range(usize start, usize end) const
-		//{
-		//	return _data.range(start, end);
-		//}
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Const range viewing the specified values in the array
+		 */
+		Const_Range_Type
+		range(usize start, usize end) const
+		{
+			return _data.range(start, end);
+		}
 
 		/**
 		 * @return     A Reference to the front value in the array
@@ -502,7 +490,7 @@ namespace cpprelude
 		Data_Type&
 		back()
 		{
-			return *(_data + _count - 1);
+			return *(_data.ptr + _count - 1);
 		}
 
 		/**
@@ -511,7 +499,7 @@ namespace cpprelude
 		const Data_Type&
 		back() const
 		{
-			return *(_data + _count - 1);
+			return *(_data.ptr + _count - 1);
 		}
 	};
 }

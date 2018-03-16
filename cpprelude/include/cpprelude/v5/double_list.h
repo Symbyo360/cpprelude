@@ -15,9 +15,9 @@ namespace cpprelude
 		{
 			using Data_Type = T;
 
-			T value;
 			Double_List_Node<T> *next = nullptr;
 			Double_List_Node<T> *prev = nullptr;
+			T value;
 		};
 	}
 
@@ -28,11 +28,13 @@ namespace cpprelude
 		using Node_Type = internal::Double_List_Node<Data_Type>;
 
 		Memory_Context *mem_context;
-		Owner<Node_Type> _head, _tail;
+		Node_Type *_head, *_tail;
 		usize _count;
 
 		Double_List(Memory_Context *context = os->global_memory)
 			:mem_context(context),
+			_head(nullptr),
+			_tail(nullptr),
 			_count(0)
 		{
 			_init_sentinals();
@@ -54,7 +56,7 @@ namespace cpprelude
 		void
 		emplace_front(TArgs&& ... args)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type *new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 
 			_insert_front_helper(_head->next, new_node);
@@ -64,7 +66,7 @@ namespace cpprelude
 		void
 		insert_front(const Data_Type& value)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type *new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(value);
 
 			_insert_front_helper(_head->next, new_node);
@@ -74,7 +76,7 @@ namespace cpprelude
 		void
 		insert_front(Data_Type&& value)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type *new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(std::move(value));
 			
 			_insert_front_helper(_head->next, new_node);
@@ -83,9 +85,9 @@ namespace cpprelude
 
 		template<typename ... TArgs>
 		void
-		insert_back(TArgs&& ... args)
+		emplace_back(TArgs&& ... args)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type *new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			
 			_insert_back_helper(_tail->prev, new_node);
@@ -95,7 +97,7 @@ namespace cpprelude
 		void
 		insert_back(const Data_Type& value)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type *new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(value);
 			
 			_insert_back_helper(_tail->prev, new_node);
@@ -105,7 +107,7 @@ namespace cpprelude
 		void
 		insert_back(Data_Type&& value)
 		{
-			auto new_node = mem_context->template alloc<Node_Type>();
+			Node_Type *new_node = mem_context->template alloc<Node_Type>();
 			::new (&new_node->value) Data_Type(std::move(value));
 			
 			_insert_back_helper(_tail->prev, new_node);
