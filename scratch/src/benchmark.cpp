@@ -2,14 +2,14 @@
 #include "stopwatch.h"
 
 #include <cpprelude/dynamic_array.h>
-#include <cpprelude/v5/dynamic_array.h>
+#include <cpprelude/v5/Dynamic_Array.h>
 #include <vector>
 
 #include <forward_list>
-#include <cpprelude/v5/single_list.h>
+#include <cpprelude/v5/Single_List.h>
 
 #include <list>
-#include <cpprelude/v5/double_list.h>
+#include <cpprelude/v5/Double_List.h>
 
 #include <cpprelude/stack_array.h>
 #include <cpprelude/stack_list.h>
@@ -132,13 +132,17 @@ bm_v5_double_list(workbench *bench, usize limit)
 {
 	usize r = rand();
 
-	Double_List<usize> list;
 	bench->watch.start();
+		Double_List<usize> list;
 		for(usize i = 0; i < limit; ++i)
 			if((i + r) % 2 == 0)
 				list.emplace_back(i + r);
 			else
 				list.emplace_front(i + r);
+
+		for(const auto& number: list.all())
+			if(number % 2 == 0)
+				r += number;
 	bench->watch.stop();
 	return r;
 }
@@ -156,6 +160,10 @@ bm_list(workbench *bench, usize limit)
 				list.push_back(i + r);
 			else
 				list.push_front(i + r);
+
+		for(const auto& number: list)
+			if(number % 2 == 0)
+				r += number;
 	bench->watch.stop();
 	return r;
 }
