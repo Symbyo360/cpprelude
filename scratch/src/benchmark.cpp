@@ -11,9 +11,12 @@
 #include <list>
 #include <cpprelude/v5/Double_List.h>
 
+#include <cpprelude/v5/Stack_Array.h>
+#include <cpprelude/v5/Stack_List.h>
+#include <stack>
+
 #include <cpprelude/stack_array.h>
 #include <cpprelude/stack_list.h>
-#include <stack>
 
 #include <cpprelude/slinked_list.h>
 #include <cpprelude/dlinked_list.h>
@@ -164,6 +167,67 @@ bm_list(workbench *bench, usize limit)
 		for(const auto& number: list)
 			if(number % 2 == 0)
 				r += number;
+	bench->watch.stop();
+	return r;
+}
+
+
+usize
+bm_v5_stack_array(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		Stack_Array<usize> stack;
+		for (usize i = 0; i < limit; ++i)
+			if ((i + r) % 2 == 0)
+				stack.push(i + r);
+
+		while (!stack.empty())
+		{
+			r += stack.top();
+			stack.pop();
+		}
+	bench->watch.stop();
+	return r;
+}
+
+usize
+bm_v5_stack_list(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		Stack_List<usize> stack;
+		for (usize i = 0; i < limit; ++i)
+			if ((i + r) % 2 == 0)
+				stack.push(i + r);
+
+		while (!stack.empty())
+		{
+			r += stack.top();
+			stack.pop();
+		}
+	bench->watch.stop();
+	return r;
+}
+
+usize
+bm_stack(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		std::stack<usize> stack;
+		for (usize i = 0; i < limit; ++i)
+			if ((i + r) % 2 == 0)
+				stack.push(i + r);
+
+		while (!stack.empty())
+		{
+			r += stack.top();
+			stack.pop();
+		}
 	bench->watch.stop();
 	return r;
 }
@@ -1092,28 +1156,40 @@ bm_list(workbench *bench, usize limit)
 void
 do_benchmark()
 {
-	cpprelude::usize limit = 10000;
+	#ifdef _DEBUG
+		cpprelude::usize limit = 10000;
+	#else
+		cpprelude::usize limit = 1000;
+	#endif
 
 	std::cout << "\nBENCHMARK START\n" << std::endl;
 
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_vector, limit),
 		CPPRELUDE_BENCHMARK(bm_v5_dynamic_array, limit)
-	});
+	}, 200000);
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_forward_list, limit),
-		CPPRELUDE_BENCHMARK(bm_v5_single_list, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_forward_list, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_v5_single_list, limit)
+	// });
 
-	std::cout << std::endl << std::endl;
+	// std::cout << std::endl << std::endl;
 
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_list, limit),
-		CPPRELUDE_BENCHMARK(bm_v5_double_list, limit)
-	});
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_list, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_v5_double_list, limit)
+	// });
+
+	// std::cout << std::endl << std::endl;
+
+	// compare_benchmark(std::cout, {
+	// 	CPPRELUDE_BENCHMARK(bm_stack, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_v5_stack_array, limit),
+	// 	CPPRELUDE_BENCHMARK(bm_v5_stack_list, limit)
+	// });
 
 	std::cout << "\nBENCHMARK END\n" << std::endl;
 }

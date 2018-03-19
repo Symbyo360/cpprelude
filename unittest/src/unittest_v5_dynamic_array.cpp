@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include <cpprelude/v5/dynamic_array.h>
+#include <cpprelude/v5/Dynamic_Array.h>
 
 using namespace cpprelude;
 
