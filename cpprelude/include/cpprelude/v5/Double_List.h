@@ -447,7 +447,7 @@ namespace cpprelude
 		 */
 		template<typename ... TArgs>
 		void
-		emplace_after(const Bidirectinal_Iterator<Node_Type>& it, TArgs&& ... args)
+		emplace_after(const Bidirectional_Iterator<Node_Type>& it, TArgs&& ... args)
 		{
 			emplace_after(it.ptr, std::forward<TArgs>(args)...);
 		}
@@ -474,7 +474,7 @@ namespace cpprelude
 		 * @param[in]  value  The value to add
 		 */
 		void
-		insert_after(const Bidirectinal_Iterator<Node_Type>& it, const Data_Type& value)
+		insert_after(const Bidirectional_Iterator<Node_Type>& it, const Data_Type& value)
 		{
 			insert_after(it.ptr, value);
 		}
@@ -501,7 +501,7 @@ namespace cpprelude
 		 * @param[in]  value  The value to add
 		 */
 		void
-		insert_after(const Bidirectinal_Iterator<Node_Type>& it, Data_Type&& value)
+		insert_after(const Bidirectional_Iterator<Node_Type>& it, Data_Type&& value)
 		{
 			insert_after(it.ptr, std::move(value));
 		}
@@ -534,7 +534,7 @@ namespace cpprelude
 		 */
 		template<typename ... TArgs>
 		void
-		emplace_before(const Bidirectinal_Iterator<Node_Type>& it, TArgs&& ... args)
+		emplace_before(const Bidirectional_Iterator<Node_Type>& it, TArgs&& ... args)
 		{
 			emplace_before(it.ptr, std::forward<TArgs>(args)...);
 		}
@@ -561,7 +561,7 @@ namespace cpprelude
 		 * @param[in]  value  The value to add
 		 */
 		void
-		insert_before(const Bidirectinal_Iterator<Node_Type>& it, const Data_Type& value)
+		insert_before(const Bidirectional_Iterator<Node_Type>& it, const Data_Type& value)
 		{
 			insert_before(it.ptr, value);
 		}
@@ -588,7 +588,7 @@ namespace cpprelude
 		 * @param[in]  value  The value to add
 		 */
 		void
-		insert_before(const Bidirectinal_Iterator<Node_Type>& it, Data_Type&& value)
+		insert_before(const Bidirectional_Iterator<Node_Type>& it, Data_Type&& value)
 		{
 			insert_before(it.ptr, std::move(value));
 		}

@@ -167,7 +167,7 @@ namespace cpprelude
 		bool
 		operator==(const Slice& other) const
 		{
-			return ptr == ptr && size == other.size;
+			return ptr == other.ptr && size == other.size;
 		}
 
 		/**
@@ -201,7 +201,7 @@ namespace cpprelude
 		/**
 		 * @return     A Range of entire underlying memory block
 		 */
-		Range_Type&
+		Range_Type
 		all()
 		{
 			return *this;
@@ -227,12 +227,12 @@ namespace cpprelude
 		Range_Type
 		range(usize start, usize end)
 		{
-			if(start >= count())
-				start = count();
-			if(end >= count())
-				end = count();
-			if(end < start)
-				end = start;
+			// if(start >= count())
+			// 	start = count();
+			// if(end >= count())
+			// 	end = count();
+			// if(end < start)
+			// 	end = start;
 			return Range_Type(ptr + start, (end - start) * sizeof(T));
 		}
 
@@ -247,12 +247,12 @@ namespace cpprelude
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
-			if(start >= count())
-				start = count();
-			if(end >= count())
-				end = count();
-			if(end < start)
-				end = start;
+			// if(start >= count())
+			// 	start = count();
+			// if(end >= count())
+			// 	end = count();
+			// if(end < start)
+			// 	end = start;
 			return Const_Range_Type(ptr + start, (end - start) * sizeof(T));
 		}
 
@@ -300,7 +300,7 @@ namespace cpprelude
 		bool
 		empty() const
 		{
-			return size < sizeof(T);
+			return size == 0 || ptr == nullptr;
 		}
 
 		/**
@@ -932,7 +932,7 @@ namespace cpprelude
 	 * 4. **prev**: a pointer to the prev node.
 	 */
 	template<typename T>
-	struct Bidirectinal_Iterator
+	struct Bidirectional_Iterator
 	{
 		/**
 		 * A type def of the list node value Data_Type
@@ -949,7 +949,7 @@ namespace cpprelude
 		 *
 		 * @param      node  The list node pointer
 		 */
-		Bidirectinal_Iterator(T* node = nullptr)
+		Bidirectional_Iterator(T* node = nullptr)
 			:ptr(node)
 		{}
 
@@ -958,7 +958,7 @@ namespace cpprelude
 		 *
 		 * @return     This iterator by reference
 		 */
-		Bidirectinal_Iterator&
+		Bidirectional_Iterator&
 		operator++()
 		{
 			ptr = ptr->next;
@@ -970,11 +970,36 @@ namespace cpprelude
 		 *
 		 * @return     This iterator before moving forward by value
 		 */
-		Bidirectinal_Iterator
+		Bidirectional_Iterator
 		operator++(int)
 		{
 			auto result = *this;
 			ptr = ptr->next;
+			return result;
+		}
+
+		/**
+		 * @brief      Moves this iterator backward in the list
+		 *
+		 * @return     This iterator by reference
+		 */
+		Bidirectional_Iterator&
+		operator--()
+		{
+			ptr = ptr->prev;
+			return *this;
+		}
+
+		/**
+		 * @brief      Moves this iterator backward in the list
+		 *
+		 * @return     This iterator before moving backward by value
+		 */
+		Bidirectional_Iterator
+		operator--(int)
+		{
+			auto result = *this;
+			ptr = ptr->prev;
 			return result;
 		}
 
@@ -986,7 +1011,7 @@ namespace cpprelude
 		 * @return     Whether the two iterators points to the same node
 		 */
 		bool
-		operator==(const Bidirectinal_Iterator& other) const
+		operator==(const Bidirectional_Iterator& other) const
 		{
 			return ptr == other.ptr;
 		}
@@ -999,7 +1024,7 @@ namespace cpprelude
 		 * @return     Whether the two iterators points to different nodes
 		 */
 		bool
-		operator!=(const Bidirectinal_Iterator& other) const
+		operator!=(const Bidirectional_Iterator& other) const
 		{
 			return !operator==(other);
 		}
@@ -1098,12 +1123,12 @@ namespace cpprelude
 		/**
 		 * Iterator type of this range
 		 */
-		using iterator = Bidirectinal_Iterator<T>;
+		using iterator = Bidirectional_Iterator<T>;
 
 		/**
 		 * Const Iterator type of this range
 		 */
-		using const_iterator = Bidirectinal_Iterator<const T>;
+		using const_iterator = Bidirectional_Iterator<const T>;
 
 		/**
 		 * Pointer to the underlying list node
@@ -1386,6 +1411,165 @@ namespace cpprelude
 		cend() const
 		{
 			return const_iterator(_end);
+		}
+	};
+
+	template<typename TNode>
+	struct Red_Black_Tree_Iterator
+	{
+		using Node_Type = TNode;
+
+		Node_Type *node;
+
+		Red_Black_Tree_Iterator()
+			:node(nullptr)
+		{}
+
+		Red_Black_Tree_Iterator(Node_Type *node_ptr)
+			:node(node_ptr)
+		{}
+
+		Red_Black_Tree_Iterator&
+		operator++()
+		{
+			node = _get_successor(node);
+			return *this;
+		}
+
+		Red_Black_Tree_Iterator
+		operator++(int)
+		{
+			Node_Type* result = node;
+			node = _get_successor(node);
+			return Red_Black_Tree_Iterator(result);
+		}
+
+		Red_Black_Tree_Iterator&
+		operator--()
+		{
+			node = _get_predecessor(node);
+			return *this;
+		}
+
+		Red_Black_Tree_Iterator
+		operator--(int)
+		{
+			Node_Type* result = node;
+			node = _get_predecessor(node);
+			return Red_Black_Tree_Iterator(result);
+		}
+
+		bool
+		operator==(const Red_Black_Tree_Iterator& other) const
+		{
+			return node == other.node;
+		}
+
+		bool
+		operator!=(const Red_Black_Tree_Iterator& other) const
+		{
+			return node != other.node;
+		}
+
+		void
+		move_up()
+		{
+			node = node->parent;
+		}
+
+		void
+		move_left()
+		{
+			node = node->left;
+		}
+
+		void
+		move_right()
+		{
+			node = node->right;
+		}
+
+		template<typename TCond = Node_Type, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		typename Node_Type::Data_Type*
+		operator->()
+		{
+			return &node->data;
+		}
+
+		const typename Node_Type::Data_Type*
+		operator->() const
+		{
+			return &node->data;
+		}
+
+		template<typename TCond = Node_Type, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		typename Node_Type::Data_Type&
+		operator*()
+		{
+			return node->data;
+		}
+
+		const typename Node_Type::Data_Type&
+		operator*() const
+		{
+			return node->data;
+		}
+
+		//the combination of the next two functions allow this iterator to iterate on all tree nodes starting from the most left smallest key in the tree
+
+		//this function traverses the right branch of a tree
+		//gets the next node in tree which the next larger key
+		Node_Type*
+		_get_successor(Node_Type* node)
+		{
+			if (node == nullptr) return node;
+			//get the right node
+			Node_Type* successor = node->right;
+
+			//if the right node exist then go all the way to its left branch
+			if (successor != nullptr)
+			{
+				while (successor->left != nullptr)
+					successor = successor->left;
+				return successor;
+			}
+
+			//if there's no right node then go up all the way along the right branch
+			Node_Type* temp = node;
+			successor = temp->parent;
+			while (successor != nullptr && temp == successor->right)
+			{
+				temp = successor;
+				successor = successor->parent;
+			}
+			return successor;
+		}
+
+		//this function traverses the left branch of a tree
+		//same as above but gets the next smaller key
+		Node_Type*
+		_get_predecessor(Node_Type* node)
+		{
+			if (node == nullptr) return node;
+			//check the left node
+			Node_Type* predecessor = node->left;
+
+			//go all the war through the right branch
+			if (predecessor != nullptr)
+			{
+				while (predecessor->right != nullptr)
+					predecessor = predecessor->right;
+				return predecessor;
+			}
+
+			Node_Type* temp = node;
+			predecessor = temp->parent;
+			while (predecessor != nullptr && temp == predecessor->left)
+			{
+				temp = predecessor;
+				predecessor = predecessor->parent;
+			}
+			return predecessor;
 		}
 	};
 }

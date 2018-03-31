@@ -274,13 +274,6 @@ namespace cpprelude
 		Range_Type
 		range(usize start, usize end)
 		{
-			if(start >= count())
-				start = count();
-			if(end >= count())
-				end = count();
-
-			if(end < start)
-				end = start;
 			return Range_Type(ptr + start, (end - start) * sizeof(T));
 		}
 
@@ -293,13 +286,6 @@ namespace cpprelude
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
-			if(start >= count())
-				start = count();
-			if(end >= count())
-				end = count();
-
-			if(end < start)
-				end = start;
 			return Const_Range_Type(ptr + start, (end - start) * sizeof(T));
 		}
 	};

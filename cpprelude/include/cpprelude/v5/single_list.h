@@ -69,7 +69,7 @@ namespace cpprelude
 		usize _count;
 
 		/**
-		 * @brief      Constructs a single list that uses the probided memory context
+		 * @brief      Constructs a single list that uses the provided memory context
 		 *
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */

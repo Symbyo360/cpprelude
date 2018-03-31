@@ -15,6 +15,20 @@
 #include <cpprelude/v5/Stack_List.h>
 #include <stack>
 
+#include <cpprelude/v5/Ring_Array.h>
+#include <cpprelude/v5/Queue_List.h>
+#include <cpprelude/v5/Priority_Queue.h>
+#include <queue>
+
+#include <cpprelude/v5/Algorithms.h>
+#include <cpprelude/algorithm.h>
+#include <algorithm>
+
+#include <cpprelude/v5/Tree_Map.h>
+#include <map>
+
+//old
+
 #include <cpprelude/stack_array.h>
 #include <cpprelude/stack_list.h>
 
@@ -25,11 +39,7 @@
 
 #include <cpprelude/queue_list.h>
 #include <cpprelude/queue_array.h>
-#include <queue>
 #include <cpprelude/priority_queue.h>
-
-#include <cpprelude/algorithm.h>
-#include <algorithm>
 
 #include <cpprelude/threading.h>
 #include <functional>
@@ -43,7 +53,6 @@
 #include <cpprelude/hash_array.h>
 #include <unordered_map>
 #include <cpprelude/tree_map.h>
-#include <map>
 
 #include <cpprelude/allocator.h>
 
@@ -55,9 +64,19 @@ using namespace cpprelude;
 
 cpprelude::arena_t arena(MEGABYTES(100));
 
+Dynamic_Array<usize> RANDOM_ARRAY;
+
+void
+generate_random_data(usize limit)
+{
+	RANDOM_ARRAY.clear();
+	for(usize i = 0; i < limit; ++i)
+		RANDOM_ARRAY.insert_back(rand());
+}
+
 //new benchmark
 usize
-bm_v5_dynamic_array(workbench* bench, usize limit)
+bm_v5_Dynamic_Array(workbench* bench, usize limit)
 {
 	usize r = rand();
 
@@ -68,7 +87,7 @@ bm_v5_dynamic_array(workbench* bench, usize limit)
 			array.insert_back(i + r);
 
 		for(const auto& number: array.all())
-			if(number % 2 == 0)
+			if(number % 3 == 0)
 				r += number;
 	bench->watch.stop();
 
@@ -87,7 +106,7 @@ bm_vector(workbench* bench, usize limit)
 			array.push_back(i + r);
 
 		for (const auto& number : array)
-			if (number % 2 == 0)
+			if (number % 3 == 0)
 				r += number;
 	bench->watch.stop();
 
@@ -96,7 +115,7 @@ bm_vector(workbench* bench, usize limit)
 
 
 usize
-bm_v5_single_list(workbench *bench, usize limit)
+bm_v5_Single_List(workbench *bench, usize limit)
 {
 	usize r = rand();
 
@@ -131,7 +150,7 @@ bm_forward_list(workbench *bench, usize limit)
 }
 
 usize
-bm_v5_double_list(workbench *bench, usize limit)
+bm_v5_Double_List(workbench *bench, usize limit)
 {
 	usize r = rand();
 
@@ -173,7 +192,7 @@ bm_list(workbench *bench, usize limit)
 
 
 usize
-bm_v5_stack_array(workbench *bench, usize limit)
+bm_v5_Stack_Array(workbench *bench, usize limit)
 {
 	usize r = rand();
 
@@ -193,7 +212,7 @@ bm_v5_stack_array(workbench *bench, usize limit)
 }
 
 usize
-bm_v5_stack_list(workbench *bench, usize limit)
+bm_v5_Stack_List(workbench *bench, usize limit)
 {
 	usize r = rand();
 
@@ -216,7 +235,6 @@ usize
 bm_stack(workbench *bench, usize limit)
 {
 	usize r = rand();
-
 	bench->watch.start();
 		std::stack<usize> stack;
 		for (usize i = 0; i < limit; ++i)
@@ -232,6 +250,378 @@ bm_stack(workbench *bench, usize limit)
 	return r;
 }
 
+usize
+bm_v5_Ring_Buffer(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		Ring_Array<usize> que;
+		que.reserve(limit);
+		for (usize i = 0; i < limit; ++i)
+			que.insert_front(i + r);
+
+		while (!que.empty())
+		{
+			r += que.back();
+			que.remove_back();
+		}
+	bench->watch.stop();
+	return r;
+}
+
+usize
+bm_v5_Queue_List(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		Queue_List<usize> que;
+		for (usize i = 0; i < limit; ++i)
+			que.enqueue(i + r);
+
+		while (!que.empty())
+		{
+			r += que.front();
+			que.dequeue();
+		}
+	bench->watch.stop();
+	return r;
+}
+
+usize
+bm_queue(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		std::queue<usize> que;
+		for (usize i = 0; i < limit; ++i)
+			que.push(i + r);
+
+		while (!que.empty())
+		{
+			r += que.front();
+			que.pop();
+		}
+	bench->watch.stop();
+	return r;
+}
+
+
+usize
+bm_v5_Priority_Queue(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		Priority_Queue<usize> array;
+		for(usize i = 0; i < limit; ++i)
+			array.enqueue(i + r);
+
+		while(!array.empty())
+		{
+			if(array.front() % 2 == 0)
+				r += array.front();
+			array.dequeue();
+		}
+	bench->watch.stop();
+	return r;
+}
+
+usize
+bm_priority_queue(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		std::priority_queue<usize> array;
+		for(usize i = 0; i < limit; ++i)
+			array.push(i + r);
+
+		while(!array.empty())
+		{
+			if(array.top() % 2 == 0)
+				r += array.top();
+			array.pop();
+		}
+	bench->watch.stop();
+	return r;
+}
+
+usize
+bm_v5_heap_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	Dynamic_Array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		cpprelude::heap_sort(array.all());
+	bench->watch.stop();
+	for(usize i = 0; i < array.count(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(cpprelude::is_sorted(array.all()));
+
+	return r;
+}
+
+usize
+bm_std_heap_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	std::vector<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.push_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		std::make_heap(array.begin(), array.end());
+		std::sort_heap(array.begin(), array.end());
+	bench->watch.stop();
+	for(usize i = 0; i < array.size(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(std::is_sorted(array.begin(), array.end()));
+
+	return r;
+}
+
+
+usize
+bm_v5_insertion_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	Dynamic_Array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		cpprelude::insertion_sort(array.all());
+	bench->watch.stop();
+	for(usize i = 0; i < array.count(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(cpprelude::is_sorted(array.all()));
+
+	return r;
+}
+
+usize
+bm_insertion_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		cpprelude::insertion_sort(array.begin(), array.count());
+	bench->watch.stop();
+	for(usize i = 0; i < array.count(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(cpprelude::is_sorted(array.begin(), array.count()));
+
+	return r;
+}
+
+
+usize
+bm_v5_merge_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	Dynamic_Array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		cpprelude::merge_sort(array.all());
+	bench->watch.stop();
+	for(usize i = 0; i < array.count(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(cpprelude::is_sorted(array.all()));
+
+	return r;
+}
+
+usize
+bm_merge_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		cpprelude::merge_sort(array.begin(), array.count());
+	bench->watch.stop();
+
+	for(usize i = 0; i < array.count(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(cpprelude::is_sorted(array.begin(), array.count()));
+
+	return r;
+}
+
+usize
+bm_std_merge_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	std::vector<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.push_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		std::stable_sort(array.begin(), array.end());
+	bench->watch.stop();
+
+	for(usize i = 0; i < array.size(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(std::is_sorted(array.begin(), array.end()));
+
+	return r;
+}
+
+
+usize
+bm_v5_quick_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	Dynamic_Array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		cpprelude::quick_sort(array.all());
+	bench->watch.stop();
+	for(usize i = 0; i < array.count(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(cpprelude::is_sorted(array.all()));
+
+	return r;
+}
+
+usize
+bm_quick_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	dynamic_array<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.insert_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		cpprelude::quick_sort(array.begin(), array.count());
+	bench->watch.stop();
+
+	for(usize i = 0; i < array.count(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(cpprelude::is_sorted(array.begin(), array.count()));
+
+	return r;
+}
+
+usize
+bm_std_quick_sort(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	std::vector<cpprelude::usize> array;
+
+	for(cpprelude::usize i = 0; i < limit; ++i)
+		array.push_back(RANDOM_ARRAY[i]);
+
+	bench->watch.start();
+		std::sort(array.begin(), array.end());
+	bench->watch.stop();
+
+	for(usize i = 0; i < array.size(); ++i)
+		if((i+r) % 3 == 0)
+			r += array[i];
+
+	assert(std::is_sorted(array.begin(), array.end()));
+
+	return r;
+}
+
+usize
+bm_v5_Tree_Map(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		Tree_Map<usize, usize> map;
+		for(usize i = 0; i < limit; ++i)
+			map[i] = i+r;
+		for(usize i = 0; i < limit; ++i)
+		{
+			auto it = map.lookup(i);
+			if(it != map.end())
+			{
+				if((it->key + it->value) % 2 == 0)
+					map.remove(it);
+			}
+		}
+	bench->watch.stop();
+
+	return r;
+}
+
+usize
+bm_std_map(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+		std::map<usize, usize> map;
+		for(usize i = 0; i < limit; ++i)
+			map[i] = i+r;
+		for(usize i = 0; i < limit; ++i)
+		{
+			auto it = map.find(i);
+			if(it != map.end())
+			{
+				if((it->first + it->second) % 2 == 0)
+					map.erase(it);
+			}
+		}
+	bench->watch.stop();
+
+	return r;
+}
 
 //double linked list container
 // usize
@@ -1156,40 +1546,94 @@ bm_stack(workbench *bench, usize limit)
 void
 do_benchmark()
 {
-	#ifdef _DEBUG
-		cpprelude::usize limit = 10000;
-	#else
+	#ifdef DEBUG
 		cpprelude::usize limit = 1000;
+	#else
+		cpprelude::usize limit = 10000;
 	#endif
 
 	std::cout << "\nBENCHMARK START\n" << std::endl;
 
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_vector, limit),
-		CPPRELUDE_BENCHMARK(bm_v5_dynamic_array, limit)
-	}, 200000);
+		CPPRELUDE_BENCHMARK(bm_v5_Dynamic_Array, limit)
+	});
 
-	// std::cout << std::endl << std::endl;
+	std::cout << std::endl << std::endl;
 
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_forward_list, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_v5_single_list, limit)
-	// });
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_forward_list, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Single_List, limit)
+	});
 
-	// std::cout << std::endl << std::endl;
+	std::cout << std::endl << std::endl;
 
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_list, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_v5_double_list, limit)
-	// });
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_list, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Double_List, limit)
+	});
 
-	// std::cout << std::endl << std::endl;
+	std::cout << std::endl << std::endl;
 
-	// compare_benchmark(std::cout, {
-	// 	CPPRELUDE_BENCHMARK(bm_stack, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_v5_stack_array, limit),
-	// 	CPPRELUDE_BENCHMARK(bm_v5_stack_list, limit)
-	// });
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_stack, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Stack_Array, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Stack_List, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_queue, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Ring_Buffer, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Queue_List, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_priority_queue, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Priority_Queue, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	generate_random_data(limit);
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_heap_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_heap_sort, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_insertion_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_insertion_sort, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_merge_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_merge_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_merge_sort, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_quick_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_quick_sort, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_quick_sort, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_map, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Tree_Map, limit)
+	});
 
 	std::cout << "\nBENCHMARK END\n" << std::endl;
 }
