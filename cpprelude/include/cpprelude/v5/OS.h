@@ -1,7 +1,7 @@
 #pragma once
 #include "cpprelude/defines.h"
 #include "cpprelude/api.h"
-#include "cpprelude/v5/Memory_Context.h"
+#include "cpprelude/v5/Allocator_Trait.h"
 #include <utility>
 
 namespace cpprelude
@@ -20,7 +20,7 @@ namespace cpprelude
 		/**
 		 * The global memory context which uses the underlying malloc/free
 		 */
-		Memory_Context global_memory;
+		Allocator_Trait* global_memory;
 
 		/**
 		 * The allocation count that's made using the global memory
@@ -48,7 +48,7 @@ namespace cpprelude
 		Owner<T>
 		alloc(usize count = 1)
 		{
-			return global_memory.template alloc<T>(count);
+			return global_memory->template alloc<T>(count);
 		}
 
 		/**
@@ -62,7 +62,7 @@ namespace cpprelude
 		void
 		free(Owner<T>& value)
 		{
-			return global_memory.template free<T>(value);
+			return global_memory->template free<T>(value);
 		}
 
 		/**
@@ -76,28 +76,7 @@ namespace cpprelude
 		void
 		free(Owner<T>&& value)
 		{
-			return global_memory.template free<T>(value);
-		}
-
-		template<typename T>
-		Owner<T>
-		alloc_aligned(usize count = 1, usize alignment = alignof(T))
-		{
-			return global_memory.template alloc_aligned<T>(count, alignment);
-		}
-
-		template<typename T>
-		void
-		free_raw(Owner<T>& value)
-		{
-			global_memory.template free_aligned<T>(value);
-		}
-
-		template<typename T>
-		void
-		free_raw(Owner<T>&& value)
-		{
-			global_memory.template free_aligned<T>(std::move(value));
+			return global_memory->template free<T>(value);
 		}
 
 		void

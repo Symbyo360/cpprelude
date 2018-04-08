@@ -103,6 +103,12 @@ namespace cpprelude
 		}
 	};
 
+	/**
+	 * @brief      A Generic Red Black Tree
+	 *
+	 * @tparam     T                   Values type in the tree
+	 * @tparam     TCompare            Compare function used by the tree
+	 */
 	template<typename T,
 			 typename TCompare = default_less_than<T>,
 			 typename TNode = internal::Red_Black_Tree_Node<T>,
@@ -112,9 +118,20 @@ namespace cpprelude
 			 typename TConstFreeDataType = T>
 	struct Red_Black_Tree
 	{
+		/**
+		 * Data Type of the tree
+		 */
 		using Data_Type = T;
 		using Node_Type = TNode;
 		using Color_Type = TColor;
+		/**
+		 * Range Type of the tree
+		 */
+		using Range_Type = Tree_Range<Node_Type>;
+		/**
+		 * Const Range Type of the tree
+		 */
+		using Const_Range_Type = Tree_Range<const Node_Type>;
 		using iterator = TIterator;
 		using const_iterator = TConstIterator;
 
@@ -123,16 +140,34 @@ namespace cpprelude
 		Memory_Context mem_context;
 		TCompare _less_than;
 
+		/**
+		 * @brief      Constructs a tree
+		 *
+		 * @param[in]  context  The memory context to use for memory allocation and freeing
+		 */
 		Red_Black_Tree(const Memory_Context& context = os->global_memory)
 			:_root(nullptr), _count(0), mem_context(context)
 		{}
 
+		/**
+		 * @brief      Constructs a tree
+		 *
+		 * @param[in]  compare_function  The compare function
+		 * @param[in]  context           The memory context
+		 */
 		Red_Black_Tree(const TCompare& compare_function,
 					   const Memory_Context& context = os->global_memory)
 			:_root(nullptr), _count(0), mem_context(context),
 			 _less_than(compare_function)
 		{}
 
+		/**
+		 * @brief      Constructs a tree with the provided list
+		 *
+		 * @param[in]  list              The initializer list to fill the tree with
+		 * @param[in]  compare_function  The compare function
+		 * @param[in]  context           The memory context
+		 */
 		Red_Black_Tree(std::initializer_list<T> list,
 					   const TCompare& compare_function = TCompare(),
 					   const Memory_Context& context = os->global_memory)
@@ -148,6 +183,11 @@ namespace cpprelude
 			}
 		}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other  The other tree to copy from
+		 */
 		Red_Black_Tree(const Red_Black_Tree& other)
 			:_root(nullptr), _count(0), mem_context(other.mem_context),
 			 _less_than(other._less_than)
@@ -155,6 +195,12 @@ namespace cpprelude
 			_copy_content(other);
 		}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other             The other tree to copy from
+		 * @param[in]  compare_function  The compare function
+		 */
 		Red_Black_Tree(const Red_Black_Tree& other,
 					   const TCompare& compare_function)
 			:_root(nullptr), _count(0), mem_context(other.mem_context),
@@ -163,6 +209,12 @@ namespace cpprelude
 			_copy_content(other);
 		}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other    The other tree to copy from
+		 * @param[in]  context  The memory context
+		 */
 		Red_Black_Tree(const Red_Black_Tree& other,
 					   const Memory_Context& context)
 			:_root(nullptr), _count(0), mem_context(context),
@@ -171,6 +223,13 @@ namespace cpprelude
 			_copy_content(other);
 		}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other             The other tree to copy from
+		 * @param[in]  context           The memory context
+		 * @param[in]  compare_function  The compare function
+		 */
 		Red_Black_Tree(const Red_Black_Tree& other,
 					   const Memory_Context& context,
 					   const TCompare& compare_function)
@@ -180,6 +239,11 @@ namespace cpprelude
 			_copy_content(other);
 		}
 
+		/**
+		 * @brief      Move Constructor
+		 *
+		 * @param[in]  other  The other tree to move from
+		 */
 		Red_Black_Tree(Red_Black_Tree&& other)
 			:_root(other._root), _count(other._count),
 			 mem_context(std::move(other.mem_context)),
@@ -189,11 +253,21 @@ namespace cpprelude
 			other._count = 0;
 		}
 
+		/**
+		 * @brief      Destroys the tree.
+		 */
 		~Red_Black_Tree()
 		{
 			clear();
 		}
 
+		/**
+		 * @brief      Copy Assignment operator
+		 *
+		 * @param[in]  other  The other tree to copy from
+		 *
+		 * @return     A Reference to this tree
+		 */
 		Red_Black_Tree&
 		operator=(const Red_Black_Tree& other)
 		{
@@ -204,6 +278,13 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Move Assignment operator
+		 *
+		 * @param[in]  other  The other tree to move from
+		 *
+		 * @return     A Reference to this tree
+		 */
 		Red_Black_Tree&
 		operator=(Red_Black_Tree&& other)
 		{
@@ -218,6 +299,9 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Clears the values in the tree
+		 */
 		void
 		clear()
 		{
@@ -226,36 +310,68 @@ namespace cpprelude
 			_count = 0;
 		}
 
+		/**
+		 * @brief      Clears the values in the tree and frees the memory
+		 */
 		void
 		reset()
 		{
 			clear();
 		}
 
+		/**
+		 * @brief      Inserts a value into the tree
+		 *
+		 * @param[in]  data  The data to insert
+		 *
+		 * @return     an iterator to the inserted value
+		 */
 		iterator
 		insert(const Data_Type& data)
 		{
 			return iterator(_insert(data));
 		}
 
+		/**
+		 * @brief      Inserts a value into the tree
+		 *
+		 * @param[in]  data  The data to insert
+		 *
+		 * @return     an iterator to the inserted value
+		 */
 		iterator
 		insert(Data_Type&& data)
 		{
 			return iterator(_insert(std::move(data)));
 		}
 
+		/**
+		 * @brief      Removes a value from the tree
+		 *
+		 * @param[in]  data  The data to remove from the tree
+		 */
 		void
 		remove(const Data_Type& data)
 		{
 			remove(lookup(data));
 		}
 
+		/**
+		 * @brief      Removes a value from the tree
+		 *
+		 * @param[in]  data  The data to remove from the tree
+		 */
 		void
 		remove(Data_Type&& data)
 		{
 			remove(lookup(data));
 		}
 
+		/**
+		 * @brief      Removes a value from the tree
+		 *
+		 * @param[in]  node_to_delete  An iterator to the value to be removed
+		 */
 		void
 		remove(iterator node_to_delete)
 		{
@@ -307,6 +423,13 @@ namespace cpprelude
 			_free_mem(y.node);
 		}
 
+		/**
+		 * @brief      Looks-up a value in the tree
+		 *
+		 * @param[in]  data  The data to look-up
+		 *
+		 * @return     an iterator to the value or to the end of the tree if it doesn't exist
+		 */
 		iterator
 		lookup(const Data_Type& data)
 		{
@@ -316,12 +439,26 @@ namespace cpprelude
 			return iterator(result);
 		}
 
+		/**
+		 * @brief      Looks-up a value in the tree
+		 *
+		 * @param[in]  data  The data to look-up
+		 *
+		 * @return     an iterator to the value or to the end of the tree if it doesn't exist
+		 */
 		iterator
 		lookup(Data_Type&& data)
 		{
 			return lookup(data);
 		}
 
+		/**
+		 * @brief      Looks-up a value in the tree
+		 *
+		 * @param[in]  data  The data to look-up
+		 *
+		 * @return     a const iterator to the value or to the end of the tree if it doesn't exist
+		 */
 		const_iterator
 		lookup(const Data_Type& data) const
 		{
@@ -331,24 +468,46 @@ namespace cpprelude
 			return const_iterator(result);
 		}
 
+		/**
+		 * @brief      Looks-up a value in the tree
+		 *
+		 * @param[in]  data  The data to look-up
+		 *
+		 * @return     a const iterator to the value or to the end of the tree if it doesn't exist
+		 */
 		const_iterator
 		lookup(Data_Type&& data) const
 		{
 			return lookup(data);
 		}
 
+		/**
+		 * @return     An iterator to the root of the tree
+		 */
 		iterator
 		root()
 		{
 			return iterator(_root);
 		}
 
+		/**
+		 * @return     A const iterator to the root of the tree
+		 */
 		const_iterator
 		root() const
 		{
 			return const_iterator(_root);
 		}
 
+		/**
+		 * @brief      Traverses the tree in an in-order pattern
+		 *
+		 * @param[in]  FT      Function to apply to the values
+		 * @param      user_data      The user data to pass to the function
+		 *
+		 * @tparam     function_type  Type of the function to be applied
+		 * @tparam     user_type      Type of the user data to be passed
+		 */
 		template<typename function_type, typename user_type = void>
 		void
 		inorder_traverse(function_type&& FT, user_type* user_data = nullptr)
@@ -356,6 +515,15 @@ namespace cpprelude
 			_inorder_traverse(std::forward<function_type>(FT), _root, user_data);
 		}
 
+		/**
+		 * @brief      Traverses the tree in a post-order pattern
+		 *
+		 * @param[in]  FT      Function to apply to the values
+		 * @param      user_data      The user data to pass to the function
+		 *
+		 * @tparam     function_type  Type of the function to be applied
+		 * @tparam     user_type      Type of the user data to be passed
+		 */
 		template<typename function_type, typename user_type = void>
 		void
 		postorder_traverse(function_type&& FT, user_type* user_data = nullptr)
@@ -363,6 +531,15 @@ namespace cpprelude
 			_postorder_traverse(std::forward<function_type>(FT), _root, user_data);
 		}
 
+		/**
+		 * @brief      Traverses the tree in an pre-order pattern
+		 *
+		 * @param[in]  FT      Function to apply to the values
+		 * @param      user_data      The user data to pass to the function
+		 *
+		 * @tparam     function_type  Type of the function to be applied
+		 * @tparam     user_type      Type of the user data to be passed
+		 */
 		template<typename function_type, typename user_type = void>
 		void
 		preorder_traverse(function_type&& FT, user_type* user_data = nullptr)
@@ -370,6 +547,15 @@ namespace cpprelude
 			_preorder_traverse(std::forward<function_type>(FT), _root, user_data);
 		}
 
+		/**
+		 * @brief      Traverses the tree in an in-order pattern
+		 *
+		 * @param[in]  FT      Function to apply to the values
+		 * @param      user_data      The user data to pass to the function
+		 *
+		 * @tparam     function_type  Type of the function to be applied
+		 * @tparam     user_type      Type of the user data to be passed
+		 */
 		template<typename function_type, typename user_type = void>
 		void
 		inorder_traverse(function_type&& FT, user_type* user_data = nullptr) const
@@ -377,6 +563,15 @@ namespace cpprelude
 			_inorder_traverse(std::forward<function_type>(FT), _root, user_data);
 		}
 
+		/**
+		 * @brief      Traverses the tree in a post-order pattern
+		 *
+		 * @param[in]  FT      Function to apply to the values
+		 * @param      user_data      The user data to pass to the function
+		 *
+		 * @tparam     function_type  Type of the function to be applied
+		 * @tparam     user_type      Type of the user data to be passed
+		 */
 		template<typename function_type, typename user_type = void>
 		void
 		postorder_traverse(function_type&& FT, user_type* user_data = nullptr) const
@@ -384,6 +579,15 @@ namespace cpprelude
 			_postorder_traverse(std::forward<function_type>(FT), _root, user_data);
 		}
 
+		/**
+		 * @brief      Traverses the tree in an pre-order pattern
+		 *
+		 * @param[in]  FT      Function to apply to the values
+		 * @param      user_data      The user data to pass to the function
+		 *
+		 * @tparam     function_type  Type of the function to be applied
+		 * @tparam     user_type      Type of the user data to be passed
+		 */
 		template<typename function_type, typename user_type = void>
 		void
 		preorder_traverse(function_type&& FT, user_type* user_data = nullptr) const
@@ -391,6 +595,11 @@ namespace cpprelude
 			_preorder_traverse(std::forward<function_type>(FT), _root, user_data);
 		}
 
+		/**
+		 * @brief      Swaps two trees
+		 *
+		 * @param      other  The other tree to swap with
+		 */
 		void
 		swap(Red_Black_Tree& other)
 		{
@@ -400,72 +609,160 @@ namespace cpprelude
 			std::swap(_less_than, other._less_than);
 		}
 
+		/**
+		 * @return     An iterator to the minimum value of the tree
+		 */
 		iterator
 		min()
 		{
 			return iterator(_min());
 		}
 
+		/**
+		 * @return     A const iterator to the minimum value of the tree
+		 */
 		const_iterator
 		min() const
 		{
 			return const_iterator(_min());
 		}
 
+		/**
+		 * @return     An iterator to the maximum value of the tree
+		 */
 		iterator
 		max()
 		{
 			return iterator(_max());
 		}
 
+		/**
+		 * @return     A const iterator to the maximum value of the tree
+		 */
 		const_iterator
 		max() const
 		{
 			return const_iterator(_max());
 		}
 
+		/**
+		 * @return     The count of values in the tree
+		 */
 		usize
 		count() const
 		{
 			return _count;
 		}
 
+		/**
+		 * @return     Whether the tree is empty or not
+		 */
 		usize
 		empty() const
 		{
 			return _count == 0;
 		}
 
+		//Container range interface
+		
+		/**
+		 * @return     Range viewing all the values in the tree
+		 */
+		Range_Type
+		all()
+		{
+			return Range_Type(min().node, _count);
+		}
+
+		/**
+		 * @return     Const Range viewing all the values in the tree
+		 */
+		Const_Range_Type
+		all() const
+		{
+			return Const_Range_Type(min().node, _count);
+		}
+
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Range viewing the specified values in the tree
+		 */
+		Range_Type
+		range(usize start, usize end)
+		{
+			auto it = min();
+			for(usize i = 0; i < start; ++i)
+				++it;
+			return Range_Type(it.node, end - start);
+		}
+
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Const range viewing the specified values in the tree
+		 */
+		Const_Range_Type
+		range(usize start, usize end) const
+		{
+			auto it = min();
+			for(usize i = 0; i < start; ++i)
+				++it;
+			return Const_Range_Type(it.node, end - start);
+		}
+
+		//iterator interface
+
+		/**
+		 * @return     An Iterator to the beginning of this container
+		 */
 		iterator
 		begin()
 		{
 			return min();
 		}
 
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
 		const_iterator
 		begin() const
 		{
 			return min();
 		}
 
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
 		const_iterator
 		cbegin() const
 		{
 			return min();
 		}
 
+		/**
+		 * @return     An Iterator to the end of the container
+		 */
 		iterator
 		end()
 		{
 			return nullptr;
 		}
 
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
 		const_iterator
 		end() const
 		{
 			return nullptr;
 		}
 
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
 		const_iterator
 		cend() const
 		{
@@ -954,6 +1251,13 @@ namespace cpprelude
 		}
 	};
 
+	/**
+	 * @brief      A Generic Red Black Map
+	 *
+	 * @tparam     TKey                Key type of pairs in the map
+	 * @tparam     TValue              Value type of pairs in the map
+	 * @tparam     TCompare            Compare function used by the tree
+	 */
 	template<typename TKey, typename TValue,
 			 typename TCompare = default_less_than<Pair_Node<const TKey, TValue>>>
 	struct Red_Black_Map:
@@ -978,87 +1282,194 @@ namespace cpprelude
 						Red_Black_Tree_Iterator<const internal::Red_Black_Tree_Node<Pair_Node<const TKey, TValue>>>,
 						Pair_Node<TKey, TValue>>;
 
+		/**
+		 * @brief      Constructs a map
+		 *
+		 * @param[in]  context  The memory context to use for memory allocation and freeing
+		 */
 		Red_Black_Map(const Memory_Context& context = os->global_memory)
 			:_impl(context)
 		{}
 
+		/**
+		 * @brief      Constructs a map
+		 *
+		 * @param[in]  compare_function  The compare function
+		 * @param[in]  context           The memory context
+		 */
 		Red_Black_Map(const TCompare& compare_function,
 					  const Memory_Context& context = os->global_memory)
 			:_impl(compare_function, context)
 		{}
 
+		/**
+		 * @brief      Constructs a map with the provided list
+		 *
+		 * @param[in]  list              The initializer list to fill the map with
+		 * @param[in]  compare_function  The compare function
+		 * @param[in]  context           The memory context
+		 */
 		Red_Black_Map(std::initializer_list<Data_Type> list,
 					  const TCompare& compare_function = TCompare(),
 					  const Memory_Context& context = os->global_memory)
 			:_impl(list, compare_function, context)
 		{}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other  The other map to copy from
+		 */
 		Red_Black_Map(const Red_Black_Map& other)
 			:_impl(other)
 		{}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other             The other map to copy from
+		 * @param[in]  compare_function  The compare function
+		 */
 		Red_Black_Map(const Red_Black_Map& other,
 					  const TCompare& compare_function)
 			:_impl(other, compare_function)
 		{}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other    The other map to copy from
+		 * @param[in]  context  The memory context
+		 */
 		Red_Black_Map(const Red_Black_Map& other,
 					  const Memory_Context& context)
 			:_impl(other, context)
 		{}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other             The other map to copy from
+		 * @param[in]  context           The memory context
+		 * @param[in]  compare_function  The compare function
+		 */
 		Red_Black_Map(const Red_Black_Map& other,
 					  const Memory_Context& context,
 					  const TCompare& compare_function)
 			:_impl(other, context, compare_function)
 		{}
 
+		/**
+		 * @brief      Move Constructor
+		 *
+		 * @param[in]  other  The other map to move from
+		 */
 		Red_Black_Map(Red_Black_Map&& other)
 			:_impl(other)
 		{}
 
+		/**
+		 * @brief      Subscript operator
+		 *
+		 * @param[in]  key   The key to search for or insert in the map
+		 *
+		 * @return     A Reference to the associated value of this key
+		 */
 		Value_Type&
 		operator[](const Key_Type& key)
 		{
 			return _impl::insert(Data_Type(key))->value;
 		}
 
+		/**
+		 * @brief      Subscript operator
+		 *
+		 * @param[in]  key   The key to search for or insert in the map
+		 *
+		 * @return     A Const Reference to the associated value of this key
+		 */
 		const Value_Type&
 		operator[](const Key_Type& key) const
 		{
 			return _impl::insert(Data_Type(key))->value;
 		}
 
+		/**
+		 * @brief      Inserts a key into the map
+		 *
+		 * @param[in]  key   The key to insert in the map
+		 *
+		 * @return     an iterator to the inserted pair
+		 */
 		iterator
 		insert(const Key_Type& key)
 		{
 			return _impl::insert(Data_Type(key));
 		}
 
+		/**
+		 * @brief      Inserts a key into the map
+		 *
+		 * @param[in]  key   The key to insert in the map
+		 *
+		 * @return     an iterator to the inserted pair
+		 */
 		iterator
 		insert(Key_Type&& key)
 		{
 			return _impl::insert(Data_Type(std::move(key)));
 		}
 
+		/**
+		 * @brief      Inserts a key value pair into the map
+		 *
+		 * @param[in]  key    The key to insert in the map
+		 * @param[in]  value  The value to insert in the map
+		 *
+		 * @return     an iterator to the inserted pair
+		 */
 		iterator
 		insert(const Key_Type& key, const Value_Type& value)
 		{
 			return _impl::insert(Data_Type(key, value));
 		}
 
+		/**
+		 * @brief      Inserts a key value pair into the map
+		 *
+		 * @param[in]  key    The key to insert in the map
+		 * @param[in]  value  The value to insert in the map
+		 *
+		 * @return     an iterator to the inserted pair
+		 */
 		iterator
 		insert(Key_Type&& key, const Value_Type& value)
 		{
 			return _impl::insert(Data_Type(std::move(key), value));
 		}
 
+		/**
+		 * @brief      Inserts a key value pair into the map
+		 *
+		 * @param[in]  key    The key to insert in the map
+		 * @param[in]  value  The value to insert in the map
+		 *
+		 * @return     an iterator to the inserted pair
+		 */
 		iterator
 		insert(const Key_Type& key, Value_Type&& value)
 		{
 			return _impl::insert(Data_Type(key, std::move(value)));
 		}
 
+		/**
+		 * @brief      Inserts a key value pair into the map
+		 *
+		 * @param[in]  key    The key to insert in the map
+		 * @param[in]  value  The value to insert in the map
+		 *
+		 * @return     an iterator to the inserted pair
+		 */
 		iterator
 		insert(Key_Type&& key, Value_Type&& value)
 		{
@@ -1067,12 +1478,22 @@ namespace cpprelude
 
 		using _impl::insert;
 
+		/**
+		 * @brief      Removes a key from the map
+		 *
+		 * @param[in]  key   The key to be removed
+		 */
 		void
 		remove(const Key_Type& key)
 		{
 			_impl::remove(lookup(Data_Type(key)));
 		}
 
+		/**
+		 * @brief      Removes a key from the map
+		 *
+		 * @param[in]  key   The key to be removed
+		 */
 		void
 		remove(Key_Type&& key)
 		{
@@ -1081,25 +1502,56 @@ namespace cpprelude
 
 		using _impl::remove;
 
+		/**
+		 * @brief      Looks-up a key in the map
+		 *
+		 * @param[in]  key   The key to be looked-up
+		 *
+		 * @return     An iterator the pair if the key exists otherwise it returns iterator to
+		 *             the end of the map
+		 */
 		iterator
 		lookup(const Key_Type& key)
 		{
 			return _impl::lookup(Data_Type(std::move(key)));
-
 		}
 
+		/**
+		 * @brief      Looks-up a key in the map
+		 *
+		 * @param[in]  key   The key to be looked-up
+		 *
+		 * @return     An iterator the pair if the key exists otherwise it returns iterator to
+		 *             the end of the map
+		 */
 		iterator
 		lookup(Key_Type&& key)
 		{
 			return _impl::lookup(Data_Type(std::move(key)));
 		}
 
+		/**
+		 * @brief      Looks-up a key in the map
+		 *
+		 * @param[in]  key   The key to be looked-up
+		 *
+		 * @return     A const iterator the pair if the key exists otherwise it returns
+		 *             const iterator to the end of the map
+		 */
 		const_iterator
 		lookup(const Key_Type& key) const
 		{
 			return _impl::lookup(Data_Type(key));
 		}
 
+		/**
+		 * @brief      Looks-up a key in the map
+		 *
+		 * @param[in]  key   The key to be looked-up
+		 *
+		 * @return     A const iterator the pair if the key exists otherwise it returns
+		 *             const iterator to the end of the map
+		 */
 		const_iterator
 		lookup(Key_Type&& key) const
 		{
@@ -1108,36 +1560,54 @@ namespace cpprelude
 
 		using _impl::lookup;
 
+		/**
+		 * @return     An Iterator to the beginning of this container
+		 */
 		iterator
 		begin()
 		{
 			return _impl::min();
 		}
 
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
 		const_iterator
 		begin() const
 		{
 			return _impl::min();
 		}
 
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
 		const_iterator
 		cbegin() const
 		{
 			return _impl::min();
 		}
 
+		/**
+		 * @return     An Iterator to the end of the container
+		 */
 		iterator
 		end()
 		{
 			return nullptr;
 		}
 
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
 		const_iterator
 		end() const
 		{
 			return nullptr;
 		}
 
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
 		const_iterator
 		cend() const
 		{
@@ -1145,6 +1615,14 @@ namespace cpprelude
 		}
 	};
 
+	/**
+	 * [[markdown]]
+	 * #Tree_Set
+	 * A Tree_Set is a Red_Black_Tree.
+	 * 
+	 * #Tree_Map
+	 * A Tree_Map is a Red_Black_Map
+	 */
 	template<typename T,
 			 typename TCompare = default_less_than<T>>
 	using Tree_Set = Red_Black_Tree<T, TCompare>;

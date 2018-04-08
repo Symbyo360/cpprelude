@@ -2,6 +2,7 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/v5/Owner.h"
+#include "cpprelude/v5/Allocator_Trait.h"
 #include <utility>
 
 namespace cpprelude
@@ -47,13 +48,14 @@ namespace cpprelude
 
 	struct Memory_Context
 	{
-		using alloc_func = Owner<byte>(*)(void*, usize);
-		using free_func = void(*)(void*, const Owner<byte>&);
+		Allocator_Trait *_allocator;
+		MEMORY_CONTEXT_FLAGS _flags;
 
-		void* _self = nullptr;
-		alloc_func _alloc = nullptr;
-		free_func _free = nullptr;
-		MEMORY_CONTEXT_FLAGS _flags = MEMORY_CONTEXT_FLAGS::NONE;
+		Memory_Context(Allocator_Trait* allocator = nullptr,
+					   MEMORY_CONTEXT_FLAGS flags = MEMORY_CONTEXT_FLAGS::NONE)
+			:_allocator(allocator),
+			 _flags(flags)
+		{}
 
 		template<typename T>
 		Owner<T>
@@ -66,7 +68,7 @@ namespace cpprelude
 
 				default:
 				case MEMORY_CONTEXT_FLAGS::NONE:
-					return _alloc(_self, sizeof(T) * count).template convert<T>();
+					return _allocator->template alloc<T>(count);
 			}
 		}
 
@@ -82,9 +84,7 @@ namespace cpprelude
 
 				default:
 				case MEMORY_CONTEXT_FLAGS::NONE:
-					_free(_self, value.template convert<byte>());
-					value.ptr = nullptr;
-					value.size = 0;
+					return _allocator->template free<T>(value);
 					break;
 			}
 		}
@@ -101,7 +101,7 @@ namespace cpprelude
 
 				default:
 				case MEMORY_CONTEXT_FLAGS::NONE:
-					_free(_self, value.template convert<byte>());
+					return _allocator->template free<T>(std::move(value));
 					break;
 			}
 		}
@@ -112,7 +112,8 @@ namespace cpprelude
 		{
 			const usize header_size = sizeof(void*);
 			const usize additional_size = header_size > alignment ? header_size : alignment;
-			void** ptr = (void**)_alloc(_self, sizeof(T) * count + additional_size).ptr;
+			void** ptr = (void**)_allocator->template
+							alloc<byte>(sizeof(T) * count + additional_size).ptr;
 			u8 adjustment = _align_header_forward(ptr, alignment, header_size);
 			void** aligned_ptr = ptr + adjustment;
 			aligned_ptr[-1] = ptr;
@@ -125,7 +126,7 @@ namespace cpprelude
 		{
 			void** ptr = (void**)value.ptr;
 			//we don't care about the size here
-			_free(_self, own((byte*)ptr[-1]));
+			_allocator->template free<T>(own((T*)ptr[-1]));
 			value.ptr = nullptr;
 			value.size = 0;
 		}
@@ -136,7 +137,7 @@ namespace cpprelude
 		{
 			void** ptr = (void**)value.ptr;
 			//we don't care about the size here
-			_free(_self, own((byte*)ptr[-1]));
+			_allocator->template free<T>(own((T*)ptr[-1]));
 		}
 
 		bool

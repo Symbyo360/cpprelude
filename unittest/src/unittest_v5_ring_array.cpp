@@ -1,5 +1,6 @@
 #include "catch.hpp"
 #include <cpprelude/v5/Ring_Array.h>
+#include <cpprelude/fmt.h>
 
 using namespace cpprelude;
 
@@ -78,11 +79,54 @@ TEST_CASE("ring_array v5", "[ring_array]")
 	{
 		Ring_Array<usize> array;
 
-		for(isize i = 9; i >= 0; --i)
+		for (isize i = 9; i >= 0; --i)
 			array.emplace_front(i);
 
 		CHECK(array.count() == 10);
 		CHECK(array.empty() == false);
+
+		{
+			usize i = 0;
+			for (auto num : array)
+			{
+				CHECK(i == num);
+				++i;
+			}
+
+			for (usize j = 0; j < array.count(); ++j)
+				CHECK(j == array[j]);
+
+			auto ring_range = array.range(2, 6);
+			for (usize j = 0; j < ring_range.count(); ++j)
+				CHECK((j + 2) == ring_range[j]);
+
+			i = 0;
+			for (auto num : array.all())
+			{
+				CHECK(i == num);
+				++i;
+			}
+
+			i = 2;
+			for (auto num : array.range(2, 6))
+			{
+				CHECK(i == num);
+				++i;
+			}
+			CHECK(i == 6);
+
+			i = 9;
+			auto it = array.end();
+			--it;
+			while (true)
+			{
+				CHECK(i == *it);
+				--i;
+				--it;
+				if (it == array.begin())
+					break;
+			}
+		}
 
 		usize i = 0;
 		while(!array.empty())
@@ -105,6 +149,49 @@ TEST_CASE("ring_array v5", "[ring_array]")
 
 		CHECK(array.count() == 10);
 		CHECK(array.empty() == false);
+
+		{
+			usize i = 0;
+			for (auto num : array)
+			{
+				CHECK(i == num);
+				++i;
+			}
+
+			for (usize j = 0; j < array.count(); ++j)
+				CHECK(j == array[j]);
+
+			auto ring_range = array.range(2, 6);
+			for (usize j = 0; j < ring_range.count(); ++j)
+				CHECK((j + 2) == ring_range[j]);
+
+			i = 0;
+			for (auto num : array.all())
+			{
+				CHECK(i == num);
+				++i;
+			}
+
+			i = 2;
+			for (auto num : array.range(2, 6))
+			{
+				CHECK(i == num);
+				++i;
+			}
+			CHECK(i == 6);
+
+			i = 9;
+			auto it = array.end();
+			--it;
+			while (true)
+			{
+				CHECK(i == *it);
+				--i;
+				--it;
+				if (it == array.begin())
+					break;
+			}
+		}
 
 		usize i = 0;
 		while(!array.empty())
@@ -151,6 +238,49 @@ TEST_CASE("ring_array v5", "[ring_array]")
 		for(usize i = 0; i < 10; ++i)
 			array.emplace_back(i);
 
+		{
+			usize i = 0;
+			for (auto num : array)
+			{
+				CHECK(i == num);
+				++i;
+			}
+
+			i = 0;
+			for (auto num : array.all())
+			{
+				CHECK(i == num);
+				++i;
+			}
+
+			for (usize j = 0; j < array.count(); ++j)
+				CHECK(j == array[j]);
+
+			auto ring_range = array.range(2, 6);
+			for (usize j = 0; j < ring_range.count(); ++j)
+				CHECK((j + 2) == ring_range[j]);
+
+			i = 2;
+			for (auto num : array.range(2, 6))
+			{
+				CHECK(i == num);
+				++i;
+			}
+			CHECK(i == 6);
+
+			i = 9;
+			auto it = array.end();
+			--it;
+			while (true)
+			{
+				CHECK(i == *it);
+				--i;
+				--it;
+				if (it == array.begin())
+					break;
+			}
+		}
+
 		usize i = 0;
 		while(!array.empty())
 		{
@@ -169,6 +299,49 @@ TEST_CASE("ring_array v5", "[ring_array]")
 
 		for(usize i = 0; i < 10; ++i)
 			array.insert_back(i);
+
+		{
+			usize i = 0;
+			for (auto num : array)
+			{
+				CHECK(i == num);
+				++i;
+			}
+
+			for (usize j = 0; j < array.count(); ++j)
+				CHECK(j == array[j]);
+
+			auto ring_range = array.range(2, 6);
+			for (usize j = 0; j < ring_range.count(); ++j)
+				CHECK((j + 2) == ring_range[j]);
+
+			i = 0;
+			for (auto num : array.all())
+			{
+				CHECK(i == num);
+				++i;
+			}
+
+			i = 2;
+			for (auto num : array.range(2, 6))
+			{
+				CHECK(i == num);
+				++i;
+			}
+			CHECK(i == 6);
+
+			i = 9;
+			auto it = array.end();
+			--it;
+			while (true)
+			{
+				CHECK(i == *it);
+				--i;
+				--it;
+				if (it == array.begin())
+					break;
+			}
+		}
 
 		CHECK(array.count() == 10);
 		CHECK(array.empty() == false);

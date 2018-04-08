@@ -1293,7 +1293,7 @@ namespace cpprelude
 		/**
 		 * @return     A Range view of entire bidirectional range
 		 */
-		Range_Type&
+		Range_Type
 		all()
 		{
 			return *this;
@@ -1317,14 +1317,6 @@ namespace cpprelude
 		Range_Type
 		range(usize start, usize end)
 		{
-			if(start >= _count)
-				start = _count;
-			if(end >= _count)
-				end = _count;
-
-			if(end < start)
-				end = start;
-
 			auto it = ptr;
 			for(usize i = 0; i < start; ++i)
 				it = it->next;
@@ -1341,14 +1333,6 @@ namespace cpprelude
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
-			if(start >= _count)
-				start = _count;
-			if(end >= _count)
-				end = _count;
-
-			if(end < start)
-				end = start;
-
 			auto it = ptr;
 			for(usize i = 0; i < start; ++i)
 				it = it->next;
@@ -1414,21 +1398,626 @@ namespace cpprelude
 		}
 	};
 
+	/**
+	 * @brief      Ring Iterator
+	 *
+	 * @tparam     T     Values type of the iterator
+	 */
+	template<typename T>
+	struct Ring_Iterator
+	{
+		/**
+		 * Data Type of the underlying values
+		 */
+		using Data_Type = T;
+
+		T* ptr;
+		usize _index;
+		usize _count;
+
+		/**
+		 * @brief      Constructs an invalid iterator
+		 */
+		Ring_Iterator()
+			:ptr(nullptr),
+			 _index(0),
+			 _count(0)
+		{}
+
+		/**
+		 * @brief      Constructs an iterator
+		 *
+		 * @param      value_ptr  The value pointer in the ring array
+		 * @param[in]  index      The index of the value in the ring array
+		 * @param[in]  count      The count of values in the array
+		 */
+		Ring_Iterator(T* value_ptr, usize index, usize count)
+			:ptr(value_ptr),
+			 _index(index),
+			 _count(count)
+		{}
+
+		/**
+		 * @brief      Moves this iterator forward in the array
+		 *
+		 * @return     This iterator by reference
+		 */
+		Ring_Iterator&
+		operator++()
+		{
+			++_index;
+			++ptr;
+			if(_index >= _count)
+			{
+				ptr -= _index;
+				_index = 0;
+			}
+			return *this;
+		}
+
+		/**
+		 * @brief      Moves this iterator forward in the array
+		 *
+		 * @return     This iterator before moving forward by value
+		 */
+		Ring_Iterator
+		operator++(int)
+		{
+			auto result = *this;
+			++_index;
+			++ptr;
+			if (_index >= _count)
+			{
+				ptr -= _index;
+				_index = 0;
+			}
+			return result;
+		}
+
+		/**
+		 * @brief      Moves this iterator backward in the array
+		 *
+		 * @return     This iterator by reference
+		 */
+		Ring_Iterator&
+		operator--()
+		{
+			if(_index == 0)
+			{
+				_index = _count - 1;
+				ptr += _index;
+				return *this;
+			}
+			else
+			{
+				--_index;
+				--ptr;
+				return *this;
+			}
+		}
+
+		/**
+		 * @brief      Moves this iterator backward in the array
+		 *
+		 * @return     This iterator before moving backward by value
+		 */
+		Ring_Iterator
+		operator--(int)
+		{
+			auto result = *this;
+			if(_index == 0)
+			{
+				_index = _count - 1;
+				ptr += _index;
+				return *this;
+			}
+			else
+			{
+				--_index;
+				--ptr;
+				return *this;
+			}
+			return result;
+		}
+
+		/**
+		 * @brief      The Equal comparator operator
+		 *
+		 * @param[in]  other  The other iterator to compare
+		 *
+		 * @return     Whether the two iterators points to the same value
+		 */
+		bool
+		operator==(const Ring_Iterator& other) const
+		{
+			return ptr == other.ptr && _count == other._count;
+		}
+
+		/**
+		 * @brief      The Not-Equal comparator operator
+		 *
+		 * @param[in]  other  The other iterator to compare
+		 *
+		 * @return     Whether the two iterators points to different values
+		 */
+		bool
+		operator!=(const Ring_Iterator& other) const
+		{
+			return !operator==(other);
+		}
+
+		/**
+		 * @brief      The Dereference operator
+		 *
+		 * @return     The underlying value by reference
+		 */
+		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		Data_Type&
+		operator*()
+		{
+			return *ptr;
+		}
+
+		/**
+		 * @brief      The Const dereference operator
+		 *
+		 * @return     The underlying value by const reference
+		 */
+		const Data_Type&
+		operator*() const
+		{
+			return *ptr;
+		}
+
+		/**
+		 * @brief      The Arrow access operator
+		 *
+		 * @return     A Pointer to the node underlying value
+		 */
+		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		Data_Type*
+		operator->()
+		{
+			return ptr;
+		}
+
+		/**
+		 * @brief      The Const arrow access operator
+		 *
+		 * @return     A Const pointer to the underlying value
+		 */
+		const Data_Type*
+		operator->() const
+		{
+			return ptr;
+		}
+	};
+
+	/**
+	 * @brief      A Ring Range
+	 *
+	 * @tparam     T     Type of the values in the ring array
+	 */
+	template<typename T>
+	struct Ring_Range
+	{
+		/**
+		 * Data type of the values in the range
+		 */
+		using Data_Type = T;
+		/**
+		 * Range Type of this range
+		 */
+		using Range_Type = Ring_Range<Data_Type>;
+		/**
+		 * Const Range Type of this range
+		 */
+		using Const_Range_Type = Ring_Range<const Data_Type>;
+		/**
+		 * Iterator type of this range
+		 */
+		using iterator = Ring_Iterator<Data_Type>;
+		/**
+		 * Const Iterator type of this range
+		 */
+		using const_iterator = Ring_Iterator<const Data_Type>;
+
+		Data_Type *ptr;
+		usize _head_index, _tail_index;
+		usize _count, _capacity;
+
+		/**
+		 * @brief      Constructs an invalid range
+		 */
+		Ring_Range()
+			:ptr(nullptr),
+			 _head_index(0),
+			 _tail_index(0),
+			 _count(0),
+			 _capacity(0)
+		{}
+
+		/**
+		 * @brief      Constructs a ring range
+		 *
+		 * @param      values_ptr  The values pointer
+		 * @param[in]  head_index  The head index
+		 * @param[in]  tail_index  The tail index
+		 * @param[in]  count       The count of values in the ring range
+		 * @param[in]  cap         The capacity of the ring range
+		 */
+		Ring_Range(T* values_ptr, usize head_index, usize tail_index, usize count, usize cap)
+			:ptr(values_ptr),
+			 _head_index(head_index),
+			 _tail_index(tail_index),
+			 _count(count),
+			 _capacity(cap)
+		{}
+
+		/**
+		 * @brief      The Equal comparator operator
+		 *
+		 * @param[in]  other  The other range to compare
+		 *
+		 * @return     Whether the two ranges point to the same range
+		 */
+		bool
+		operator==(const Ring_Range& other) const
+		{
+			return ptr == other.ptr && 
+				   _head_index == other._head_index &&
+				   _tail_index == other._tail_index &&
+				   _count == other._count &&
+				   _capacity == other._capacity;
+		}
+
+		/**
+		 * @brief      The Not-Equal comparator operator
+		 *
+		 * @param[in]  other  The other range to compare
+		 *
+		 * @return     Whether the two ranges point to different ranges
+		 */
+		bool
+		operator!=(const Ring_Range& other) const
+		{
+			return !operator==(other);
+		}
+
+		//Forward Range interface
+
+		/**
+		 * @return     Whether the range is empty
+		 */
+		bool
+		empty() const
+		{
+			return _count == 0 || ptr == nullptr;
+		}
+
+		/**
+		 * @return     The count of elements inside the range
+		 */
+		usize
+		count() const
+		{
+			return _count;
+		}
+
+		/**
+		 * @return     True if finite, False otherwise.
+		 */
+		bool
+		is_finite() const
+		{
+			return true;
+		}
+
+		/**
+		 * @return     The Front value of the range by reference
+		 */
+		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		Data_Type&
+		front()
+		{
+			return _data[_increment(_tail_index)];
+		}
+
+		/**
+		 * @return     The Front value of the range by const reference
+		 */
+		const Data_Type&
+		front() const
+		{
+			return _data[_increment(_tail_index)];
+		}
+
+		/**
+		 * @brief      Pops the front value of this range
+		 */
+		void
+		pop_front()
+		{
+			_tail_index = _increment(_tail_index);
+			--_count;
+		}
+
+		//Bidirectional Range Interface
+
+		/**
+		 * @return     The Back value of the range by reference
+		 */
+		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		Data_Type&
+		back()
+		{
+			return _data[_head_index];
+		}
+
+		/**
+		 * @return     The Back value of the range by const reference
+		 */
+		const Data_Type&
+		back() const
+		{
+			return _data[_head_index];
+		}
+
+		/**
+		 * @brief      Pops the back value of this range
+		 */
+		void
+		pop_back()
+		{
+			_head_index = _decrement(_head_index);
+			--_count;
+		}
+
+		//Random_Access_Range Interface
+
+		/**
+		 * @param[in]  index  The index of the value
+		 *
+		 * @return     A Reference to the value in the range
+		 */
+		Data_Type&
+		operator[](usize index)
+		{
+			return ptr[(_tail_index + index + 1) % _capacity];
+		}
+
+		/**
+		 * @param[in]  index  The index of the value
+		 *
+		 * @return     A Const reference to the value in the range
+		 */
+		const Data_Type&
+		operator[](usize index) const
+		{
+			return ptr[(_tail_index + index + 1) % _capacity];
+		}
+
+		//Container interface
+		/**
+		 * @return     A Range view of entire ring range
+		 */
+		Range_Type
+		all()
+		{
+			return *this;
+		}
+
+		/**
+		 * @return     A Const Range view of entire ring range
+		 */
+		Const_Range_Type
+		all() const
+		{
+			return Const_Range_Type(ptr, _head_index, _tail_index, _count, _capacity);
+		}
+
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Range viewing the specified values in the ring range
+		 */
+		Range_Type
+		range(usize start, usize end)
+		{
+			auto new_tail = (_tail_index + start) % _capacity;
+			auto new_head = (_tail_index + end) % _capacity;
+
+			return Range_Type(ptr, new_head, new_tail, end - start, _capacity);
+		}
+
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Const range viewing the specified values in the ring range
+		 */
+		Const_Range_Type
+		range(usize start, usize end) const
+		{
+			auto new_tail = (_tail_index + start) % _capacity;
+			auto new_head = (_tail_index + end) % _capacity;
+
+			return Range_Type(ptr, new_head, new_tail, end - start, _capacity);
+		}
+
+		//iterator interface
+		/**
+		 * @return     An Iterator to the start of the range
+		 */
+		iterator
+		begin()
+		{
+			auto index = _increment(_tail_index);
+			return iterator(ptr + index, index, _capacity);
+		}
+
+		/**
+		 * @return     A Const iterator to the start of the range
+		 */
+		const_iterator
+		begin() const
+		{
+			auto index = _increment(_tail_index);
+			return const_iterator(ptr + index, index, _capacity);
+		}
+
+		/**
+		 * @return     A Const iterator to the start of the range
+		 */
+		const_iterator
+		cbegin() const
+		{
+			auto index = _increment(_tail_index);
+			return const_iterator(ptr + index, index, _capacity);
+		}
+
+		/**
+		 * @return     An iterator to the end of the range
+		 */
+		iterator
+		end()
+		{
+			auto index = _increment(_head_index);
+			return iterator(ptr + index, index, _capacity);
+		}
+
+		/**
+		 * @return     A Const iterator to the end of the range
+		 */
+		const_iterator
+		end() const
+		{
+			auto index = _increment(_head_index);
+			return const_iterator(ptr + index, index, _capacity);
+		}
+
+		/**
+		 * @return     A Const iterator to the end of the range
+		 */
+		const_iterator
+		cend() const
+		{
+			auto index = _increment(_head_index);
+			return const_iterator(ptr + index, index, _capacity);
+		}
+
+		inline usize
+		_decrement(usize index) const
+		{
+			if(index == 0)
+				return _capacity - 1;
+			else
+				return index - 1;
+		}
+
+		inline usize
+		_increment(usize index) const
+		{
+			return (index+1) % _capacity;
+		}
+	};
+
+
+	//this function traverses the right branch of a tree
+	//gets the next node in tree which the next larger key
+	template<typename TNode>
+	inline static TNode*
+	_get_successor(TNode* node)
+	{
+		if (node == nullptr) return node;
+		//get the right node
+		TNode* successor = node->right;
+
+		//if the right node exist then go all the way to its left branch
+		if (successor != nullptr)
+		{
+			while (successor->left != nullptr)
+				successor = successor->left;
+			return successor;
+		}
+
+		//if there's no right node then go up all the way along the right branch
+		TNode* temp = node;
+		successor = temp->parent;
+		while (successor != nullptr && temp == successor->right)
+		{
+			temp = successor;
+			successor = successor->parent;
+		}
+		return successor;
+	}
+
+	//this function traverses the left branch of a tree
+	//same as above but gets the next smaller key
+	template<typename TNode>
+	inline static TNode*
+	_get_predecessor(TNode* node)
+	{
+		if (node == nullptr) return node;
+		//check the left node
+		TNode* predecessor = node->left;
+
+		//go all the war through the right branch
+		if (predecessor != nullptr)
+		{
+			while (predecessor->right != nullptr)
+				predecessor = predecessor->right;
+			return predecessor;
+		}
+
+		TNode* temp = node;
+		predecessor = temp->parent;
+		while (predecessor != nullptr && temp == predecessor->left)
+		{
+			temp = predecessor;
+			predecessor = predecessor->parent;
+		}
+		return predecessor;
+	}
+
+	/**
+	 * @brief      A Red Black Tree iterator
+	 *
+	 * @tparam     TNode  Node Type of the tree
+	 */
 	template<typename TNode>
 	struct Red_Black_Tree_Iterator
 	{
 		using Node_Type = TNode;
+		/**
+		 * Data type of the values in the tree
+		 */
+		using Data_Type = typename Node_Type::Data_Type;
 
 		Node_Type *node;
 
+		/**
+		 * @brief      Constructs an invalid iterator
+		 */
 		Red_Black_Tree_Iterator()
 			:node(nullptr)
 		{}
 
+		/**
+		 * @brief      Constructs an iterator
+		 *
+		 * @param      node_ptr  The tree node pointer
+		 */
 		Red_Black_Tree_Iterator(Node_Type *node_ptr)
 			:node(node_ptr)
 		{}
 
+		/**
+		 * @brief      Moves this iterator forward in the tree
+		 *
+		 * @return     This iterator by reference
+		 */
 		Red_Black_Tree_Iterator&
 		operator++()
 		{
@@ -1436,6 +2025,11 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Moves this iterator forward in the tree
+		 *
+		 * @return     This iterator before moving forward by value
+		 */
 		Red_Black_Tree_Iterator
 		operator++(int)
 		{
@@ -1444,6 +2038,11 @@ namespace cpprelude
 			return Red_Black_Tree_Iterator(result);
 		}
 
+		/**
+		 * @brief      Moves this iterator backward in the tree
+		 *
+		 * @return     This iterator by reference
+		 */
 		Red_Black_Tree_Iterator&
 		operator--()
 		{
@@ -1451,6 +2050,11 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Moves this iterator backward in the tree
+		 *
+		 * @return     This iterator before moving backward by value
+		 */
 		Red_Black_Tree_Iterator
 		operator--(int)
 		{
@@ -1459,36 +2063,64 @@ namespace cpprelude
 			return Red_Black_Tree_Iterator(result);
 		}
 
+		/**
+		 * @brief      The Equal comparator operator
+		 *
+		 * @param[in]  other  The other iterator to compare
+		 *
+		 * @return     Whether the two iterators points to the same node
+		 */
 		bool
 		operator==(const Red_Black_Tree_Iterator& other) const
 		{
 			return node == other.node;
 		}
 
+		/**
+		 * @brief      The Not-Equal comparator operator
+		 *
+		 * @param[in]  other  The other iterator to compare
+		 *
+		 * @return     Whether the two iterators points to different nodes
+		 */
 		bool
 		operator!=(const Red_Black_Tree_Iterator& other) const
 		{
 			return node != other.node;
 		}
 
+		/**
+		 * @brief      Moves this iterator to the parent node
+		 */
 		void
 		move_up()
 		{
 			node = node->parent;
 		}
 
+		/**
+		 * @brief      Moves this iterator to the left child node
+		 */
 		void
 		move_left()
 		{
 			node = node->left;
 		}
 
+		/**
+		 * @brief      Moves this iterator to the right child node
+		 */
 		void
 		move_right()
 		{
 			node = node->right;
 		}
 
+		/**
+		 * @brief      The Arrow access operator
+		 *
+		 * @return     A Pointer to the node underlying value
+		 */
 		template<typename TCond = Node_Type, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
 		typename Node_Type::Data_Type*
 		operator->()
@@ -1496,12 +2128,22 @@ namespace cpprelude
 			return &node->data;
 		}
 
+		/**
+		 * @brief      The Const arrow access operator
+		 *
+		 * @return     A Const pointer to the node underlying value
+		 */
 		const typename Node_Type::Data_Type*
 		operator->() const
 		{
 			return &node->data;
 		}
 
+		/**
+		 * @brief      The Dereference operator
+		 *
+		 * @return     The underlying node value by reference
+		 */
 		template<typename TCond = Node_Type, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
 		typename Node_Type::Data_Type&
 		operator*()
@@ -1509,67 +2151,636 @@ namespace cpprelude
 			return node->data;
 		}
 
+		/**
+		 * @brief      The Const dereference operator
+		 *
+		 * @return     The underlying node value by const reference
+		 */
 		const typename Node_Type::Data_Type&
 		operator*() const
 		{
 			return node->data;
 		}
+	};
 
-		//the combination of the next two functions allow this iterator to iterate on all tree nodes starting from the most left smallest key in the tree
+	/**
+	 * @brief      A Tree Range
+	 *
+	 * @tparam     TNode  Tree Node type
+	 */
+	template<typename TNode>
+	struct Tree_Range
+	{
+		using Node_Type = TNode;
+		/**
+		 * Data Type of the values in the tree
+		 */
+		using Data_Type = typename Node_Type::Data_Type;
+		/**
+		 * Range Type of this range
+		 */
+		using Range_Type = Tree_Range<Node_Type>;
+		/**
+		 * Const Range Type of this range
+		 */
+		using Const_Range_Type = Tree_Range<const Node_Type>;
+		/**
+		 * Iterator type of this range
+		 */
+		using iterator = Red_Black_Tree_Iterator<Node_Type>;
+		/**
+		 * Const Iterator type of this range
+		 */
+		using const_iterator = Red_Black_Tree_Iterator<const Node_Type>;
 
-		//this function traverses the right branch of a tree
-		//gets the next node in tree which the next larger key
-		Node_Type*
-		_get_successor(Node_Type* node)
+		Node_Type *node;
+		usize _count;
+
+		/**
+		 * @brief      Constructs an invalid tree range
+		 */
+		Tree_Range()
+			:node(nullptr),
+			 _count(0)
+		{}
+
+		/**
+		 * @brief      Constructs a tree range
+		 *
+		 * @param      node_ptr     The tree node pointer
+		 * @param[in]  nodes_count  The nodes count in the tree
+		 */
+		Tree_Range(Node_Type *node_ptr, usize nodes_count)
+			:node(node_ptr),
+			 _count(nodes_count)
+		{}
+
+		/**
+		 * @brief      The Equal comparator operator
+		 *
+		 * @param[in]  other  The other range to compare
+		 *
+		 * @return     Whether the two ranges point to the same range
+		 */
+		bool
+		operator==(const Tree_Range& other) const
 		{
-			if (node == nullptr) return node;
-			//get the right node
-			Node_Type* successor = node->right;
-
-			//if the right node exist then go all the way to its left branch
-			if (successor != nullptr)
-			{
-				while (successor->left != nullptr)
-					successor = successor->left;
-				return successor;
-			}
-
-			//if there's no right node then go up all the way along the right branch
-			Node_Type* temp = node;
-			successor = temp->parent;
-			while (successor != nullptr && temp == successor->right)
-			{
-				temp = successor;
-				successor = successor->parent;
-			}
-			return successor;
+			return node == other.node && _count == other._count;
 		}
 
-		//this function traverses the left branch of a tree
-		//same as above but gets the next smaller key
-		Node_Type*
-		_get_predecessor(Node_Type* node)
+		/**
+		 * @brief      The Not-Equal comparator operator
+		 *
+		 * @param[in]  other  The other range to compare
+		 *
+		 * @return     Whether the two ranges point to different ranges
+		 */
+		bool
+		operator!=(const Tree_Range& other) const
 		{
-			if (node == nullptr) return node;
-			//check the left node
-			Node_Type* predecessor = node->left;
+			return !operator==(other);
+		}
 
-			//go all the war through the right branch
-			if (predecessor != nullptr)
+		//Forward Range interface
+		/**
+		 * @return     Whether the range is empty
+		 */
+		bool
+		empty() const
+		{
+			return _count == 0 || node == nullptr;
+		}
+
+		/**
+		 * @return     The count of elements inside the range
+		 */
+		usize
+		count() const
+		{
+			return _count;
+		}
+
+		/**
+		 * @return     True if finite, False otherwise.
+		 */
+		bool
+		is_finite() const
+		{
+			return true;
+		}
+
+		/**
+		 * @return     The Front value of the range by reference
+		 */
+		template<typename TCond = TNode,
+				 typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		Data_Type&
+		front()
+		{
+			return node->data;
+		}
+
+		/**
+		 * @return     The Front value of the range by const reference
+		 */
+		const Data_Type&
+		front() const
+		{
+			return node->data;
+		}
+
+		/**
+		 * @brief      Pops the front value of this range
+		 */
+		void
+		pop_front()
+		{
+			node = _get_successor(node);
+			--_count;
+		}
+
+		//Container interface
+		/**
+		 * @return     A Range view of entire tree range
+		 */
+		Range_Type
+		all()
+		{
+			return *this;
+		}
+
+		/**
+		 * @return     A Const Range view of entire tree range
+		 */
+		Const_Range_Type
+		all() const
+		{
+			return Const_Range_Type(node, _count);
+		}
+
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Range viewing the specified values in the range
+		 */
+		Range_Type
+		range(usize start, usize end)
+		{
+			auto it = node;
+			for(usize i = 0; i < start; ++i)
+				it = _get_successor(it);
+			return Range_Type(it, end - start);
+		}
+
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Const range viewing the specified values in the range
+		 */
+		Const_Range_Type
+		range(usize start, usize end) const
+		{
+			auto it = node;
+			for(usize i = 0; i < start; ++i)
+				it = _get_successor(it);
+			return Const_Range_Type(it, end - start);
+		}
+
+		//Iterator interface
+		/**
+		 * @return     An Iterator to the start of the range
+		 */
+		template<typename TCond = Node_Type,
+				 typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		iterator
+		begin()
+		{
+			return iterator(node);
+		}
+
+		/**
+		 * @return     A Const iterator to the start of the range
+		 */
+		const_iterator
+		begin() const
+		{
+			return const_iterator(node);
+		}
+
+		/**
+		 * @return     A Const iterator to the start of the range
+		 */
+		const_iterator
+		cbegin() const
+		{
+			return const_iterator(node);
+		}
+
+		/**
+		 * @return     An iterator to the end of the range
+		 */
+		template<typename TCond = Node_Type,
+				 typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		iterator
+		end()
+		{
+			return iterator(nullptr);
+		}
+
+		/**
+		 * @return     A Const iterator to the end of the range
+		 */
+		const_iterator
+		end() const
+		{
+			return const_iterator(nullptr);
+		}
+
+		/**
+		 * @return     A Const iterator to the end of the range
+		 */
+		const_iterator
+		cend() const
+		{
+			return const_iterator(nullptr);
+		}
+	};
+
+	struct Rune
+	{
+		u32 data;
+
+		Rune(u32 c = 0)
+			:data(c)
+		{}
+
+		operator u32&()
+		{
+			return data;
+		}
+
+		operator const u32&() const
+		{
+			return data;
+		}
+
+		bool
+		operator==(const Rune& other) const
+		{
+			return data == other.data;
+		}
+
+		bool
+		operator!=(const Rune& other) const
+		{
+			return data != other.data;
+		}
+
+		bool
+		operator<(const Rune& other) const
+		{
+			return data < other.data;
+		}
+
+		bool
+		operator>(const Rune& other) const
+		{
+			return data > other.data;
+		}
+
+		bool
+		operator<=(const Rune& other) const
+		{
+			return data <= other.data;
+		}
+
+		bool
+		operator>=(const Rune& other) const
+		{
+			return data >= other.data;
+		}
+	};
+
+	namespace internal
+	{
+		template<typename TForwardRange>
+		inline static usize
+		_utf8_count_chars(TForwardRange&& range)
+		{
+			usize result = 0;
+			for (const auto& code_point : range)
 			{
-				while (predecessor->right != nullptr)
-					predecessor = predecessor->right;
-				return predecessor;
+				if (code_point == 0)
+					break;
+				result += ((code_point & 0xC0) != 0x80);
+			}
+			return result;
+		}
+
+		template<typename TForwardRange>
+		inline static usize
+		_utf8_count_runes_to(TForwardRange&& range, usize to)
+		{
+			if (to == 0)
+				return 0;
+
+			usize byte_size = 0;
+			for (auto it = range.begin(); it != range.end();)
+			{
+				++byte_size;
+				if(((*it & 0xC0) != 0x80))
+				{
+					--to;
+					++it;
+				}
+				while(*it != 0 && ((*it & 0xC0) == 0x80))
+				{
+					++it;
+					++byte_size;
+				}
+				if(to == 0)
+					break;
+			}
+			return byte_size;
+		}
+
+		template<typename TForwardRange1, typename TForwardRange2,
+				 typename TCompare = default_less_than<typename TForwardRange1::Data_Type>>
+		inline static isize
+		_strcmp(TForwardRange1&& range_a, TForwardRange2&& range_b,
+				TCompare&& compare_func = TCompare())
+		{
+			usize min_count = range_a.count() > range_b.count()?
+							  range_b.count() : range_a.count();
+
+			//we just here compare the bare bytes
+			//init with 0 as if they are completely equal
+			isize raw_data_compare_result = 0;
+			{
+				auto a_it = range_a.begin();
+				auto b_it = range_b.begin();
+				for(usize i = 0; i < min_count; ++i)
+				{
+					if(compare_func(*a_it, *b_it))
+					{
+						raw_data_compare_result = -1;
+						break;
+					}
+					else if(compare_func(*b_it, *a_it))
+					{
+						raw_data_compare_result = 1;
+						break;
+					}
+
+					++a_it;
+					++b_it;
+				}
 			}
 
-			Node_Type* temp = node;
-			predecessor = temp->parent;
-			while (predecessor != nullptr && temp == predecessor->left)
+			//if raw data is completely equal then we compare the sizes
+			if(raw_data_compare_result == 0)
 			{
-				temp = predecessor;
-				predecessor = predecessor->parent;
+				//if a size is less than b then a < b
+				if(range_a.count() < range_b.count())
+					return -1;
+				//if b size is less than a then a > b
+				else if(range_b.count() < range_a.count())
+					return 1;
+				//if sizes are equal then a = b
+				else
+					return 0;
 			}
-			return predecessor;
+			else
+			{
+				return raw_data_compare_result;
+			}
+		}
+	}
+
+	struct String_Iterator
+	{
+		const byte* ptr;
+
+		String_Iterator(const byte* str_ptr)
+			:ptr(str_ptr)
+		{}
+
+		String_Iterator&
+		operator++()
+		{
+			++ptr;
+			while(*ptr && ((*ptr & 0xC0) == 0x80))
+				++ptr;
+			return *this;
+		}
+
+		String_Iterator
+		operator++(int)
+		{
+			auto result = *this;
+			++ptr;
+			while(*ptr && ((*ptr & 0xC0) == 0x80))
+				++ptr;
+			return result;
+		}
+
+		String_Iterator&
+		operator--()
+		{
+			--ptr;
+			while(*ptr && ((*ptr & 0xC0) == 0x80))
+				--ptr;
+			return *this;
+		}
+
+		String_Iterator
+		operator--(int)
+		{
+			auto result = *this;
+			--ptr;
+			while(*ptr && ((*ptr & 0xC0) == 0x80))
+				--ptr;
+			return result;
+		}
+
+		bool
+		operator==(const String_Iterator& other) const
+		{
+			return ptr == other.ptr;
+		}
+
+		bool
+		operator!=(const String_Iterator& other) const
+		{
+			return ptr != other.ptr;
+		}
+
+		Rune
+		operator*() const
+		{
+			if(ptr == nullptr)
+				return Rune();
+
+			if(*ptr == 0)
+				return Rune();
+
+			Rune rune;
+			byte* result = (byte*)&rune;
+			const byte* it = ptr;
+			*result++ = *it++;
+			while (*it && ((*it & 0xC0) == 0x80))
+			{
+				*result++ = *it++;
+			}
+			return rune;
+		}
+	};
+
+	struct String_Range
+	{
+		using Data_Type = Rune;
+		using Range_Type = String_Range;
+		using Const_Range_Type = String_Range;
+		using iterator = String_Iterator;
+		using const_iterator = String_Iterator;
+
+		Slice<const byte> bytes;
+		usize _count;
+
+		String_Range()
+			:_count(0)
+		{}
+
+		String_Range(const Slice<const byte>& str_range, usize rune_count)
+			:bytes(str_range),
+			 _count(rune_count)
+		{}
+
+		bool
+		operator==(const String_Range& other) const
+		{
+			return bytes == other.bytes;
+		}
+
+		bool
+		operator!=(const String_Range& other) const
+		{
+			return !operator==(other);
+		}
+
+		bool
+		empty() const
+		{
+			return _count == 0 || bytes.empty();
+		}
+
+		usize
+		count() const
+		{
+			return _count;
+		}
+
+		bool
+		is_finite() const
+		{
+			return true;
+		}
+
+		Rune
+		front() const
+		{
+			if(bytes.empty())
+				return Rune();
+
+			Rune rune;
+			byte* result = (byte*)&rune;
+			auto it = bytes.ptr;
+			*result++ = *it++;
+			while (*it && ((*it & 0xC0) == 0x80))
+			{
+				*result++ = *it++;
+			}
+			return rune;
+		}
+
+		void
+		pop_front()
+		{
+			bytes.pop_front();
+			while(bytes.front() && ((bytes.front() & 0xC0) == 0x80))
+				bytes.pop_front();
+			--_count;
+		}
+
+		Const_Range_Type
+		all() const
+		{
+			return Const_Range_Type(bytes.all(), count());
+		}
+
+		Const_Range_Type
+		range(usize start, usize end) const
+		{
+			usize start_bytes_offset = internal::_utf8_count_runes_to(bytes.all(), start);
+			usize end_bytes_offset = internal::_utf8_count_runes_to(bytes.all(), end);
+
+			return Const_Range_Type(bytes.range(start_bytes_offset, end_bytes_offset), end - start);
+		}
+
+		/**
+		 * @return     An Iterator to the beginning of this container
+		 */
+		iterator
+		begin()
+		{
+			return bytes.ptr;
+		}
+
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
+		const_iterator
+		begin() const
+		{
+			return bytes.ptr;
+		}
+
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
+		const_iterator
+		cbegin() const
+		{
+			return bytes.ptr;
+		}
+
+		/**
+		 * @return     An Iterator to the end of the container
+		 */
+		iterator
+		end()
+		{
+			return bytes.ptr + bytes.size;
+		}
+
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
+		const_iterator
+		end() const
+		{
+			return bytes.ptr + bytes.size;
+		}
+
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
+		const_iterator
+		cend() const
+		{
+			return bytes.ptr + bytes.size;
 		}
 	};
 }

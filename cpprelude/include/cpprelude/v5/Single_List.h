@@ -62,6 +62,15 @@ namespace cpprelude
 		using Const_Range_Type = Forward_Range<const Node_Type>;
 
 		/**
+		 * Iterator type of this container
+		 */
+		using iterator = typename Range_Type::iterator;
+		/**
+		 * Const Iterator type of this container
+		 */
+		using const_iterator = typename Range_Type::const_iterator;
+
+		/**
 		 * Memory context used by the container
 		 */
 		Memory_Context mem_context;
@@ -549,6 +558,60 @@ namespace cpprelude
 		front() const
 		{
 			return _head->value;
+		}
+
+		/**
+		 * @return     An Iterator to the beginning of this container
+		 */
+		iterator
+		begin()
+		{
+			return iterator(_head);
+		}
+
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
+		const_iterator
+		begin() const
+		{
+			return const_iterator(_head);
+		}
+
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
+		const_iterator
+		cbegin() const
+		{
+			return const_iterator(_head);
+		}
+
+		/**
+		 * @return     An Iterator to the end of the container
+		 */
+		iterator
+		end()
+		{
+			return iterator(nullptr);
+		}
+
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
+		const_iterator
+		end() const
+		{
+			return const_iterator(nullptr);
+		}
+
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
+		const_iterator
+		cend() const
+		{
+			return const_iterator(nullptr);
 		}
 	};
 }

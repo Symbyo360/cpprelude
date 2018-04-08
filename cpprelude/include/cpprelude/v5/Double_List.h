@@ -63,6 +63,15 @@ namespace cpprelude
 		using Const_Range_Type = Bidirectional_Range<const Node_Type>;
 
 		/**
+		 * Iterator type of the container
+		 */
+		using iterator = typename Range_Type::iterator;
+		/**
+		 * Const Iterator type of the container
+		 */
+		using const_iterator = typename Range_Type::const_iterator;
+
+		/**
 		 * Memory context used by the container
 		 */
 		Memory_Context mem_context;
@@ -696,14 +705,6 @@ namespace cpprelude
 		Range_Type
 		range(usize start, usize end)
 		{
-			if(start >= _count)
-				start = _count;
-			if(end >= _count)
-				end = _count;
-
-			if(end < start)
-				end = start;
-
 			Node_Type* ptr = _head->next;
 			for(usize i = 0; i < start; ++i)
 				ptr = ptr->next;
@@ -769,6 +770,60 @@ namespace cpprelude
 		back() const
 		{
 			return _tail->prev->value;
+		}
+
+		/**
+		 * @return     An Iterator to the beginning of this container
+		 */
+		iterator
+		begin()
+		{
+			return iterator(_head);
+		}
+
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
+		const_iterator
+		begin() const
+		{
+			return const_iterator(_head);
+		}
+
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
+		const_iterator
+		cbegin() const
+		{
+			return const_iterator(_head);
+		}
+
+		/**
+		 * @return     An Iterator to the end of the container
+		 */
+		iterator
+		end()
+		{
+			return iterator(_tail);
+		}
+
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
+		const_iterator
+		end() const
+		{
+			return const_iterator(_tail);
+		}
+
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
+		const_iterator
+		cend() const
+		{
+			return const_iterator(_tail);
 		}
 
 		inline void

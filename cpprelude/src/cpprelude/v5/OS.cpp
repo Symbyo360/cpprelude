@@ -63,6 +63,7 @@ namespace cpprelude
 	OS*
 	_actual_init_os()
 	{
+		static Allocator_Trait _global_memory_trait;
 		static OS _os;
 		static bool _is_initialized = false;
 
@@ -70,9 +71,11 @@ namespace cpprelude
 			return &_os;
 
 		//setup the memory
-		_os.global_memory._self  = &_os;
-		_os.global_memory._alloc = _global_memory_alloc;
-		_os.global_memory._free  = _global_memory_free;
+		_os.global_memory = &_global_memory_trait;
+
+		_global_memory_trait._self  = &_os;
+		_global_memory_trait._alloc = _global_memory_alloc;
+		_global_memory_trait._free  = _global_memory_free;
 
 		_os.allocation_count = 0;
 		_os.allocation_size = 0;

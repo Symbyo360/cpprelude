@@ -697,4 +697,35 @@ TEST_CASE("Tree_Map v5", "[Tree_Map]")
 			}
 		};
 	}
+
+	SECTION("Case 26")
+	{
+		Tree_Map<usize, bool> map;
+		for (usize i = 0; i < 10; ++i)
+			map.insert(i, i % 2 == 0);
+
+		usize i = 0;
+		for (auto& item : map)
+		{
+			CHECK(item.key == i);
+			CHECK(item.value == (i % 2 == 0));
+			++i;
+		}
+
+		i = 0;
+		for (auto& item : map.all())
+		{
+			CHECK(item.key == i);
+			CHECK(item.value == (i % 2 == 0));
+			++i;
+		}
+
+		i = 2;
+		for (auto& item : map.range(2, 10))
+		{
+			CHECK(item.key == i);
+			CHECK(item.value == (i % 2 == 0));
+			++i;
+		}
+	}
 }

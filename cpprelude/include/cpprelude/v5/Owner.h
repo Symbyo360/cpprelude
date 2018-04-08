@@ -3,6 +3,7 @@
 #include "cpprelude/defines.h"
 #include "cpprelude/v5/Ranges.h"
 #include <cassert>
+#include <cstring>
 
 namespace cpprelude
 {
@@ -305,5 +306,99 @@ namespace cpprelude
 	own(T* value, usize count = 1)
 	{
 		return Owner<T>(value, count * sizeof(T));
+	}
+
+	template<typename T>
+	inline static void
+	copy(const Owner<T>& dst, const Owner<T>& src)
+	{
+		usize size = dst.size < src.size ? dst.size : src.size;
+		std::memcpy(dst.ptr, src.ptr, size);
+	}
+
+	template<typename T>
+	inline static void
+	copy(const Owner<T>& dst, const Owner<T>& src, usize count)
+	{
+		std::memcpy(dst.ptr, src.ptr, count * sizeof(T));
+	}
+
+	template<typename T>
+	inline static void
+	copy(const typename Owner<T>::Range_Type& dst, const typename Owner<T>::Range_Type& src)
+	{
+		usize size = dst.size < src.size ? dst.size : src.size;
+		std::memcpy(dst.ptr, src.ptr, size);
+	}
+
+	template<typename T>
+	inline static void
+	copy(const typename Owner<T>::Range_Type& dst, const typename Owner<T>::Const_Range_Type& src)
+	{
+		usize size = dst.size < src.size ? dst.size : src.size;
+		std::memcpy(dst.ptr, src.ptr, size);
+	}
+
+	template<typename T>
+	inline static void
+	copy(const typename Owner<T>::Range_Type& dst,
+		 const typename Owner<T>::Range_Type& src, usize count)
+	{
+		std::memcpy(dst.ptr, src.ptr, count * sizeof(T));
+	}
+
+	template<typename T>
+	inline static void
+	copy(const typename Owner<T>::Range_Type& dst,
+		 const typename Owner<T>::Const_Range_Type& src, usize count)
+	{
+		std::memcpy(dst.ptr, src.ptr, count * sizeof(T));
+	}
+
+	template<typename T>
+	inline static void
+	move(const Owner<T>& dst, const Owner<T>& src)
+	{
+		usize size = dst.size < src.size ? dst.size : src.size;
+		std::memmove(dst.ptr, src.ptr, size);
+	}
+
+	template<typename T>
+	inline static void
+	move(const Owner<T>& dst, const Owner<T>& src, usize count)
+	{
+		std::memmove(dst.ptr, src.ptr, count * sizeof(T));
+	}
+
+	template<typename T>
+	inline static void
+	move(const typename Owner<T>::Range_Type& dst, const typename Owner<T>::Range_Type& src)
+	{
+		usize size = dst.size < src.size ? dst.size : src.size;
+		std::memmove(dst.ptr, src.ptr, size);
+	}
+
+	template<typename T>
+	inline static void
+	move(const typename Owner<T>::Range_Type& dst, const typename Owner<T>::Const_Range_Type& src)
+	{
+		usize size = dst.size < src.size ? dst.size : src.size;
+		std::memmove(dst.ptr, src.ptr, size);
+	}
+
+	template<typename T>
+	inline static void
+	move(const typename Owner<T>::Range_Type& dst,
+		 const typename Owner<T>::Range_Type& src, usize count)
+	{
+		std::memmove(dst.ptr, src.ptr, count * sizeof(T));
+	}
+
+	template<typename T>
+	inline static void
+	move(const typename Owner<T>::Range_Type& dst,
+		 const typename Owner<T>::Const_Range_Type& src, usize count)
+	{
+		std::memmove(dst.ptr, src.ptr, count * sizeof(T));
 	}
 }

@@ -30,6 +30,16 @@ namespace cpprelude
 		 * Data type of the dynamic array
 		 */
 		using Data_Type = T;
+
+		/**
+		 * Iterator type of this container
+		 */
+		using iterator = typename Range_Type::iterator;
+		/**
+		 * Const Iterator type of this container
+		 */
+		using const_iterator = typename Range_Type::const_iterator;
+
 		constexpr static usize GROW_FACTOR = 2;
 		constexpr static usize STARTING_COUNT = 8;
 
@@ -370,6 +380,36 @@ namespace cpprelude
 			++_count;
 		}
 
+		void
+		insert_back(const Range_Type& range)
+		{
+			auto cap = capacity();
+			auto range_count = range.count();
+			if(_count + range_count > cap)
+				reserve(range_count);
+
+			for(const auto& value: range)
+			{
+				::new (_data.ptr + _count) Data_Type(value);
+				++_count;
+			}
+		}
+
+		void
+		insert_back(const Const_Range_Type& range)
+		{
+			auto cap = capacity();
+			auto range_count = range.count();
+			if(_count + range_count > cap)
+				reserve(range_count);
+
+			for(const auto& value: range)
+			{
+				::new (_data.ptr + _count) Data_Type(value);
+				++_count;
+			}
+		}
+
 		/**
 		 * @brief      Removes the specified count of values from the back of the array
 		 *
@@ -503,6 +543,60 @@ namespace cpprelude
 		back() const
 		{
 			return *(_data.ptr + _count - 1);
+		}
+
+		/**
+		 * @return     An Iterator to the beginning of this container
+		 */
+		iterator
+		begin()
+		{
+			return _data.ptr;
+		}
+
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
+		const_iterator
+		begin() const
+		{
+			return _data.ptr;
+		}
+
+		/**
+		 * @return     A Const iterator to the beginning of this container
+		 */
+		const_iterator
+		cbegin() const
+		{
+			return _data.ptr;
+		}
+
+		/**
+		 * @return     An Iterator to the end of the container
+		 */
+		iterator
+		end()
+		{
+			return _data.ptr + _count;
+		}
+
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
+		const_iterator
+		end() const
+		{
+			return _data.ptr + _count;
+		}
+
+		/**
+		 * @return     A Const Iterator to the end of the container
+		 */
+		const_iterator
+		cend() const
+		{
+			return _data.ptr + _count;
 		}
 	};
 }

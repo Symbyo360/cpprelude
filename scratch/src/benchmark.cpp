@@ -27,6 +27,9 @@
 #include <cpprelude/v5/Tree_Map.h>
 #include <map>
 
+#include <cpprelude/v5/String.h>
+#include <string>
+
 //old
 
 #include <cpprelude/stack_array.h>
@@ -45,7 +48,6 @@
 #include <functional>
 
 #include <cpprelude/string.h>
-#include <string>
 #include <sstream>
 #include <cpprelude/stream.h>
 #include <cpprelude/fmt.h>
@@ -86,7 +88,7 @@ bm_v5_Dynamic_Array(workbench* bench, usize limit)
 		for(usize i = 0; i < limit; ++i)
 			array.insert_back(i + r);
 
-		for(const auto& number: array.all())
+		for(const auto& number: array)
 			if(number % 3 == 0)
 				r += number;
 	bench->watch.stop();
@@ -124,7 +126,7 @@ bm_v5_Single_List(workbench *bench, usize limit)
 		for(usize i = 0; i < limit; ++i)
 			list.insert_front(i + r);
 
-		for (const auto& number : list.all())
+		for (const auto& number : list)
 			if (number % 2 == 0)
 				r += number;
 	bench->watch.stop();
@@ -162,7 +164,7 @@ bm_v5_Double_List(workbench *bench, usize limit)
 			else
 				list.emplace_front(i + r);
 
-		for(const auto& number: list.all())
+		for(const auto& number: list)
 			if(number % 2 == 0)
 				r += number;
 	bench->watch.stop();
@@ -251,7 +253,7 @@ bm_stack(workbench *bench, usize limit)
 }
 
 usize
-bm_v5_Ring_Buffer(workbench *bench, usize limit)
+bm_v5_Ring_Array(workbench *bench, usize limit)
 {
 	usize r = rand();
 
@@ -261,10 +263,10 @@ bm_v5_Ring_Buffer(workbench *bench, usize limit)
 		for (usize i = 0; i < limit; ++i)
 			que.insert_front(i + r);
 
-		while (!que.empty())
+		while(!que.empty())
 		{
-			r += que.back();
-			que.remove_back();
+			r += que.front();
+			que.remove_front();
 		}
 	bench->watch.stop();
 	return r;
@@ -621,6 +623,65 @@ bm_std_map(workbench* bench, usize limit)
 	bench->watch.stop();
 
 	return r;
+}
+
+
+char* random_str = nullptr;
+
+void
+gen_random_str(const int len) {
+	static const char alphanum[] =
+		"0123456789"
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+		"abcdefghijklmnopqrstuvwxyz";
+
+	random_str = new char[len + 1];
+
+	for (int i = 0; i < len; ++i) {
+		random_str[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
+	}
+
+	random_str[len] = 0;
+}
+
+std::string
+bm_std_string_create(workbench *bench, usize limit)
+{
+	bench->watch.start();
+		std::string str(random_str);
+	bench->watch.stop();
+	return str;
+}
+
+String
+bm_v5_String(workbench *bench, usize limit)
+{
+	bench->watch.start();
+		String str(random_str);
+	bench->watch.stop();
+	return str;
+}
+
+std::string
+bm_std_string_concat(workbench *bench, usize limit)
+{
+	bench->watch.start();
+		std::string str;
+		for(usize i = 0; i < limit; ++i)
+			str += "Mostafa";
+	bench->watch.stop();
+	return str;
+}
+
+String
+bm_v5_String_concat(workbench *bench, usize limit)
+{
+	bench->watch.start();
+		String str;
+		for(usize i = 0; i < limit; ++i)
+			str.concat("Mostafa");
+	bench->watch.stop();
+	return str;
 }
 
 //double linked list container
@@ -1552,6 +1613,10 @@ do_benchmark()
 		cpprelude::usize limit = 10000;
 	#endif
 
+	String_Range str = literal("Mostafaمصطفى");
+	for(const auto& c: str.range(7,12))
+		println(rune(c));
+
 	std::cout << "\nBENCHMARK START\n" << std::endl;
 
 	compare_benchmark(std::cout, {
@@ -1585,7 +1650,7 @@ do_benchmark()
 
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_queue, limit),
-		CPPRELUDE_BENCHMARK(bm_v5_Ring_Buffer, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Ring_Array, limit),
 		CPPRELUDE_BENCHMARK(bm_v5_Queue_List, limit)
 	});
 
@@ -1594,6 +1659,31 @@ do_benchmark()
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_priority_queue, limit),
 		CPPRELUDE_BENCHMARK(bm_v5_Priority_Queue, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_map, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Tree_Map, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	gen_random_str(limit);
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_string_create, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_String, limit)
+	});
+
+	delete[] random_str;
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_string_concat, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_String_concat, limit)
 	});
 
 	std::cout << std::endl << std::endl;
@@ -1626,13 +1716,6 @@ do_benchmark()
 		CPPRELUDE_BENCHMARK(bm_std_quick_sort, limit),
 		CPPRELUDE_BENCHMARK(bm_quick_sort, limit),
 		CPPRELUDE_BENCHMARK(bm_v5_quick_sort, limit)
-	});
-
-	std::cout << std::endl << std::endl;
-
-	compare_benchmark(std::cout, {
-		CPPRELUDE_BENCHMARK(bm_std_map, limit),
-		CPPRELUDE_BENCHMARK(bm_v5_Tree_Map, limit)
 	});
 
 	std::cout << "\nBENCHMARK END\n" << std::endl;
