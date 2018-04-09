@@ -1,5 +1,6 @@
 #pragma once
 #include "cpprelude/defines.h"
+#include "cpprelude/defaults.h"
 #include <type_traits>
 
 namespace cpprelude
@@ -1720,7 +1721,7 @@ namespace cpprelude
 		Data_Type&
 		front()
 		{
-			return _data[_increment(_tail_index)];
+			return ptr[_increment(_tail_index)];
 		}
 
 		/**
@@ -1729,7 +1730,7 @@ namespace cpprelude
 		const Data_Type&
 		front() const
 		{
-			return _data[_increment(_tail_index)];
+			return ptr[_increment(_tail_index)];
 		}
 
 		/**
@@ -1751,7 +1752,7 @@ namespace cpprelude
 		Data_Type&
 		back()
 		{
-			return _data[_head_index];
+			return ptr[_head_index];
 		}
 
 		/**
@@ -1760,7 +1761,7 @@ namespace cpprelude
 		const Data_Type&
 		back() const
 		{
-			return _data[_head_index];
+			return ptr[_head_index];
 		}
 
 		/**
@@ -2781,6 +2782,99 @@ namespace cpprelude
 		cend() const
 		{
 			return bytes.ptr + bytes.size;
+		}
+	};
+
+	template<typename T, typename TFlags>
+	struct Hash_Iterator
+	{
+		using Data_Type = T;
+
+		T* ptr;
+		const TFlags* _flag;
+		usize _capacity;
+
+		Hash_Iterator()
+			:ptr(nullptr),
+			 _flag(nullptr),
+			 _capacity(0)
+		{}
+
+		Hash_Iterator(T* value_ptr, const TFlags* flag_ptr, usize cap)
+			:ptr(value_ptr),
+			 _flag(flag_ptr),
+			 _capacity(cap)
+		{}
+
+		Hash_Iterator&
+		operator++()
+		{
+			++_flag;
+			++ptr;
+			--_capacity;
+			while(*_flag != TFlags::USED &&
+				  _capacity > 0)
+			{
+				++_flag;
+				++ptr;
+				--_capacity;
+			}
+			return *this;
+		}
+
+		Hash_Iterator
+		operator++(int)
+		{
+			auto result = *this;
+			++_flag;
+			++ptr;
+			--_capacity;
+			while(*_flag != TFlags::USED &&
+				  _capacity > 0)
+			{
+				++_flag;
+				++ptr;
+				--_capacity;
+			}
+			return result;
+		}
+
+		bool
+		operator==(const Hash_Iterator& other) const
+		{
+			return ptr == other.ptr && _flag == other._flag;
+		}
+
+		bool
+		operator!=(const Hash_Iterator& other) const
+		{
+			return !operator==(other);
+		}
+
+		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		Data_Type&
+		operator*()
+		{
+			return *ptr;
+		}
+
+		const Data_Type&
+		operator*() const
+		{
+			return *ptr;
+		}
+
+		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		Data_Type*
+		operator->()
+		{
+			return ptr;
+		}
+
+		const Data_Type*
+		operator->() const
+		{
+			return ptr;
 		}
 	};
 }

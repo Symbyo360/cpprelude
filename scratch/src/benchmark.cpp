@@ -30,6 +30,10 @@
 #include <cpprelude/v5/String.h>
 #include <string>
 
+#include <cpprelude/v5/Hash_Map.h>
+#include <unordered_set>
+#include <unordered_map>
+
 //old
 
 #include <cpprelude/stack_array.h>
@@ -682,6 +686,117 @@ bm_v5_String_concat(workbench *bench, usize limit)
 			str.concat("Mostafa");
 	bench->watch.stop();
 	return str;
+}
+
+
+usize
+bm_std_unordered_set(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+	{
+		std::unordered_set<usize> s;
+		for(usize i = 0; i < limit; ++i)
+			s.insert(r + i);
+		for(usize i = r; i < limit + r; ++i)
+			if(i % 2 == 0)
+				s.erase(i);
+		for(const auto& num: s)
+			r += num;
+	}
+	bench->watch.stop();
+	return r;
+}
+
+usize
+bm_v5_Hash_Set(workbench *bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+	{
+		Hash_Set<usize> s;
+		for(usize i = 0; i < limit; ++i)
+			s.insert(r + i);
+		for(usize i = r; i < limit + r; ++i)
+			if(i % 2 == 0)
+				s.remove(i);
+		for(const auto& num: s)
+			r += num;
+	}
+	bench->watch.stop();
+	return r;
+}
+
+
+usize
+bm_std_unordered_map(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+	{
+		std::unordered_map<usize, usize> m;
+		for(usize i = 0; i < limit; ++i)
+			m[i] = r + i;
+		for(usize i = 0; i < limit; ++i)
+		{
+			auto it = m.find(i);
+			if(it->second % 2 == 0)
+				m.erase(it);
+		}
+		for (const auto& it : m)
+			r += it.second;
+	}
+	bench->watch.stop();
+	return r;
+}
+
+usize
+bm_v5_Hash_Map(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+	{
+		Hash_Map<usize, usize> m;
+		for (usize i = 0; i < limit; ++i)
+			m[i] = r + i;
+		for (usize i = 0; i < limit; ++i)
+		{
+			auto it = m.lookup(i);
+			if (it->value % 2 == 0)
+				m.remove(it);
+		}
+		for (const auto& it : m)
+			r += it.value;
+	}
+	bench->watch.stop();
+	return r;
+}
+
+usize
+bm_hash_array(workbench* bench, usize limit)
+{
+	usize r = rand();
+
+	bench->watch.start();
+	{
+		hash_array<usize, usize> m;
+		for (usize i = 0; i < limit; ++i)
+			m[i] = r + i;
+		for (usize i = 0; i < limit; ++i)
+		{
+			auto it = m.lookup(i);
+			if (it.value() % 2 == 0)
+				m.remove(it);
+		}
+		for (auto it = m.begin(); it != m.end(); ++it)
+			r += it.value();
+	}
+	bench->watch.stop();
+	return r;
 }
 
 //double linked list container
@@ -1613,10 +1728,6 @@ do_benchmark()
 		cpprelude::usize limit = 10000;
 	#endif
 
-	String_Range str = literal("Mostafaمصطفى");
-	for(const auto& c: str.range(7,12))
-		println(rune(c));
-
 	std::cout << "\nBENCHMARK START\n" << std::endl;
 
 	compare_benchmark(std::cout, {
@@ -1684,6 +1795,21 @@ do_benchmark()
 	compare_benchmark(std::cout, {
 		CPPRELUDE_BENCHMARK(bm_std_string_concat, limit),
 		CPPRELUDE_BENCHMARK(bm_v5_String_concat, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_unordered_set, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Hash_Set, limit)
+	});
+
+	std::cout << std::endl << std::endl;
+
+	compare_benchmark(std::cout, {
+		CPPRELUDE_BENCHMARK(bm_std_unordered_map, limit),
+		CPPRELUDE_BENCHMARK(bm_v5_Hash_Map, limit),
+		CPPRELUDE_BENCHMARK(bm_hash_array, limit)
 	});
 
 	std::cout << std::endl << std::endl;

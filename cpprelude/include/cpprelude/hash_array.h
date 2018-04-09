@@ -576,6 +576,7 @@ namespace cpprelude
 		value_type&
 		operator[](const key_type& key)
 		{
+			_maintain_space_complexity();
 			auto index = _find_position(key);
 
 			//if not found then create and init one
@@ -593,6 +594,7 @@ namespace cpprelude
 		value_type&
 		operator[](key_type&& key)
 		{
+			_maintain_space_complexity();
 			auto index = _find_position(key);
 
 			//if not found then create and init one
