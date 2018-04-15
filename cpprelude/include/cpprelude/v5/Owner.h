@@ -99,18 +99,18 @@ namespace cpprelude
 		/**
 		 * Constant pointer cast operator
 		 */
-		operator const T*() const
-		{
-			return ptr;
-		}
+		// operator const T*() const
+		// {
+		// 	return ptr;
+		// }
 
 		/**
 		 * Pointer cast operator
 		 */
-		operator T*()
-		{
-			return ptr;
-		}
+		// operator T*()
+		// {
+		// 	return ptr;
+		// }
 
 		/**
 		 * Bool cast operator

@@ -35,7 +35,7 @@ TEST_CASE("string v5", "[string]")
 	SECTION("Case 04")
 	{
 		const char* name = "Mostafa";
-		String str(name, 3);
+		String str(const_str(name, 3));
 		CHECK(str.size() == 4);
 		CHECK(str.count() == 3);
 		CHECK(str.empty() == false);
@@ -156,7 +156,7 @@ TEST_CASE("string v5", "[string]")
 
 	SECTION("Case 11")
 	{
-		String cpp_str[6] = {"abcd", "ab", "ba", "dcba", "fegh", "cdab"};
+		String_Range cpp_str[6] = {"abcd", "ab", "ba", "dcba", "fegh", "cdab"};
 		std::string std_str[6] = {"abcd", "ab", "ba", "dcba", "fegh", "cdab"};
 
 		for(usize i = 0; i < 6; ++i)

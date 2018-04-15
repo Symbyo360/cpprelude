@@ -38,25 +38,21 @@ namespace cpprelude
 			_bytes[0] = 0;
 		}
 
-		String(const char* str, const Memory_Context& context = os->global_memory)
-			:mem_context(context),
-			 _bytes_size(0),
-			 _count(-1)
+		String(const String_Range& str_range, const Memory_Context& context = os->global_memory)
+			:mem_context(context)
 		{
-			_bytes_size = std::strlen(str) + 1;
-			_bytes = mem_context.template alloc<byte>(_bytes_size);
-			move(_bytes, own((byte*)str, _bytes_size), _bytes_size);
-		}
+			_bytes_size = str_range.size();
+			bool is_zero_terminated = str_range.bytes[_bytes_size - 1] == 0;
+			//this is not a zero terminated string so we better add a zero
+			if(!is_zero_terminated)
+				_bytes_size += 1;
 
-		String(const char* str, usize size, const Memory_Context& context = os->global_memory)
-			:mem_context(context),
-			 _bytes_size(0),
-			 _count(-1)
-		{
-			_bytes_size = size + 1;
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
-			move(_bytes, own((byte*)str, size), size);
-			_bytes[size] = 0;
+			move(_bytes, own((byte*)str_range.data(), str_range.size()), str_range.size());
+			_count = str_range.count();
+			//if it's not zero terminated then we terminate it with the zero
+			if(!is_zero_terminated)
+				_bytes[_bytes_size - 1] = 0;
 		}
 
 		String(const Owner<byte>& data, const Memory_Context& context = os->global_memory)
@@ -354,7 +350,7 @@ namespace cpprelude
 			auto start_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), start);
 			auto end_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), end);
 
-			String result(_bytes.ptr + start_bytes_offset, end_bytes_offset - start_bytes_offset, context);
+			String result(const_str(_bytes.ptr + start_bytes_offset, end_bytes_offset - start_bytes_offset), context);
 			result._count = end - start;
 			return result;
 		}
@@ -484,16 +480,5 @@ namespace cpprelude
 	strcmp(const String_Range& a, const String_Range& b)
 	{
 		return internal::_strcmp(a.bytes.all(), b.bytes);
-	}
-
-	inline static String_Range
-	literal(const char* str)
-	{
-		usize str_size = std::strlen(str) + 1;
-		String_Range result;
-		result.bytes.ptr = (byte*)str;
-		result.bytes.size = str_size;
-		result._count = str_size - 1;
-		return result;
 	}
 }

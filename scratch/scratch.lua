@@ -30,7 +30,7 @@ project "scratch"
 			systemversion(win10_sdk_version())
 		end
 
-		buildoptions {"/utf-8"}
+		buildoptions {"/utf-8", "/std:c++14"}
 	end
 
 	filter "configurations:debug"

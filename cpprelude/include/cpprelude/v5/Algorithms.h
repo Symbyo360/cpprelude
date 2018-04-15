@@ -6,7 +6,6 @@
 #include "cpprelude/v5/Dynamic_Array.h"
 #include "cpprelude/fmt.h"
 #include <type_traits>
-#include <cmath>
 
 namespace cpprelude
 {
@@ -373,6 +372,6 @@ namespace cpprelude
 		if(arr_range.count() <= 2)
 			return;
 		std::swap(arr_range.front(), _median_of_3(arr_range, compare_func));
-		_quick_sort(arr_range, std::log2(arr_range.count()), compare_func);
+		_quick_sort(arr_range, arr_range.count() / 2, compare_func);
 	}
 }

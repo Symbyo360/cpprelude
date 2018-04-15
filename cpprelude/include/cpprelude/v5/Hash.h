@@ -211,7 +211,7 @@ namespace cpprelude
 		inline usize
 		operator()(Rune value) const
 		{
-			return static_cast<usize>(value);
+			return static_cast<usize>(value.data);
 		}
 	};
 }

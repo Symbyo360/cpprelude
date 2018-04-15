@@ -80,6 +80,8 @@ namespace cpprelude
 	{
 
 		using Data_Type = T;
+		using Range_Type = Hash_Range<const T, internal::HASH_FLAGS>;
+		using Const_Range_Type = Hash_Range<const T, internal::HASH_FLAGS>;
 		using iterator = Hash_Iterator<const T, internal::HASH_FLAGS>;
 		using const_iterator = iterator;
 
@@ -217,7 +219,6 @@ namespace cpprelude
 			if(_flags.count() - _count >= expected_count)
 				return;
 
-			usize old_cap = _flags.count();
 			usize double_cap = (_flags.count() * 2);
 			usize fit = _count + expected_count;
 			usize new_cap = double_cap > fit ? double_cap : fit;
@@ -353,6 +354,36 @@ namespace cpprelude
 			clear();
 			mem_context.template free<internal::HASH_FLAGS>(_flags);
 			mem_context.template free<Data_Type>(_values);
+		}
+
+		Range_Type
+		all()
+		{
+			return Range_Type(begin(), end(), _count);
+		}
+
+		Const_Range_Type
+		all() const
+		{
+			return Const_Range_Type(begin(), end(), _count);
+		}
+
+		Range_Type
+		range(usize start, usize end_count)
+		{
+			auto it = begin();
+			for(usize i = 0; i < start; ++i)
+				++it;
+			return Range_Type(it, end(), end_count - start);
+		}
+
+		Const_Range_Type
+		range(usize start, usize end_count) const
+		{
+			auto it = begin();
+			for(usize i = 0; i < start; ++i)
+				++it;
+			return Const_Range_Type(it, end(), end_count - start);
 		}
 
 		iterator
@@ -518,6 +549,8 @@ namespace cpprelude
 	{
 
 		using Data_Type = internal::Hash_Pair<const TKey, TValue>;
+		using Range_Type = Hash_Range<Data_Type, internal::HASH_FLAGS>;
+		using Const_Range_Type = Hash_Range<const Data_Type, internal::HASH_FLAGS>;
 		using iterator = Hash_Iterator<Data_Type, internal::HASH_FLAGS>;
 		using const_iterator = Hash_Iterator<const Data_Type, internal::HASH_FLAGS>;
 
@@ -655,7 +688,6 @@ namespace cpprelude
 			if(_flags.count() - _count >= expected_count)
 				return;
 
-			usize old_cap = _flags.count();
 			usize double_cap = (_flags.count() * 2);
 			usize fit = _count + expected_count;
 			usize new_cap = double_cap > fit ? double_cap : fit;
@@ -977,6 +1009,36 @@ namespace cpprelude
 			clear();
 			mem_context.template free<internal::HASH_FLAGS>(_flags);
 			mem_context.template free<Data_Type>(_values);
+		}
+
+		Range_Type
+		all()
+		{
+			return Range_Type(begin(), end(), _count);
+		}
+
+		Const_Range_Type
+		all() const
+		{
+			return Const_Range_Type(begin(), end(), _count);
+		}
+
+		Range_Type
+		range(usize start, usize end_count)
+		{
+			auto it = begin();
+			for(usize i = 0; i < start; ++i)
+				++it;
+			return Range_Type(it, end(), end_count - start);
+		}
+
+		Const_Range_Type
+		range(usize start, usize end_count) const
+		{
+			auto it = begin();
+			for(usize i = 0; i < start; ++i)
+				++it;
+			return Const_Range_Type(it, end(), end_count - start);
 		}
 
 		iterator

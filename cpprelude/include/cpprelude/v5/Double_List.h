@@ -148,7 +148,7 @@ namespace cpprelude
 			Node_Type* it = other._head->next;
 			while(it != other._tail)
 			{
-				Node_Type* new_node = mem_context.template alloc<Node_Type>();
+				Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
 				::new (&new_node->value) Data_Type(it->value);
 
 				_insert_back_helper(insertion_head, new_node);
@@ -343,7 +343,7 @@ namespace cpprelude
 		void
 		emplace_front(TArgs&& ... args)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 
 			_insert_front_helper(_head->next, new_node);
@@ -358,7 +358,7 @@ namespace cpprelude
 		void
 		insert_front(const Data_Type& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 
 			_insert_front_helper(_head->next, new_node);
@@ -373,7 +373,7 @@ namespace cpprelude
 		void
 		insert_front(Data_Type&& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			
 			_insert_front_helper(_head->next, new_node);
@@ -391,7 +391,7 @@ namespace cpprelude
 		void
 		emplace_back(TArgs&& ... args)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			
 			_insert_back_helper(_tail->prev, new_node);
@@ -406,7 +406,7 @@ namespace cpprelude
 		void
 		insert_back(const Data_Type& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			
 			_insert_back_helper(_tail->prev, new_node);
@@ -421,7 +421,7 @@ namespace cpprelude
 		void
 		insert_back(Data_Type&& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			
 			_insert_back_helper(_tail->prev, new_node);
@@ -440,7 +440,7 @@ namespace cpprelude
 		void
 		emplace_after(Node_Type *it, TArgs&& ... args)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			_insert_back_helper(it, new_node);
 			++_count;
@@ -470,7 +470,7 @@ namespace cpprelude
 		void
 		insert_after(Node_Type *it, const Data_Type& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			_insert_back_helper(it, new_node);
 			++_count;
@@ -497,7 +497,7 @@ namespace cpprelude
 		void
 		insert_after(Node_Type *it, Data_Type&& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			_insert_back_helper(it, new_node);
 			++_count;
@@ -527,7 +527,7 @@ namespace cpprelude
 		void
 		emplace_before(Node_Type *it, TArgs&& ... args)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			_insert_front_helper(it, new_node);
 			++_count;
@@ -557,7 +557,7 @@ namespace cpprelude
 		void
 		insert_before(Node_Type *it, const Data_Type& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			_insert_front_helper(it, new_node);
 			++_count;
@@ -584,7 +584,7 @@ namespace cpprelude
 		void
 		insert_before(Node_Type *it, Data_Type&& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>();
+			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			_insert_front_helper(it, new_node);
 			++_count;
@@ -849,8 +849,8 @@ namespace cpprelude
 		inline void
 		_init_sentinals()
 		{
-			_head = mem_context.template alloc<Node_Type>();
-			_tail = mem_context.template alloc<Node_Type>();
+			_head = mem_context.template alloc<Node_Type>().ptr;
+			_tail = mem_context.template alloc<Node_Type>().ptr;
 			_head->next = _tail;
 			_tail->prev = _head;
 		}

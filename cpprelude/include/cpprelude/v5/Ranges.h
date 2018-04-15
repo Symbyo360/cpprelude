@@ -2,6 +2,7 @@
 #include "cpprelude/defines.h"
 #include "cpprelude/defaults.h"
 #include <type_traits>
+#include <cstring>
 
 namespace cpprelude
 {
@@ -790,7 +791,7 @@ namespace cpprelude
 		/**
 		 * @return     A Range view of entire forward range
 		 */
-		Range_Type&
+		Range_Type
 		all()
 		{
 			return *this;
@@ -814,14 +815,6 @@ namespace cpprelude
 		Range_Type
 		range(usize start, usize end)
 		{
-			if(start >= _count)
-				start = _count;
-			if(end >= _count)
-				end = _count;
-
-			if(end < start)
-				end = start;
-
 			auto it = ptr;
 			for(usize i = 0; i < start; ++i)
 				it = it->next;
@@ -838,14 +831,6 @@ namespace cpprelude
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
-			if(start >= _count)
-				start = _count;
-			if(end >= _count)
-				end = _count;
-
-			if(end < start)
-				end = start;
-
 			auto it = ptr;
 			for(usize i = 0; i < start; ++i)
 				it = it->next;
@@ -2417,15 +2402,19 @@ namespace cpprelude
 			:data(c)
 		{}
 
-		operator u32&()
-		{
-			return data;
-		}
+		Rune(char c)
+			:data(c)
+		{}
 
-		operator const u32&() const
-		{
-			return data;
-		}
+		//operator u32&()
+		//{
+		//	return data;
+		//}
+
+		//operator const u32&() const
+		//{
+		//	return data;
+		//}
 
 		bool
 		operator==(const Rune& other) const
@@ -2508,7 +2497,8 @@ namespace cpprelude
 		}
 
 		template<typename TForwardRange1, typename TForwardRange2,
-				 typename TCompare = default_less_than<typename TForwardRange1::Data_Type>>
+				 typename TCompare = 
+				 	default_less_than<typename std::remove_reference_t<TForwardRange1>::Data_Type>>
 		inline static isize
 		_strcmp(TForwardRange1&& range_a, TForwardRange2&& range_b,
 				TCompare&& compare_func = TCompare())
@@ -2564,7 +2554,7 @@ namespace cpprelude
 	{
 		const byte* ptr;
 
-		String_Iterator(const byte* str_ptr)
+		String_Iterator(const byte* str_ptr = nullptr)
 			:ptr(str_ptr)
 		{}
 
@@ -2659,6 +2649,21 @@ namespace cpprelude
 			 _count(rune_count)
 		{}
 
+		String_Range(const char* str)
+		{
+			usize str_size = std::strlen(str) + 1;
+			bytes.ptr = (byte*)str;
+			bytes.size = str_size;
+			_count = str_size - 1;
+		}
+
+		String_Range(const char* str, usize str_size)
+		{
+			bytes.ptr = (byte*)str;
+			bytes.size = str_size;
+			_count = str_size;
+		}
+
 		bool
 		operator==(const String_Range& other) const
 		{
@@ -2669,6 +2674,30 @@ namespace cpprelude
 		operator!=(const String_Range& other) const
 		{
 			return !operator==(other);
+		}
+
+		bool
+		operator<(const Range_Type& str_range) const
+		{
+			return internal::_strcmp(bytes, str_range.bytes) < 0;
+		}
+
+		bool
+		operator>(const Range_Type& str_range) const
+		{
+			return internal::_strcmp(bytes, str_range.bytes) > 0;
+		}
+
+		bool
+		operator<=(const Range_Type& str_range) const
+		{
+			return internal::_strcmp(bytes, str_range.bytes) <= 0;
+		}
+
+		bool
+		operator>=(const Range_Type& str_range) const
+		{
+			return internal::_strcmp(bytes, str_range.bytes) >= 0;
 		}
 
 		bool
@@ -2713,6 +2742,18 @@ namespace cpprelude
 			while(bytes.front() && ((bytes.front() & 0xC0) == 0x80))
 				bytes.pop_front();
 			--_count;
+		}
+
+		const byte*
+		data() const
+		{
+			return bytes.ptr;
+		}
+
+		usize
+		size() const
+		{
+			return bytes.size;
 		}
 
 		Const_Range_Type
@@ -2784,6 +2825,28 @@ namespace cpprelude
 			return bytes.ptr + bytes.size;
 		}
 	};
+
+	inline static String_Range
+	const_str(const char* str)
+	{
+		usize str_size = std::strlen(str) + 1;
+		String_Range result;
+		result.bytes.ptr = (byte*)str;
+		result.bytes.size = str_size;
+		result._count = str_size - 1;
+		return result;
+	}
+
+	inline static String_Range
+	const_str(const char* str, usize str_size)
+	{
+		String_Range result;
+		result.bytes.ptr = (byte*)str;
+		result.bytes.size = str_size;
+		result._count = str_size;
+		return result;
+	}
+
 
 	template<typename T, typename TFlags>
 	struct Hash_Iterator
@@ -2875,6 +2938,164 @@ namespace cpprelude
 		operator->() const
 		{
 			return ptr;
+		}
+	};
+
+	template<typename T, typename TFlags>
+	struct Hash_Range
+	{
+		using Data_Type = T;
+		using Range_Type = Hash_Range<T, TFlags>;
+		using Const_Range_Type = Hash_Range<const T, TFlags>;
+		using iterator = Hash_Iterator<T, TFlags>;
+		using const_iterator = Hash_Iterator<const T, TFlags>;
+
+		iterator _begin;
+		iterator _end;
+		usize _count;
+
+		Hash_Range()
+			:_count(0)
+		{}
+
+		Hash_Range(const iterator& begin_it, const iterator& end_it, usize values_count)
+			:_begin(begin_it), _end(end_it), _count(values_count)
+		{}
+
+		bool
+		operator==(const Hash_Range& other) const
+		{
+			return _begin == other._begin && _end == other._end && _count == other._count;
+		}
+
+		bool
+		operator!=(const Hash_Range& other) const
+		{
+			return !operator==(other);
+		}
+
+		bool
+		empty() const
+		{
+			return _count == 0;
+		}
+
+		usize
+		count() const
+		{
+			return _count;
+		}
+
+		bool
+		is_finite() const
+		{
+			return true;
+		}
+
+		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		Data_Type&
+		front()
+		{
+			return *_begin;
+		}
+
+		const Data_Type&
+		front() const
+		{
+			return *_begin;
+		}
+
+		void
+		pop_front()
+		{
+			++_begin;
+			--_count;
+		}
+
+		Range_Type
+		all()
+		{
+			return *this;
+		}
+
+		Const_Range_Type
+		all() const
+		{
+			return Const_Range_Type(_begin, _end, _count);
+		}
+
+		Range_Type
+		range(usize start, usize end)
+		{
+			auto it = _begin;
+			for(usize i = 0; i < start; ++i)
+				++it;
+			return Range_Type(it, _end, end - start);
+		}
+
+		Const_Range_Type
+		range(usize start, usize end) const
+		{
+			auto it = _begin;
+			for(usize i = 0; i < start; ++i)
+				++it;
+			return Const_Range_Type(it, _end, end - start);
+		}
+
+		/**
+		 * @return     An Iterator to the start of the range
+		 */
+		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		iterator
+		begin()
+		{
+			return _begin;
+		}
+
+		/**
+		 * @return     A Const iterator to the start of the range
+		 */
+		const_iterator
+		begin() const
+		{
+			return _begin;
+		}
+
+		/**
+		 * @return     A Const iterator to the start of the range
+		 */
+		const_iterator
+		cbegin() const
+		{
+			return _begin;
+		}
+
+		/**
+		 * @return     An iterator to the end of the range
+		 */
+		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
+		iterator
+		end()
+		{
+			return _end;
+		}
+
+		/**
+		 * @return     A Const iterator to the end of the range
+		 */
+		const_iterator
+		end() const
+		{
+			return _end;
+		}
+
+		/**
+		 * @return     A Const iterator to the end of the range
+		 */
+		const_iterator
+		cend() const
+		{
+			return _end;
 		}
 	};
 }

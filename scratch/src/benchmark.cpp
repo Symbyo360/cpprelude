@@ -34,6 +34,11 @@
 #include <unordered_set>
 #include <unordered_map>
 
+#include <cpprelude/v5/IO.h>
+
+// #include <cpprelude/v5/Result.h>
+// #include <optional>
+// #include <variant>
 //old
 
 #include <cpprelude/stack_array.h>
@@ -1719,6 +1724,182 @@ bm_hash_array(workbench* bench, usize limit)
 // 	return str.size();
 // }
 
+// struct Screamer
+// {
+// 	Screamer()
+// 	{
+// 		println("Screamer");
+// 	}
+
+// 	Screamer(const Screamer& other)
+// 	{
+// 		println("Copy Screamer");
+// 	}
+
+// 	Screamer(Screamer&& other)
+// 	{
+// 		println("Move Screamer");
+// 	}
+
+// 	Screamer&
+// 	operator=(const Screamer& other)
+// 	{
+// 		println("copy assign screamer");
+// 		return *this;
+// 	}
+
+// 	Screamer&
+// 	operator=(Screamer&& other)
+// 	{
+// 		println("move assign screamer");
+// 		return *this;
+// 	}
+
+// 	~Screamer()
+// 	{
+// 		println("~Screamer");
+// 	}
+// };
+
+// struct Special_Screamer
+// {
+// 	Special_Screamer()
+// 	{
+// 		println("Special_Screamer");
+// 	}
+
+// 	Special_Screamer(const Special_Screamer& other)
+// 	{
+// 		println("Copy Special_Screamer");
+// 	}
+
+// 	Special_Screamer(Special_Screamer&& other)
+// 	{
+// 		println("Move Special_Screamer");
+// 	}
+
+// 	Special_Screamer&
+// 	operator=(const Special_Screamer& other)
+// 	{
+// 		println("copy assign Special_Screamer");
+// 		return *this;
+// 	}
+
+// 	Special_Screamer&
+// 	operator=(Special_Screamer&& other)
+// 	{
+// 		println("move assign Special_Screamer");
+// 		return *this;
+// 	}
+
+// 	~Special_Screamer()
+// 	{
+// 		println("~Special_Screamer");
+// 	}
+// };
+
+// template<typename T1, typename T2>
+// struct Two
+// {
+// 	T1 first;
+// 	T2 second;
+// };
+
+// Screamer
+// optimal_screamer()
+// {
+// 	return Screamer();
+// }
+
+// Special_Screamer
+// optimal_special_screamer()
+// {
+// 	return Special_Screamer();
+// }
+
+// Result<Screamer, usize>
+// result_screamer()
+// {
+// 	return Screamer();
+// }
+
+// Result<Special_Screamer, usize>
+// result_speical_screamer()
+// {
+// 	return Special_Screamer();
+// }
+
+// std::optional<Screamer>
+// optional_screamer()
+// {
+// 	return Screamer();
+// }
+
+// std::optional<Special_Screamer>
+// optional_special_screamer()
+// {
+// 	return Special_Screamer();
+// }
+
+// std::variant<Screamer, usize>
+// variant_screamer()
+// {
+// 	return Screamer();
+// }
+
+// std::variant<Special_Screamer, usize>
+// variant_special_screamer()
+// {
+// 	return Special_Screamer();
+// }
+
+// Two<Screamer, usize>
+// sb_screamer()
+// {
+// 	return { Screamer(), 0 };
+// }
+
+// Two<Special_Screamer, usize>
+// sb_special_screamer()
+// {
+// 	return { Special_Screamer(), 0 };
+// }
+
+template<typename T>
+void
+print_stuff(void* data)
+{
+	T* p = (T*)data;
+	std::cout << *p;
+}
+
+struct generic_data
+{
+	using print_func = void(*)(void*);
+	void* ptr;
+	print_func _print;
+
+	template<typename T>
+	generic_data(const T& data)
+	{
+		ptr = (void*)(&data);
+		_print = print_stuff<T>;
+	}
+};
+
+template<typename ... TArgs>
+void
+do_stuff(TArgs&& ... args)
+{
+	generic_data arr[] = { args... };
+	println(sizeof...(args));
+	for (usize i = 0; i < sizeof...(args); ++i)
+	{
+		arr[i]._print(arr[i].ptr);
+	}
+}
+
+
 void
 do_benchmark()
 {
@@ -1727,6 +1908,22 @@ do_benchmark()
 	#else
 		cpprelude::usize limit = 10000;
 	#endif
+
+	// println(vprintb(os->unbuf_stdout, "abc"));
+	// println(vprints(os->unbuf_stdout, 1, 2, 3, const_str("Mostafa")));
+	// println(print_str(os->unbuf_stdout, 1.21f));
+	// println();
+	// println(vprintf(os->unbuf_stdout, "Mo{{{0}ka {1:.3f}", 1213, 1.2134f));
+	println(vprintf(os->unbuf_stdout, "{:0>+4d}\n{:0>+4d}\n", 110, 1));
+	//do_stuff("sdfdsf", 34234, 234234);
+	return;
+	auto handle = os->file_open("My_Stuff.txt").value;
+	os->file_close(handle);
+
+	auto sfd = const_str("mostafa");
+	os->unbuf_stdout->write(sfd.bytes.convert<byte>());
+	auto sfd2 = const_str("مصطفى");
+	os->unbuf_stdout->write(sfd2.bytes.convert<byte>());
 
 	std::cout << "\nBENCHMARK START\n" << std::endl;
 

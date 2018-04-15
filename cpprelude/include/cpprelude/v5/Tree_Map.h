@@ -1071,7 +1071,7 @@ namespace cpprelude
 		Node_Type*
 		_create_node(const Data_Type& data)
 		{
-			auto result = mem_context.template alloc<Node_Type>();
+			Node_Type* result = mem_context.template alloc<Node_Type>().ptr;
 			::new (result) Node_Type(data);
 			return result;
 		}
@@ -1079,7 +1079,7 @@ namespace cpprelude
 		Node_Type*
 		_create_node(Data_Type&& data)
 		{
-			auto result = mem_context.template alloc<Node_Type>();
+			Node_Type *result = mem_context.template alloc<Node_Type>().ptr;
 			::new (result) Node_Type(std::move(data));
 			return result;
 		}

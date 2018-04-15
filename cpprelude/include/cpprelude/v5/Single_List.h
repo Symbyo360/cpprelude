@@ -140,7 +140,7 @@ namespace cpprelude
 			auto it = &other._head;
 			for(usize i = 0; i < other._count; ++i)
 			{
-				*insertion_head = mem_context.template alloc<Node_Type>();
+				*insertion_head = mem_context.template alloc<Node_Type>().ptr;
 
 				::new (&(*insertion_head)->value) Data_Type((*it)->value);
 
@@ -302,7 +302,7 @@ namespace cpprelude
 		void
 		emplace_front(TArgs&& ... args)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>();
+			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			new_node->next = _head;
 			_head = new_node;
@@ -317,7 +317,7 @@ namespace cpprelude
 		void
 		insert_front(const Data_Type& value)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>();
+			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			new_node->next = _head;
 			_head = new_node;
@@ -332,7 +332,7 @@ namespace cpprelude
 		void
 		insert_front(Data_Type&& value)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>();
+			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			new_node->next = _head;
 			_head = new_node;
@@ -351,7 +351,7 @@ namespace cpprelude
 		void
 		emplace_after(Node_Type *it, TArgs&& ... args)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>();
+			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			new_node->next = it->next;
 			it->next = new_node;
@@ -382,7 +382,7 @@ namespace cpprelude
 		void
 		insert_after(Node_Type *it, const Data_Type& value)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>();
+			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			new_node->next = it->next;
 			it->next = new_node;
@@ -410,7 +410,7 @@ namespace cpprelude
 		void
 		insert_after(Node_Type *it, Data_Type&& value)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>();
+			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			new_node->next = it->next;
 			it->next = new_node;
