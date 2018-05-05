@@ -6,6 +6,7 @@
 #include "cpprelude/v5/Dynamic_Array.h"
 #include "cpprelude/fmt.h"
 #include <type_traits>
+#include <stdlib.h>
 
 namespace cpprelude
 {

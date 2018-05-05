@@ -42,6 +42,11 @@
     <DisplayString Condition="_data.size != 0" Encoding="Utf8">{_data.ptr,[_data.size - 1]s8}</DisplayString>
   </Type>
 
+  <Type Name="cpprelude::Slice&lt;*&gt;">
+    <DisplayString Condition="size == 0">empty</DisplayString>
+    <DisplayString Condition="size != 0" Encoding="Utf8">{ptr,[size]s8}</DisplayString>
+  </Type>
+
   <Type Name="cpprelude::rune">
     <DisplayString Encoding="Utf8">{data,c}</DisplayString>
   </Type>

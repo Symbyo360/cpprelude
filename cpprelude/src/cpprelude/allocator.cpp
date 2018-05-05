@@ -11,8 +11,9 @@ namespace cpprelude
 
 		if(self->_allocation_head + size > self->_memory.size)
 		{
-			panic(concat("arena couldn't perform allocator(remaining size = ",
-				  self->_memory.size - self->_allocation_head, ")"));
+			panic("arena couldn't perform allocator");
+			/*panic(concat("arena couldn't perform allocator(remaining size = ",
+				  self->_memory.size - self->_allocation_head, ")"));*/
 		}
 
 		slice<byte> result = make_slice(self->_memory.ptr + self->_allocation_head, size);

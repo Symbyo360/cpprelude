@@ -1,18 +1,18 @@
 #pragma once
 
 #include "cpprelude/defines.h"
-#include "cpprelude/defaults.h"
-#include "cpprelude/v5/Owner.h"
+#include "cpprelude/v5/Dynamic_Array.h"
 #include "cpprelude/v5/Memory_Context.h"
 #include "cpprelude/v5/OS.h"
 #include "cpprelude/v5/Ranges.h"
+#include "cpprelude/v5/IO.h"
 #include <cstring>
 
 namespace cpprelude
 {
 	struct String
 	{
-		using Data_Type = byte;
+		using Data_Type = Rune;
 		using Range_Type = String_Range;
 		using Const_Range_Type = String_Range;
 		using iterator = String_Iterator;
@@ -21,82 +21,67 @@ namespace cpprelude
 		Memory_Context mem_context;
 		Owner<byte> _bytes;
 		usize _bytes_size;
-		mutable usize _count;
+		mutable usize _runes_count;
 
 		String(const Memory_Context& context = os->global_memory)
 			:mem_context(context),
 			 _bytes_size(0),
-			 _count(-1)
+			 _runes_count(-1)
 		{}
-
-		String(usize count, const Memory_Context& context = os->global_memory)
-			:mem_context(context),
-			 _bytes_size(0),
-			 _count(-1)
-		{
-			_bytes = mem_context.template alloc<byte>(count);
-			_bytes[0] = 0;
-		}
 
 		String(const String_Range& str_range, const Memory_Context& context = os->global_memory)
 			:mem_context(context)
 		{
-			_bytes_size = str_range.size();
-			bool is_zero_terminated = str_range.bytes[_bytes_size - 1] == 0;
-			//this is not a zero terminated string so we better add a zero
-			if(!is_zero_terminated)
-				_bytes_size += 1;
+			_bytes_size = str_range.bytes.size + 1;
 
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
-			move(_bytes, own((byte*)str_range.data(), str_range.size()), str_range.size());
-			_count = str_range.count();
-			//if it's not zero terminated then we terminate it with the zero
-			if(!is_zero_terminated)
-				_bytes[_bytes_size - 1] = 0;
+			move<byte>(_bytes.all(), str_range.bytes);
+			_bytes[_bytes_size - 1] = '\0';
+			_runes_count = str_range._runes_count;
 		}
 
 		String(const Owner<byte>& data, const Memory_Context& context = os->global_memory)
 			:mem_context(context),
-			 _count(-1)
+			 _runes_count(-1)
 		{
-			_bytes_size = data.count();
-			_bytes = mem_context.template alloc<byte>(_bytes_size);
-			move(_bytes, data, _bytes_size);
+			_bytes = mem_context.template alloc<byte>(data.size);
+			move<byte>(_bytes, data);
+			_bytes_size = data.size;
 		}
 
 		String(Owner<byte>&& data, const Memory_Context& context = os->global_memory)
 			:mem_context(context),
 			 _bytes(std::move(data)),
-			 _bytes_size(_bytes.count()),
-			 _count(-1)
+			 _bytes_size(_bytes.size),
+			 _runes_count(-1)
 		{}
 
 		String(const String& other)
 			:mem_context(other.mem_context),
 			 _bytes_size(other._bytes_size),
-			 _count(other._count)
+			 _runes_count(other._runes_count)
 		{
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
-			move(_bytes, other._bytes, _bytes_size);
+			move<byte>(_bytes, other._bytes);
 		}
 
 		String(const String& other, const Memory_Context& context)
 			:mem_context(context),
 			 _bytes_size(other._bytes_size),
-			 _count(other._count)
+			 _runes_count(other._runes_count)
 		{
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
-			move(_bytes, other._bytes, _bytes_size);
+			move<byte>(_bytes, other._bytes);
 		}
 
 		String(String&& other)
 			:mem_context(std::move(other.mem_context)),
 			 _bytes(std::move(other._bytes)),
 			 _bytes_size(other._bytes_size),
-			 _count(other._count)
+			 _runes_count(other._runes_count)
 		{
 			other._bytes_size = 0;
-			other._count = -1;
+			other._runes_count = -1;
 		}
 
 		~String()
@@ -107,30 +92,48 @@ namespace cpprelude
 		String&
 		operator=(const String& other)
 		{
-			_bytes_size = other._bytes_size;
-			if(_bytes.count() < other._bytes.count())
+			if(_bytes.size < other._bytes_size)
 			{
 				mem_context.template free<byte>(_bytes);
-				_bytes = mem_context.template alloc<byte>(_bytes_size);
+				_bytes = mem_context.template alloc<byte>(other._bytes_size);
 			}
 
-			move(_bytes, other._bytes, _bytes_size);
-			_count = other._count;
+			move<byte>(_bytes, other._bytes);
+			_bytes_size = other._bytes_size;
+			_runes_count = other._runes_count;
+			return *this;
+		}
+
+		String&
+		operator=(const Range_Type& str)
+		{
+			if(_bytes.size < (str.bytes.size + 1))
+			{
+				mem_context.template free<byte>(_bytes);
+				_bytes = mem_context.template alloc<byte>(str.bytes.size + 1);
+			}
+
+			move<byte>(_bytes.all(), str.bytes);
+			_bytes_size = str.bytes.size + 1;
+			_bytes[_bytes_size - 1] = '\0';
+			_runes_count = str._runes_count;
 			return *this;
 		}
 
 		String&
 		operator=(const char* str)
 		{
-			_bytes_size = std::strlen(str) + 1;
-			if(_bytes.count() < _bytes_size)
+			usize str_size = std::strlen(str);
+			if(_bytes.size < (str_size + 1))
 			{
 				mem_context.template free<byte>(_bytes);
-				_bytes = mem_context.template alloc<byte>(_bytes_size);
+				_bytes = mem_context.template alloc<byte>(str_size + 1);
 			}
 
-			move(_bytes, own((byte*)str, _bytes_size), _bytes_size);
-			_count = -1;
+			move<byte>(_bytes.all(), Slice<const byte>(str, str_size));
+			_bytes_size = str_size + 1;
+			_bytes[_bytes_size - 1] = '\0';
+			_runes_count = -1;
 			return *this;
 		}
 
@@ -140,10 +143,10 @@ namespace cpprelude
 			mem_context = std::move(other.mem_context);
 			_bytes = std::move(other._bytes);
 			_bytes_size = other._bytes_size;
-			_count = other._count;
+			_runes_count = other._runes_count;
 
 			other._bytes_size = 0;
-			other._count = -1;
+			other._runes_count = -1;
 			return *this;
 		}
 
@@ -151,9 +154,9 @@ namespace cpprelude
 		usize
 		count() const
 		{
-			if(_count == -1)
-				_count = internal::_utf8_count_chars(_bytes.range(0, _bytes_size));
-			return _count;
+			if(_runes_count == -1)
+				_runes_count = internal::_utf8_count_chars(_bytes.range(0, _bytes_size));
+			return _runes_count;
 		}
 
 		usize
@@ -199,30 +202,9 @@ namespace cpprelude
 		}
 
 		bool
-		operator==(const Range_Type& str_range) const
-		{
-			usize limit = count();
-			if(limit != str_range.count())
-				return false;
-
-			auto this_it = begin();
-			auto range_it = str_range.begin();
-			for(usize i = 0; i < limit; ++i, ++this_it, ++range_it)
-				if(*this_it != *range_it)
-					return false;
-			return true;
-		}
-
-		bool
 		operator!=(const String& other) const
 		{
 			return !operator==(other);
-		}
-
-		bool
-		operator!=(const Range_Type& str_range) const
-		{
-			return !operator==(str_range);
 		}
 
 		bool
@@ -232,9 +214,9 @@ namespace cpprelude
 		}
 
 		bool
-		operator<(const Range_Type& str_range) const
+		operator<=(const String& other) const
 		{
-			return internal::_strcmp(_bytes.all(), str_range.bytes) < 0;
+			return internal::_strcmp(_bytes.all(), other._bytes.all()) <= 0;
 		}
 
 		bool
@@ -244,104 +226,111 @@ namespace cpprelude
 		}
 
 		bool
-		operator>(const Range_Type& str_range) const
-		{
-			return internal::_strcmp(_bytes.all(), str_range.bytes) > 0;
-		}
-
-		bool
-		operator<=(const String& other) const
-		{
-			return internal::_strcmp(_bytes.all(), other._bytes.all()) <= 0;
-		}
-
-		bool
-		operator<=(const Range_Type& str_range) const
-		{
-			return internal::_strcmp(_bytes.all(), str_range.bytes) <= 0;
-		}
-
-		bool
 		operator>=(const String& other) const
 		{
 			return internal::_strcmp(_bytes.all(), other._bytes.all()) >= 0;
 		}
 
 		bool
-		operator>=(const Range_Type& str_range) const
+		operator==(const Range_Type& str)
 		{
-			return internal::_strcmp(_bytes.all(), str_range.bytes) >= 0;
+			if(_bytes_size - 1 != str.bytes.size)
+				return false;
+
+			for(usize i = 0; i < _bytes_size - 1; ++i)
+				if(_bytes[i] != str.bytes[i])
+					return false;
+			return true;
+		}
+
+		bool
+		operator!=(const Range_Type& str) const
+		{
+			return !operator==(str);
+		}
+
+		bool
+		operator<(const Range_Type& str) const
+		{
+			return internal::_strcmp(_bytes.all(), str.bytes) < 0;
+		}
+
+		bool
+		operator<=(const Range_Type& str) const
+		{
+			return internal::_strcmp(_bytes.all(), str.bytes) <= 0;
+		}
+
+		bool
+		operator>(const Range_Type& str) const
+		{
+			return internal::_strcmp(_bytes.all(), str.bytes) > 0;
+		}
+
+		bool
+		operator>=(const Range_Type& str) const
+		{
+			return internal::_strcmp(_bytes.all(), str.bytes) >= 0;
+		}
+
+		void
+		reserve(usize expected_count)
+		{
+			if((_bytes.size - _bytes_size) >= expected_count)
+				return;
+
+			usize double_cap = _bytes.size * 2;
+			usize fit = _bytes_size + expected_count;
+			usize new_cap = double_cap > fit ? double_cap : fit;
+			auto new_bytes = mem_context.template alloc<byte>(new_cap);
+			if(_bytes_size > 0)
+				move<byte>(new_bytes, _bytes);
+			mem_context.template free<byte>(_bytes);
+			_bytes = std::move(new_bytes);
 		}
 
 		void
 		concat(const String& other)
 		{
-			if((_bytes.count() - _bytes_size) < other._bytes_size)
-			{
-				usize double_cap = _bytes.count() * 2;
-				usize fit = _bytes_size + other._bytes_size;
-				usize new_cap = double_cap > fit ? double_cap : fit;
-				auto new_bytes = mem_context.template alloc<byte>(new_cap);
-				if (_bytes_size != 0)
-				{
-					move(new_bytes, _bytes, _bytes_size);
-					mem_context.template free<byte>(_bytes);
-				}
-				_bytes = std::move(new_bytes);
-			}
-
-			if (_bytes_size != 0)
-			{
-				//for the null termination
+			reserve(other._bytes_size);
+			
+			if(_bytes_size > 0)
 				--_bytes_size;
-				move<byte>(_bytes.range(_bytes_size, _bytes_size + other._bytes_size),
-						   other._bytes.all(),
-						   other._bytes_size);
-			}
-			else
-			{
-				move<byte>(_bytes.all(),
-						   other._bytes.all(),
-						   other._bytes_size);
-			}
+
+			move<byte>(_bytes.range(_bytes_size, _bytes_size + other._bytes_size), other._bytes.range(0, other._bytes_size));
 			_bytes_size += other._bytes_size;
-			_count = -1;
+			_runes_count = -1;
+		}
+
+		void
+		concat(const Range_Type& str)
+		{
+			reserve(str.bytes.size + 1);
+
+			if(_bytes_size > 0)
+				--_bytes_size;
+
+			move<byte>(_bytes.range(_bytes_size, _bytes_size + str.bytes.size), str.bytes);
+			_bytes_size += str.bytes.size;
+			_bytes[_bytes_size] = '\0';
+			++_bytes_size;
+			_runes_count = -1;
 		}
 
 		void
 		concat(const char* str)
 		{
-			usize str_bytes_size = std::strlen(str) + 1;
-			if((_bytes.count() - _bytes_size) < str_bytes_size)
-			{
-				usize double_cap = _bytes.count() * 2;
-				usize fit = _bytes_size + str_bytes_size;
-				usize new_cap = double_cap > fit ? double_cap : fit;
-				auto new_bytes = mem_context.template alloc<byte>(new_cap);
-				if (_bytes_size != 0)
-				{
-					move(new_bytes, _bytes, _bytes_size);
-					mem_context.template free<byte>(_bytes);
-				}
-				_bytes = std::move(new_bytes);
-			}
+			usize str_size = std::strlen(str);
+			reserve(str_size + 1);
 
-			if (_bytes_size != 0)
-			{
-				//for the null termination
+			if(_bytes_size > 0)
 				--_bytes_size;
-				move<byte>(_bytes.range(_bytes_size, _bytes_size + str_bytes_size),
-						   Slice<byte>((byte*)str, str_bytes_size),
-						   str_bytes_size);
-			}
-			else
-			{
-				move<byte>(_bytes.all(),
-						   Slice<byte>((byte*)str, str_bytes_size),
-						   str_bytes_size);
-			}
-			_bytes_size += str_bytes_size;
-			_count = -1;
+
+			move<byte>(_bytes.range(_bytes_size, _bytes_size + str_size), Slice<const byte>(str, str_size));
+			_bytes_size += str_size;
+			_bytes[_bytes_size] = '\0';
+			++_bytes_size;
+			_runes_count = -1;
 		}
 
 		String
@@ -350,16 +339,14 @@ namespace cpprelude
 			auto start_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), start);
 			auto end_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), end);
 
-			String result(const_str(_bytes.ptr + start_bytes_offset, end_bytes_offset - start_bytes_offset), context);
-			result._count = end - start;
-			return result;
+			return String(Range_Type(_bytes.range(start_bytes_offset, end_bytes_offset), end - start), context);
 		}
 
 		void
 		clear()
 		{
 			_bytes_size = 0;
-			_count = -1;
+			_runes_count = -1;
 		}
 
 		void
@@ -367,31 +354,15 @@ namespace cpprelude
 		{
 			mem_context.template free<byte>(_bytes);
 			_bytes_size = 0;
-			_count = -1;
-		}
-
-		void
-		reserve(usize expected_count)
-		{
-			if((_bytes.count() - _bytes_size) < expected_count)
-			{
-				usize double_cap = _bytes.count() * 2;
-				usize fit = _bytes_size + expected_count;
-				usize new_cap = double_cap > fit ? double_cap : fit;
-				auto new_bytes = mem_context.template alloc<byte>(new_cap);
-				if(_bytes_size != 0)
-				{
-					move(new_bytes, _bytes, _bytes_size);
-					mem_context.template free<byte>(_bytes);
-				}
-				_bytes = std::move(new_bytes);
-			}
+			_runes_count = -1;
 		}
 
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(_bytes.all(), count());
+			if(_bytes_size == 0)
+				return Const_Range_Type();
+			return Const_Range_Type(_bytes.range(0, _bytes_size - 1), count());
 		}
 
 		Const_Range_Type
@@ -458,6 +429,39 @@ namespace cpprelude
 		}
 	};
 
+	inline static usize
+	print_str(IO_Trait* trait, const Parsed_Format& format, const String& value)
+	{
+		return print_str(trait, format, value.all());
+	}
+
+	inline static usize
+	print_bin(IO_Trait* trait, const String& value)
+	{
+		return print_bin(trait, value._bytes.range(0, value._bytes_size));
+	}
+
+	inline static usize
+	read_str(Bufio_Trait* trait, String& value)
+	{
+		_guarantee_text_chunk(trait, KILOBYTES(1));
+		auto bytes = trait->peek();
+		usize non_whitespace_count = 0;
+		for(const auto& byte: bytes)
+		{
+			if(_is_whitespace(byte))
+				break;
+			++non_whitespace_count;
+		}
+
+		if(non_whitespace_count == 0)
+			return 0;
+
+		value.clear();
+		value.concat(String_Range(bytes.range(0, non_whitespace_count).template convert<const byte>()));
+		return trait->skip(non_whitespace_count);
+	}
+
 	inline static isize
 	strcmp(const String& a, const String& b)
 	{
@@ -480,5 +484,64 @@ namespace cpprelude
 	strcmp(const String_Range& a, const String_Range& b)
 	{
 		return internal::_strcmp(a.bytes.all(), b.bytes);
+	}
+
+	inline static usize
+	_readln(Bufio_Trait* trait, String& value)
+	{
+		usize newline_offset = -1;
+		usize last_size = -1;
+		usize request_size = 0;
+		while(true)
+		{
+			auto bytes = trait->peek(request_size);
+
+			bool found_newline = false;
+			for(usize i = 0; i < bytes.size; ++i)
+			{
+				if(bytes[i] == '\n')
+				{
+					found_newline = true;
+					newline_offset = i;
+					break;
+				}
+			}
+
+			if(found_newline)
+				break;
+			else if(last_size == bytes.size)
+				break;
+
+			request_size += KILOBYTES(1);
+			last_size = bytes.size;
+		}
+
+		auto bytes = trait->peek();
+		value.clear();
+		if(newline_offset != -1)
+		{
+			usize additional_skip = 1;
+			#if defined(OS_WINDOWS)
+			{
+				//because of the \r\n on window
+				--newline_offset;
+				++additional_skip;
+			}
+			#endif
+
+			value.concat(String_Range(bytes.range(0, newline_offset).template convert<const byte>()));
+			return trait->skip(newline_offset + additional_skip) - additional_skip;
+		}
+		else
+		{
+			value.concat(String_Range(bytes.template convert<const byte>()));
+			return trait->skip(bytes.size);
+		}
+	}
+
+	inline static usize
+	readln(String& value)
+	{
+		return _readln(os->buf_stdin, value);
 	}
 }

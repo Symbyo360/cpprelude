@@ -37,6 +37,7 @@ namespace cpprelude
 		IO_Trait* unbuf_stdout;
 		IO_Trait* unbuf_stderr;
 		IO_Trait* unbuf_stdin;
+		Bufio_Trait* buf_stdin;
 
 		/**
 		 * The allocation count that's made using the global memory
@@ -97,6 +98,9 @@ namespace cpprelude
 
 		API_CPPR void
 		_print_memory_report() const;
+
+		API_CPPR void
+		dump_callstack() const;
 
 		API_CPPR Result<File_Handle, OS_ERROR>
 		file_open(const String_Range& filename,

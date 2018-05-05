@@ -2,6 +2,7 @@
 #include "cpprelude/string.h"
 #include "cpprelude/io.h"
 #include "cpprelude/fmt.h"
+#include "cpprelude/v5/IO.h"
 #include <algorithm>
 
 #if defined(OS_WINDOWS)
@@ -124,62 +125,62 @@ namespace cpprelude
 			#elif defined(OS_LINUX)
 			{
 				//+1 for null terminated string
-				char name_buffer[MAX_NAME_LEN+1];
-				char demangled_buffer[MAX_NAME_LEN];
-				usize demangled_buffer_length = MAX_NAME_LEN;
+				// char name_buffer[MAX_NAME_LEN+1];
+				// char demangled_buffer[MAX_NAME_LEN];
+				// usize demangled_buffer_length = MAX_NAME_LEN;
 
-				//capture the call stack
-				usize frames_count = backtrace(callstack, STACK_MAX);
-				//resolve the symbols
-				char** symbols = backtrace_symbols(callstack, frames_count);
+				// //capture the call stack
+				// usize frames_count = backtrace(callstack, STACK_MAX);
+				// //resolve the symbols
+				// char** symbols = backtrace_symbols(callstack, frames_count);
 
-				if(symbols)
-				{
-					for(usize i = 0; i < frames_count; ++i)
-					{
-						//isolate the function name
-						char *name_begin = nullptr, *name_end = nullptr, *name_it = symbols[i];
-						while(*name_it != 0)
-						{
-							if(*name_it == '(')
-								name_begin = name_it+1;
-							else if(*name_it == ')' || *name_it == '+')
-							{
-								name_end = name_it;
-								break;
-							}
-							++name_it;
-						}
+				// if(symbols)
+				// {
+				// 	for(usize i = 0; i < frames_count; ++i)
+				// 	{
+				// 		//isolate the function name
+				// 		char *name_begin = nullptr, *name_end = nullptr, *name_it = symbols[i];
+				// 		while(*name_it != 0)
+				// 		{
+				// 			if(*name_it == '(')
+				// 				name_begin = name_it+1;
+				// 			else if(*name_it == ')' || *name_it == '+')
+				// 			{
+				// 				name_end = name_it;
+				// 				break;
+				// 			}
+				// 			++name_it;
+				// 		}
 
 						
-						usize mangled_name_size = name_end - name_begin;
-						//function maybe inlined
-						if(mangled_name_size == 0)
-						{
-							println_err("[", frames_count - i - 1, "]: unknown/inlined symbol");
-							continue;
-						}
+				// 		usize mangled_name_size = name_end - name_begin;
+				// 		//function maybe inlined
+				// 		if(mangled_name_size == 0)
+				// 		{
+				// 			println_err("[", frames_count - i - 1, "]: unknown/inlined symbol");
+				// 			continue;
+				// 		}
 
-						//copy the function name into the name buffer
-						usize copy_size = mangled_name_size > MAX_NAME_LEN ? MAX_NAME_LEN : mangled_name_size;
-						memcpy(name_buffer, name_begin, copy_size);
-						name_buffer[copy_size] = 0;
+				// 		//copy the function name into the name buffer
+				// 		usize copy_size = mangled_name_size > MAX_NAME_LEN ? MAX_NAME_LEN : mangled_name_size;
+				// 		memcpy(name_buffer, name_begin, copy_size);
+				// 		name_buffer[copy_size] = 0;
 
-						int status = 0;
-						abi::__cxa_demangle(name_buffer, demangled_buffer, &demangled_buffer_length, &status);
-						if(status == 0)
-						{
-							auto function_name = string(make_slice(demangled_buffer, demangled_buffer_length), nullptr);
-							println_err("[", frames_count - i - 1, "]: ", function_name);
-						}
-						else
-						{
-							auto function_name = string(make_slice(name_buffer, copy_size), nullptr);
-							println_err("[", frames_count - i - 1, "]: ", function_name);
-						}
-					}
-					::free(symbols);
-				}
+				// 		int status = 0;
+				// 		abi::__cxa_demangle(name_buffer, demangled_buffer, &demangled_buffer_length, &status);
+				// 		if(status == 0)
+				// 		{
+				// 			auto function_name = string(make_slice(demangled_buffer, demangled_buffer_length), nullptr);
+				// 			println_err("[", frames_count - i - 1, "]: ", function_name);
+				// 		}
+				// 		else
+				// 		{
+				// 			auto function_name = string(make_slice(name_buffer, copy_size), nullptr);
+				// 			println_err("[", frames_count - i - 1, "]: ", function_name);
+				// 		}
+				// 	}
+				// 	::free(symbols);
+				// }
 			}
 			#endif
 		}
@@ -420,7 +421,7 @@ namespace cpprelude
 		}
 		#elif defined(OS_LINUX)
 		{
-			return read(handle._linux_handle, data.ptr, data.size);
+			return ::read(handle._linux_handle, data.ptr, data.size);
 		}
 		#endif
 	}
@@ -632,7 +633,7 @@ namespace cpprelude
 		#if defined(OS_WINDOWS)
 		{
 			//set the console mode to support utf8
-			SetConsoleOutputCP(CP_UTF8);
+			//SetConsoleOutputCP(CP_UTF8);
 
 			//configure the debug mode stuff
 			#ifdef DEBUG

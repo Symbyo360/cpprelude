@@ -4,6 +4,7 @@
 #include "cpprelude/string.h"
 #include "cpprelude/platform.h"
 #include "cpprelude/fmt.h"
+#include "cpprelude/v5/IO.h"
 
 namespace cpprelude
 {
@@ -36,7 +37,7 @@ namespace cpprelude
 	[[noreturn]] inline static void
 	panic(const string& msg)
 	{
-		println_err("[panic]: ", msg);
+		//println_err("[panic]: ", msg);
 		platform->dump_callstack();
 		std::abort();
 	}

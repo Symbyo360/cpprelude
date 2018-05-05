@@ -32,4 +32,33 @@ namespace cpprelude
 			return _read(_self, data);
 		}
 	};
+
+	struct Bufio_Trait: IO_Trait
+	{
+		using peek_func = Slice<byte>(*)(void*, usize);
+		using skip_func = usize(*)(void*, usize);
+		using flush_func = usize(*)(void*);
+
+		peek_func _peek;
+		skip_func _skip;
+		flush_func _flush;
+
+		Slice<byte>
+		peek(usize size = 0)
+		{
+			return _peek(_self, size);
+		}
+
+		usize
+		skip(usize size)
+		{
+			return _skip(_self, size);
+		}
+
+		usize
+		flush()
+		{
+			return _flush(_self);
+		}
+	};
 }

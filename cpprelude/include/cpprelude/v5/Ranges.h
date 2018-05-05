@@ -22,9 +22,6 @@ namespace cpprelude
 	 *	bool
 	 *	empty();
 	 *
-	 *	usize
-	 *	count();
-	 *
 	 *	T&
 	 *	front()
 	 *
@@ -33,16 +30,11 @@ namespace cpprelude
 	 *
 	 *	void
 	 *	pop_front();
-	 *	
-	 *	bool
-	 * 	is_finite() const;
 	 * };
 	 * ```
 	 * - **empty:** returns whether the range is empty or not
-	 * - **count:** returns the number of values in the range
 	 * - **front:** returns the front value of the range
 	 * - **pop_front:** pops the front value of the range
-	 * - **is_finite:** returns whether the range is finite or infinite
 	 * 
 	 * ##Bidirectional_Range
 	 * A Two direction range it's analogous to a bidirectional iterator
@@ -78,10 +70,14 @@ namespace cpprelude
 	 * 	const T&
 	 * 	operator[](usize index) const;
 	 * 	
+	 *	usize
+	 *	count();
+	 * 	
 	 * };
 	 * ```
 	 * 
 	 * - **operator[]:** access a certain value by index in the range
+	 * - **count:** returns the number of values in the range
 	 * 
 	 * ##Example container
 	 * So an example container should have the following functions
@@ -306,15 +302,6 @@ namespace cpprelude
 		}
 
 		/**
-		 * @return     The count of values in this range
-		 */
-		usize
-		count() const
-		{
-			return size / sizeof(T);
-		}
-
-		/**
 		 * @return     A Reference to the front value of this range
 		 */
 		T&
@@ -340,17 +327,6 @@ namespace cpprelude
 		{
 			++ptr;
 			size -= sizeof(T);
-		}
-
-		/**
-		 * @brief      Determines if finite
-		 *
-		 * @return     True if finite, False otherwise
-		 */
-		bool
-		is_finite() const
-		{
-			return true;
 		}
 
 		//Bidirectional_Range Interface
@@ -403,6 +379,15 @@ namespace cpprelude
 		operator[](usize index) const
 		{
 			return ptr[index];
+		}
+
+		/**
+		 * @return     The count of values in this range
+		 */
+		usize
+		count() const
+		{
+			return size / sizeof(T);
 		}
 
 		//iterator interface
@@ -662,44 +647,24 @@ namespace cpprelude
 		 */
 		T *ptr;
 		T *_end;
-		usize _count;
 
 		/**
 		 * @brief      Constructs an empty forward range
 		 */
 		Forward_Range()
 			:ptr(nullptr),
-			 _end(nullptr),
-			 _count(0)
+			 _end(nullptr)
 		{}
-
-		/**
-		 * @brief      Constructs a forward range
-		 *
-		 * @param      node         the list node pointer
-		 * @param[in]  values_count  The values count in the given list
-		 */
-		Forward_Range(T* node, usize values_count)
-			:ptr(node),
-			 _end(nullptr),
-			 _count(values_count)
-		{
-			_end = ptr;
-			for(usize i = 0; i < _count; ++i)
-				_end = _end->next;
-		}
 
 		/**
 		 * @brief      Constructs a forward range
 		 *
 		 * @param      node_begin    The list node begin pointer
 		 * @param      node_end      The list node end pointer
-		 * @param[in]  values_count  The values count in the given list
 		 */
-		Forward_Range(T* node_begin, T* node_end, usize values_count)
+		Forward_Range(T* node_begin, T* node_end)
 			:ptr(node_begin),
-			 _end(node_end),
-			 _count(values_count)
+			 _end(node_end)
 		{}
 
 		/**
@@ -712,7 +677,7 @@ namespace cpprelude
 		bool
 		operator==(const Forward_Range& other) const
 		{
-			return ptr == other.ptr && _count == other._count;
+			return ptr == other.ptr && _end == other._end;
 		}
 
 		/**
@@ -736,27 +701,9 @@ namespace cpprelude
 		bool
 		empty() const
 		{
-			return _count == 0 || ptr == nullptr;
+			return ptr == _end;
 		}
 
-		/**
-		 * @return     The count of elements inside the range
-		 */
-		usize
-		count() const
-		{
-			return _count;
-		}
-
-		/**
-		 * @return     True if finite, False otherwise.
-		 */
-		bool
-		is_finite() const
-		{
-			return true;
-		}
-		
 		/**
 		 * @return     The Front value of the range by reference
 		 */
@@ -783,7 +730,6 @@ namespace cpprelude
 		pop_front()
 		{
 			ptr = ptr->next;
-			--_count;
 		}
 
 		//Container Interface
@@ -803,7 +749,7 @@ namespace cpprelude
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(ptr, _end, _count);
+			return Const_Range_Type(ptr, _end);
 		}
 
 		/**
@@ -819,7 +765,11 @@ namespace cpprelude
 			for(usize i = 0; i < start; ++i)
 				it = it->next;
 
-			return Range_Type(it, end-start);
+			auto it_end = it;
+			for(usize i = 0; i < end - start; ++i)
+				it_end = it_end->next;
+
+			return Range_Type(it, it_end);
 		}
 
 		/**
@@ -835,7 +785,11 @@ namespace cpprelude
 			for(usize i = 0; i < start; ++i)
 				it = it->next;
 
-			return Range_Type(it, end-start);
+			auto it_end = it;
+			for(usize i = 0; i < end - start; ++i)
+				it_end = it_end->next;
+
+			return Const_Range_Type(it, it_end);
 		}
 
 		//iterator interface
@@ -1121,44 +1075,24 @@ namespace cpprelude
 		 */
 		T *ptr;
 		T *_end;
-		usize _count;
 
 		/**
 		 * @brief      Constructs an empty Bidirectional range
 		 */
 		Bidirectional_Range()
 			:ptr(nullptr),
-			 _end(nullptr),
-			 _count(0)
+			 _end(nullptr)
 		{}
-
-		/**
-		 * @brief      Constructs a bidirectional range
-		 *
-		 * @param      node         the list node pointer
-		 * @param[in]  values_count  The values count in the given list
-		 */
-		Bidirectional_Range(T* node, usize values_count)
-			:ptr(node),
-			 _end(nullptr),
-			 _count(values_count)
-		{
-			_end = ptr;
-			for(usize i = 0; i < _count; ++i)
-				_end = _end->next;
-		}
 
 		/**
 		 * @brief      Constructs a bidirectional range
 		 *
 		 * @param      node_begin    The list node begin pointer
 		 * @param      node_end      The list node end pointer
-		 * @param[in]  values_count  The values count in the given list
 		 */
-		Bidirectional_Range(T* node_begin, T* node_end, usize values_count)
+		Bidirectional_Range(T* node_begin, T* node_end)
 			:ptr(node_begin),
-			 _end(node_end),
-			 _count(values_count)
+			 _end(node_end)
 		{}
 
 		/**
@@ -1171,7 +1105,7 @@ namespace cpprelude
 		bool
 		operator==(const Bidirectional_Range& other) const
 		{
-			return ptr == other.ptr && _count == other._count;
+			return ptr == other.ptr && _end == other._end;
 		}
 
 		/**
@@ -1195,25 +1129,7 @@ namespace cpprelude
 		bool
 		empty() const
 		{
-			return _count == 0 || ptr == nullptr;
-		}
-
-		/**
-		 * @return     The count of elements inside the range
-		 */
-		usize
-		count() const
-		{
-			return _count;
-		}
-
-		/**
-		 * @return     True if finite, False otherwise.
-		 */
-		bool
-		is_finite() const
-		{
-			return true;
+			return ptr == _end;
 		}
 
 		/**
@@ -1242,7 +1158,6 @@ namespace cpprelude
 		pop_front()
 		{
 			ptr = ptr->next;
-			--_count;
 		}
 
 		//Bidirectional Range Interface
@@ -1272,7 +1187,6 @@ namespace cpprelude
 		pop_back()
 		{
 			_end = _end->prev;
-			--_count;
 		}
 
 		//Container Interface
@@ -1291,7 +1205,7 @@ namespace cpprelude
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(ptr, _end, _count);
+			return Const_Range_Type(ptr, _end);
 		}
 
 		/**
@@ -1307,7 +1221,11 @@ namespace cpprelude
 			for(usize i = 0; i < start; ++i)
 				it = it->next;
 
-			return Range_Type(it, end-start);
+			auto end_it = it;
+			for(usize i = 0; i < end - start; ++i)
+				end_it = end_it->next;
+
+			return Range_Type(it, end_it);
 		}
 
 		/**
@@ -1323,7 +1241,11 @@ namespace cpprelude
 			for(usize i = 0; i < start; ++i)
 				it = it->next;
 
-			return Range_Type(it, end-start);
+			auto end_it = it;
+			for(usize i = 0; i < end - start; ++i)
+				end_it = end_it->next;
+
+			return Const_Range_Type(it, end_it);
 		}
 
 		//iterator interface
@@ -1682,24 +1604,6 @@ namespace cpprelude
 		}
 
 		/**
-		 * @return     The count of elements inside the range
-		 */
-		usize
-		count() const
-		{
-			return _count;
-		}
-
-		/**
-		 * @return     True if finite, False otherwise.
-		 */
-		bool
-		is_finite() const
-		{
-			return true;
-		}
-
-		/**
 		 * @return     The Front value of the range by reference
 		 */
 		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
@@ -1781,6 +1685,15 @@ namespace cpprelude
 		operator[](usize index) const
 		{
 			return ptr[(_tail_index + index + 1) % _capacity];
+		}
+
+		/**
+		 * @return     The count of elements inside the range
+		 */
+		usize
+		count() const
+		{
+			return _count;
 		}
 
 		//Container interface
@@ -2238,24 +2151,6 @@ namespace cpprelude
 		}
 
 		/**
-		 * @return     The count of elements inside the range
-		 */
-		usize
-		count() const
-		{
-			return _count;
-		}
-
-		/**
-		 * @return     True if finite, False otherwise.
-		 */
-		bool
-		is_finite() const
-		{
-			return true;
-		}
-
-		/**
 		 * @return     The Front value of the range by reference
 		 */
 		template<typename TCond = TNode,
@@ -2283,6 +2178,15 @@ namespace cpprelude
 		{
 			node = _get_successor(node);
 			--_count;
+		}
+
+		/**
+		 * @return     The count of elements inside the range
+		 */
+		usize
+		count() const
+		{
+			return _count;
 		}
 
 		//Container interface
@@ -2406,16 +2310,6 @@ namespace cpprelude
 			:data(c)
 		{}
 
-		//operator u32&()
-		//{
-		//	return data;
-		//}
-
-		//operator const u32&() const
-		//{
-		//	return data;
-		//}
-
 		bool
 		operator==(const Rune& other) const
 		{
@@ -2455,6 +2349,31 @@ namespace cpprelude
 
 	namespace internal
 	{
+		inline static usize
+		_utf8_count_chars(const byte* chars)
+		{
+			usize result = 0;
+			while(chars != nullptr && *chars != '\0')
+			{
+				result += ((*chars & 0xC0) != 0x80);
+				++chars;
+			}
+			return result;
+		}
+
+		inline static usize
+		_utf8_count_chars(const byte* chars, usize& str_size)
+		{
+			usize result = 0;
+			while(chars != nullptr && *chars != '\0')
+			{
+				result += ((*chars & 0xC0) != 0x80);
+				++chars;
+				++str_size;
+			}
+			return result;
+		}
+
 		template<typename TForwardRange>
 		inline static usize
 		_utf8_count_chars(TForwardRange&& range)
@@ -2638,84 +2557,59 @@ namespace cpprelude
 		using const_iterator = String_Iterator;
 
 		Slice<const byte> bytes;
-		usize _count;
+		mutable usize _runes_count;
 
 		String_Range()
-			:_count(0)
+			:_runes_count(0)
 		{}
 
-		String_Range(const Slice<const byte>& str_range, usize rune_count)
+		String_Range(const Slice<const byte>& str_range)
 			:bytes(str_range),
-			 _count(rune_count)
+			 _runes_count(-1)
+		{}
+
+		String_Range(const Slice<const byte>& str_range, usize runes_count)
+			:bytes(str_range),
+			 _runes_count(runes_count)
 		{}
 
 		String_Range(const char* str)
 		{
-			usize str_size = std::strlen(str) + 1;
 			bytes.ptr = (byte*)str;
-			bytes.size = str_size;
-			_count = str_size - 1;
+			bytes.size = std::strlen(str);
+			_runes_count = -1;
+			//_runes_count = internal::_utf8_count_chars(bytes.ptr, bytes.size);
 		}
 
 		String_Range(const char* str, usize str_size)
-		{
-			bytes.ptr = (byte*)str;
-			bytes.size = str_size;
-			_count = str_size;
-		}
+			:bytes(str, str_size),
+			 _runes_count(-1)
+		{}
 
 		bool
-		operator==(const String_Range& other) const
+		operator==(const Range_Type& other) const
 		{
 			return bytes == other.bytes;
 		}
 
 		bool
-		operator!=(const String_Range& other) const
+		operator!=(const Range_Type& other) const
 		{
 			return !operator==(other);
 		}
 
 		bool
-		operator<(const Range_Type& str_range) const
-		{
-			return internal::_strcmp(bytes, str_range.bytes) < 0;
-		}
-
-		bool
-		operator>(const Range_Type& str_range) const
-		{
-			return internal::_strcmp(bytes, str_range.bytes) > 0;
-		}
-
-		bool
-		operator<=(const Range_Type& str_range) const
-		{
-			return internal::_strcmp(bytes, str_range.bytes) <= 0;
-		}
-
-		bool
-		operator>=(const Range_Type& str_range) const
-		{
-			return internal::_strcmp(bytes, str_range.bytes) >= 0;
-		}
-
-		bool
 		empty() const
 		{
-			return _count == 0 || bytes.empty();
+			return bytes.empty();
 		}
 
 		usize
 		count() const
 		{
-			return _count;
-		}
-
-		bool
-		is_finite() const
-		{
-			return true;
+			if(_runes_count == -1)
+				_runes_count = internal::_utf8_count_chars(bytes);
+			return _runes_count;
 		}
 
 		Rune
@@ -2741,7 +2635,7 @@ namespace cpprelude
 			bytes.pop_front();
 			while(bytes.front() && ((bytes.front() & 0xC0) == 0x80))
 				bytes.pop_front();
-			--_count;
+			--_runes_count;
 		}
 
 		const byte*
@@ -2759,7 +2653,7 @@ namespace cpprelude
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(bytes.all(), count());
+			return *this;
 		}
 
 		Const_Range_Type
@@ -2827,24 +2721,9 @@ namespace cpprelude
 	};
 
 	inline static String_Range
-	const_str(const char* str)
+	operator""_const_str(const char* str, usize str_count)
 	{
-		usize str_size = std::strlen(str) + 1;
-		String_Range result;
-		result.bytes.ptr = (byte*)str;
-		result.bytes.size = str_size;
-		result._count = str_size - 1;
-		return result;
-	}
-
-	inline static String_Range
-	const_str(const char* str, usize str_size)
-	{
-		String_Range result;
-		result.bytes.ptr = (byte*)str;
-		result.bytes.size = str_size;
-		result._count = str_size;
-		return result;
+		return String_Range(str, str_count);
 	}
 
 
@@ -2984,12 +2863,6 @@ namespace cpprelude
 		count() const
 		{
 			return _count;
-		}
-
-		bool
-		is_finite() const
-		{
-			return true;
 		}
 
 		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>

@@ -1,8 +1,11 @@
 #include "cpprelude/v5/OS.h"
-#include "cpprelude/fmt.h"
+#include "cpprelude/v5/IO.h"
+#include "cpprelude/v5/Buffered_Stream.h"
 #include <stdlib.h>
 
 #if defined(OS_WINDOWS)
+#define UNICODE
+#define _UNICODE
 #include <Windows.h>
 #include <Psapi.h>
 #include <DbgHelp.h>
@@ -37,6 +40,105 @@ namespace cpprelude
 		{
 			println_err("OS allocation_count = ", allocation_count, "\n",
 						"OS allocation_size  = ", allocation_size);
+		}
+		#endif
+	}
+
+	void
+	OS::dump_callstack() const
+	{
+		#ifdef DEBUG
+		{
+			constexpr usize MAX_NAME_LEN = 1024;
+			constexpr usize STACK_MAX = 4096;
+			void* callstack[STACK_MAX];
+
+			#if defined(OS_WINDOWS)
+			{
+				auto process_handle = GetCurrentProcess();
+
+				//allocaet a buffer for the symbol info
+				//windows lays the symbol info in memory in this form
+				//[struct][name buffer]
+				//and the name buffer size is the same as the MaxNameLen set below
+				byte buffer[sizeof(SYMBOL_INFO) + MAX_NAME_LEN];
+
+				SYMBOL_INFO* symbol = reinterpret_cast<SYMBOL_INFO*>(buffer);
+				memset(symbol, 0, sizeof(SYMBOL_INFO));
+
+				symbol->MaxNameLen = MAX_NAME_LEN;
+				symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
+
+				usize frames_count = CaptureStackBackTrace(0, STACK_MAX, callstack, NULL);
+				for(usize i = 0; i < frames_count; ++i)
+				{
+					if(SymFromAddr(process_handle, (DWORD64)(callstack[i]), NULL, symbol))
+						println_err("[", frames_count - i - 1, "]: ", symbol->Name);
+					else
+						println_err("[", frames_count - i - 1, "]: unknown symbol");
+				}
+			}
+			#elif defined(OS_LINUX)
+			{
+				//+1 for null terminated string
+				char name_buffer[MAX_NAME_LEN+1];
+				char demangled_buffer[MAX_NAME_LEN];
+				usize demangled_buffer_length = MAX_NAME_LEN;
+
+				//capture the call stack
+				usize frames_count = backtrace(callstack, STACK_MAX);
+				//resolve the symbols
+				char** symbols = backtrace_symbols(callstack, frames_count);
+
+				if(symbols)
+				{
+					for(usize i = 0; i < frames_count; ++i)
+					{
+						//isolate the function name
+						char *name_begin = nullptr, *name_end = nullptr, *name_it = symbols[i];
+						while(*name_it != 0)
+						{
+							if(*name_it == '(')
+								name_begin = name_it+1;
+							else if(*name_it == ')' || *name_it == '+')
+							{
+								name_end = name_it;
+								break;
+							}
+							++name_it;
+						}
+
+						
+						usize mangled_name_size = name_end - name_begin;
+						//function maybe inlined
+						if(mangled_name_size == 0)
+						{
+							println_err("[", frames_count - i - 1, "]: unknown/inlined symbol");
+							continue;
+						}
+
+						//copy the function name into the name buffer
+						usize copy_size = mangled_name_size > MAX_NAME_LEN ? MAX_NAME_LEN : mangled_name_size;
+						memcpy(name_buffer, name_begin, copy_size);
+						name_buffer[copy_size] = 0;
+
+						int status = 0;
+						abi::__cxa_demangle(name_buffer, demangled_buffer, &demangled_buffer_length, &status);
+						if(status == 0)
+						{
+							String_Range function_name(demangled_buffer, demangled_buffer_length);
+							println_err("[", frames_count - i - 1, "]: ", function_name);
+						}
+						else
+						{
+							String_Range function_name(name_buffer, copy_size);
+							println_err("[", frames_count - i - 1, "]: ", function_name);
+						}
+					}
+					::free(symbols);
+				}
+			}
+			#endif
 		}
 		#endif
 	}
@@ -100,6 +202,8 @@ namespace cpprelude
 			WCHAR utf16_buffer[buffer_size];
 			auto size_needed = MultiByteToWideChar(CP_UTF8,
 									MB_PRECOMPOSED, filename.data(), filename.size(), NULL, 0);
+			//for zero termination
+			++size_needed;
 
 			LPWSTR win_filename;
 			//i use small buffer to optimise for the common cases
@@ -109,6 +213,7 @@ namespace cpprelude
 				win_filename = utf16_buffer;
 			MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED,
 					filename.data(), filename.size(), win_filename, size_needed);
+			win_filename[size_needed - 1] = L'\0';
 
 			handle.windows_handle = CreateFile(win_filename, desired_access, 0, NULL,
 											   creation_disposition,
@@ -282,7 +387,7 @@ namespace cpprelude
 		}
 		#elif defined(OS_LINUX)
 		{
-			return read(handle.linux_handle, data.ptr, data.size);
+			return ::read(handle.linux_handle, data.ptr, data.size);
 		}
 		#endif
 	}
@@ -409,6 +514,7 @@ namespace cpprelude
 			OS* self = (OS*)_self;
 			self->allocation_count += 1;
 			self->allocation_size += size;
+			//os->dump_callstack();
 		}
 		#endif
 		return Owner<byte>(ptr, size);
@@ -425,6 +531,7 @@ namespace cpprelude
 			OS* self = (OS*)_self;
 			self->allocation_count -= 1;
 			self->allocation_size -= value.size;
+			//os->dump_callstack();
 		}
 		#endif
 
@@ -437,7 +544,42 @@ namespace cpprelude
 	{
 		File_Handle *handle = reinterpret_cast<File_Handle*>(self);
 
-		return os->file_write(*handle, data);
+		#if defined(OS_WINDOWS)
+		{
+			constexpr usize BUFFER_SIZE = KILOBYTES(2);
+			WCHAR buffer[BUFFER_SIZE];
+			WCHAR* wide_ptr = nullptr;
+			auto count_needed = MultiByteToWideChar(CP_UTF8, NULL, data.ptr, data.size, NULL, 0);
+
+			Owner<WCHAR> dynamic_buffer;
+			if(count_needed > BUFFER_SIZE)
+			{
+				dynamic_buffer = os->template alloc<WCHAR>(count_needed);
+				wide_ptr = dynamic_buffer.ptr;
+			}
+			else
+			{
+				wide_ptr = buffer;
+			}
+
+			MultiByteToWideChar(CP_UTF8, NULL, data.ptr, data.size, wide_ptr, count_needed);
+
+			DWORD count_chars_written = 0;
+			auto success = WriteConsoleW(handle->windows_handle, wide_ptr, count_needed, &count_chars_written, NULL);
+
+			if(count_needed > BUFFER_SIZE)
+				os->free(dynamic_buffer);
+
+			if(success)
+				return data.size;
+			else
+				return 0;
+		}
+		#elif defined(OS_LINUX)
+		{
+			return os->file_write(*handle, data);
+		}
+		#endif
 	}
 
 	usize
@@ -445,7 +587,22 @@ namespace cpprelude
 	{
 		File_Handle *handle = reinterpret_cast<File_Handle*>(self);
 
-		return os->file_read(*handle, data);
+		#if defined(OS_WINDOWS)
+		{
+			constexpr usize BUFFER_SIZE = KILOBYTES(2);
+			WCHAR buffer[BUFFER_SIZE];
+			WCHAR* wide_ptr = buffer;
+			usize wide_read = (data.size / sizeof(WCHAR)) < (BUFFER_SIZE / 2) ? (data.size / sizeof(WCHAR)) : (BUFFER_SIZE / 2);
+			DWORD read_chars_count = 0;
+			ReadConsoleW(handle->windows_handle, wide_ptr, wide_read, &read_chars_count, NULL);
+			auto result = WideCharToMultiByte(CP_UTF8, NULL, wide_ptr, read_chars_count, data.ptr, data.size, NULL, NULL);
+			return result;
+		}
+		#elif defined(OS_LINUX)
+		{
+			return os->file_read(*handle, data);
+		}
+		#endif
 	}
 
 	//Init Stuff
@@ -504,6 +661,11 @@ namespace cpprelude
 
 		_os.allocation_count = 0;
 		_os.allocation_size = 0;
+
+		//setup the buffered stdin
+		static Buffered_Stream _buf_stdin(_os.unbuf_stdin, _os.global_memory);
+		_os.buf_stdin = _buf_stdin;
+
 
 		_is_initialized = true;
 

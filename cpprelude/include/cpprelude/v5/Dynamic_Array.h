@@ -6,6 +6,7 @@
 #include "cpprelude/v5/OS.h"
 #include <initializer_list>
 #include <utility>
+#include <new>
 
 
 namespace cpprelude

@@ -141,6 +141,7 @@ namespace cpprelude
 			for(usize i = 0; i < other._count; ++i)
 			{
 				*insertion_head = mem_context.template alloc<Node_Type>().ptr;
+				(*insertion_head)->next = nullptr;
 
 				::new (&(*insertion_head)->value) Data_Type((*it)->value);
 
@@ -167,6 +168,7 @@ namespace cpprelude
 			for(usize i = 0; i < other._count; ++i)
 			{
 				*insertion_head = mem_context.template alloc<Node_Type>();
+				(*insertion_head)->next = nullptr;
 
 				::new (&(*insertion_head)->value) Data_Type((*it)->value);
 
@@ -212,13 +214,14 @@ namespace cpprelude
 
 			mem_context = other.mem_context;
 
-			Node_Type **insertion_head = _head;
-			Node_Type **it = &other._head;
+			auto insertion_head = &_head;
+			auto it = &other._head;
 			for(usize i = 0; i < other._count; ++i)
 			{
-				*it = mem_context.template alloc<Node_Type>();
+				*insertion_head = mem_context.template alloc<Node_Type>().ptr;
+				(*insertion_head)->next = nullptr;
 
-				::new (&(*insertion_head)->data) Data_Type((*it)->value);
+				::new (&(*insertion_head)->value) Data_Type((*it)->value);
 
 				it = &(*it)->next;
 				insertion_head = &(*insertion_head)->next;
@@ -482,7 +485,7 @@ namespace cpprelude
 		Range_Type
 		all()
 		{
-			return Range_Type(_head, nullptr, _count);
+			return Range_Type(_head, nullptr);
 		}
 
 		/**
@@ -491,7 +494,7 @@ namespace cpprelude
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(_head, nullptr, _count);
+			return Const_Range_Type(_head, nullptr);
 		}
 
 		/**
@@ -503,19 +506,15 @@ namespace cpprelude
 		Range_Type
 		range(usize start, usize end)
 		{
-			if(start >= _count)
-				start = _count;
-			if(end >= _count)
-				end = _count;
-
-			if(end < start)
-				end = start;
-
 			Node_Type* ptr = _head;
 			for(usize i = 0; i < start; ++i)
 				ptr = ptr->next;
 
-			return Range_Type(ptr, end-start);
+			Node_Type* end_it = ptr;
+			for(usize i = 0; i < end - start; ++i)
+				end_it = end_it->next;
+
+			return Range_Type(ptr, end_it);
 		}
 
 		/**
@@ -527,19 +526,15 @@ namespace cpprelude
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
-			if(start >= _count)
-				start = _count;
-			if(end >= _count)
-				end = _count;
-
-			if(end < start)
-				end = start;
-
 			Node_Type* ptr = _head;
 			for(usize i = 0; i < start; ++i)
 				ptr = ptr->next;
 
-			return Const_Range_Type(ptr, end-start);
+			Node_Type* end_it = ptr;
+			for(usize i = 0; i < end - start; ++i)
+				end_it = end_it->next;
+
+			return Const_Range_Type(ptr, end_it);
 		}
 
 		/**

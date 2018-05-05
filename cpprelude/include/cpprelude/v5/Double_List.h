@@ -684,7 +684,7 @@ namespace cpprelude
 		Range_Type
 		all()
 		{
-			return Range_Type(_head->next, _tail, _count);
+			return Range_Type(_head->next, _tail);
 		}
 
 		/**
@@ -693,7 +693,7 @@ namespace cpprelude
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(_head->next, _tail, _count);
+			return Const_Range_Type(_head->next, _tail);
 		}
 
 		/**
@@ -709,7 +709,11 @@ namespace cpprelude
 			for(usize i = 0; i < start; ++i)
 				ptr = ptr->next;
 
-			return Range_Type(ptr, end-start);
+			Node_Type* end_ptr = ptr;
+			for(usize i = 0; i < end - start; ++i)
+				end_ptr = end_ptr->next;
+
+			return Range_Type(ptr, end_ptr);
 		}
 
 		/**
@@ -721,19 +725,15 @@ namespace cpprelude
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
-			if(start >= _count)
-				start = _count;
-			if(end >= _count)
-				end = _count;
-
-			if(end < start)
-				end = start;
-
 			Node_Type* ptr = _head->next;
 			for(usize i = 0; i < start; ++i)
 				ptr = ptr->next;
 
-			return Const_Range_Type(ptr, end-start);
+			Node_Type* end_ptr = ptr;
+			for(usize i = 0; i < end - start; ++i)
+				end_ptr = end_ptr->next;
+
+			return Const_Range_Type(ptr, end_ptr);
 		}
 
 		/**

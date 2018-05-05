@@ -80,7 +80,8 @@ TEST_CASE("single_list v5", "[single_list]")
 		CHECK(list.empty() == false);
 		CHECK(list.count() == 4);
 
-		Single_List<usize> other = list;
+		Single_List<usize> other({1, 2, 3});
+		other = list;
 		CHECK(list.empty() == false);
 		CHECK(list.count() == 4);
 		CHECK(other.empty() == false);
