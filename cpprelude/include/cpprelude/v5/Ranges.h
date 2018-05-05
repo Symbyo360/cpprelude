@@ -225,12 +225,6 @@ namespace cpprelude
 		Range_Type
 		range(usize start, usize end)
 		{
-			// if(start >= count())
-			// 	start = count();
-			// if(end >= count())
-			// 	end = count();
-			// if(end < start)
-			// 	end = start;
 			return Range_Type(ptr + start, (end - start) * sizeof(T));
 		}
 
@@ -245,13 +239,19 @@ namespace cpprelude
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
-			// if(start >= count())
-			// 	start = count();
-			// if(end >= count())
-			// 	end = count();
-			// if(end < start)
-			// 	end = start;
 			return Const_Range_Type(ptr + start, (end - start) * sizeof(T));
+		}
+
+		Range_Type
+		range(iterator start, iterator end)
+		{
+			return Range_Type(start, (end - start) * sizeof(T));
+		}
+
+		Const_Range_Type
+		range(const_iterator start, const_iterator end) const
+		{
+			return Const_Range_Type(start, (end - start) * sizeof(T));
 		}
 
 		/**
@@ -263,9 +263,6 @@ namespace cpprelude
 		Range_Type
 		byte_range(usize start_in_bytes, usize end_in_bytes)
 		{
-			if(end_in_bytes < start_in_bytes)
-				end_in_bytes = start_in_bytes;
-
 			byte* byte_ptr = (byte*)ptr;
 			byte_ptr += start_in_bytes;
 			usize new_size = end_in_bytes - start_in_bytes;
@@ -281,9 +278,6 @@ namespace cpprelude
 		Const_Range_Type
 		byte_range(usize start_in_bytes, usize end_in_bytes) const
 		{
-			if(end_in_bytes < start_in_bytes)
-				end_in_bytes = start_in_bytes;
-
 			byte* byte_ptr = (byte*)ptr;
 			byte_ptr += start_in_bytes;
 			usize new_size = end_in_bytes - start_in_bytes;
@@ -792,6 +786,18 @@ namespace cpprelude
 			return Const_Range_Type(it, it_end);
 		}
 
+		Range_Type
+		range(iterator start, iterator end_it)
+		{
+			return Range_Type(start, end_it);
+		}
+
+		Const_Range_Type
+		range(const_iterator start, const_iterator end_it) const
+		{
+			return Const_Range_Type(start, end_it);
+		}
+
 		//iterator interface
 		/**
 		 * @return     An Iterator to the start of the range
@@ -1246,6 +1252,18 @@ namespace cpprelude
 				end_it = end_it->next;
 
 			return Const_Range_Type(it, end_it);
+		}
+
+		Range_Type
+		range(iterator start, iterator end_it)
+		{
+			return Range_Type(start, end_it);
+		}
+
+		Const_Range_Type
+		range(const_iterator start, const_iterator end_it) const
+		{
+			return Const_Range_Type(start, end_it);
 		}
 
 		//iterator interface
@@ -2578,7 +2596,6 @@ namespace cpprelude
 			bytes.ptr = (byte*)str;
 			bytes.size = std::strlen(str);
 			_runes_count = -1;
-			//_runes_count = internal::_utf8_count_chars(bytes.ptr, bytes.size);
 		}
 
 		String_Range(const char* str, usize str_size)
@@ -2663,6 +2680,12 @@ namespace cpprelude
 			usize end_bytes_offset = internal::_utf8_count_runes_to(bytes.all(), end);
 
 			return Const_Range_Type(bytes.range(start_bytes_offset, end_bytes_offset), end - start);
+		}
+
+		Const_Range_Type
+		range(const_iterator start, const_iterator end_it) const
+		{
+			return Const_Range_Type(Slice<const byte>(start.ptr, end_it.ptr - start.ptr));
 		}
 
 		/**
@@ -2831,20 +2854,18 @@ namespace cpprelude
 
 		iterator _begin;
 		iterator _end;
-		usize _count;
 
 		Hash_Range()
-			:_count(0)
 		{}
 
-		Hash_Range(const iterator& begin_it, const iterator& end_it, usize values_count)
-			:_begin(begin_it), _end(end_it), _count(values_count)
+		Hash_Range(const iterator& begin_it, const iterator& end_it)
+			:_begin(begin_it), _end(end_it)
 		{}
 
 		bool
 		operator==(const Hash_Range& other) const
 		{
-			return _begin == other._begin && _end == other._end && _count == other._count;
+			return _begin == other._begin && _end == other._end;
 		}
 
 		bool
@@ -2856,13 +2877,7 @@ namespace cpprelude
 		bool
 		empty() const
 		{
-			return _count == 0;
-		}
-
-		usize
-		count() const
-		{
-			return _count;
+			return _begin == _end;
 		}
 
 		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
@@ -2882,7 +2897,6 @@ namespace cpprelude
 		pop_front()
 		{
 			++_begin;
-			--_count;
 		}
 
 		Range_Type
@@ -2894,25 +2908,45 @@ namespace cpprelude
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(_begin, _end, _count);
+			return Const_Range_Type(_begin, _end);
 		}
 
 		Range_Type
-		range(usize start, usize end)
+		range(usize start, usize end_count)
 		{
-			auto it = _begin;
+			auto it = begin();
 			for(usize i = 0; i < start; ++i)
 				++it;
-			return Range_Type(it, _end, end - start);
+
+			auto end_it = it;
+			for(usize i = 0; i < end_count - start; ++i)
+				++end_it;
+			return Range_Type(it, end_it);
 		}
 
 		Const_Range_Type
-		range(usize start, usize end) const
+		range(usize start, usize end_count) const
 		{
-			auto it = _begin;
+			auto it = begin();
 			for(usize i = 0; i < start; ++i)
 				++it;
-			return Const_Range_Type(it, _end, end - start);
+
+			auto end_it = it;
+			for(usize i = 0; i < end_count - start; ++i)
+				++end_it;
+			return Const_Range_Type(it, end_it);
+		}
+
+		Range_Type
+		range(iterator start, iterator end_it)
+		{
+			return Range_Type(start, end_it);
+		}
+
+		Const_Range_Type
+		range(const_iterator start, const_iterator end_it) const
+		{
+			return Const_Range_Type(start, end_it);
 		}
 
 		/**

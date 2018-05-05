@@ -510,6 +510,18 @@ namespace cpprelude
 			return _data.range(start, end);
 		}
 
+		Range_Type
+		range(iterator start, iterator end)
+		{
+			return Range_Type(start, (end - start) * sizeof(T));
+		}
+
+		Const_Range_Type
+		range(const_iterator start, const_iterator end) const
+		{
+			return Const_Range_Type(start, (end - start) * sizeof(T));
+		}
+
 		/**
 		 * @return     A Reference to the front value in the array
 		 */

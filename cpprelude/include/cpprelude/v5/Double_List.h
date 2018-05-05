@@ -736,6 +736,18 @@ namespace cpprelude
 			return Const_Range_Type(ptr, end_ptr);
 		}
 
+		Range_Type
+		range(iterator start, iterator end_it)
+		{
+			return Range_Type(start, end_it);
+		}
+
+		Const_Range_Type
+		range(const_iterator start, const_iterator end_it) const
+		{
+			return Const_Range_Type(start, end_it);
+		}
+
 		/**
 		 * @return     A Reference to the front value in the array
 		 */

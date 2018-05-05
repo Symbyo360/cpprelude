@@ -157,7 +157,7 @@ TEST_CASE("string v5", "[string]")
 
 	SECTION("Case 11")
 	{
-		String cpp_str[6] = {"abcd"_const_str, "ab"_const_str, "ba"_const_str, "dcba"_const_str, "fegh"_const_str, "cdab"_const_str};
+		String cpp_str[6] = {"abcd", "ab", "ba", "dcba", "fegh", "cdab"};
 		std::string std_str[6] = {"abcd", "ab", "ba", "dcba", "fegh", "cdab"};
 
 		for(usize i = 0; i < 6; ++i)

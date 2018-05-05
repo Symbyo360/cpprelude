@@ -7,6 +7,7 @@
 #include "cpprelude/fmt.h"
 #include <type_traits>
 #include <stdlib.h>
+#include <future>
 
 namespace cpprelude
 {
@@ -305,48 +306,16 @@ namespace cpprelude
 
 	template<typename TRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
-	inline static void
-	_partition_3_way(TRange&& range, usize& less_end_index, usize& greater_start_index, TCompare&& compare_func = TCompare())
-	{
-		auto pivot = range[0];
-		usize ix = 1;
-		less_end_index = 0;
-		greater_start_index = range.count() - 1;
-
-		while(ix <= greater_start_index)
-		{
-			if(compare_func(range[ix], pivot))
-			{
-				std::swap(range[less_end_index], range[ix]);
-				++ix;
-				++less_end_index;
-			}
-			else if(compare_func(pivot, range[ix]))
-			{
-				std::swap(range[greater_start_index], range[ix]);
-				--greater_start_index;
-			}
-			else
-			{
-				++ix;
-			}
-		}
-		greater_start_index = ix;
-	}
-
-	template<typename TRange,
-			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>,
+			 usize TElementSize = sizeof(typename std::remove_reference_t<TRange>::Data_Type)>
 	inline static void
 	_quick_sort(TRange&& arr_range, usize depth, TCompare&& compare_func = TCompare())
 	{
-		usize count = arr_range.count();
-		if (count <= 1)
+		if(arr_range.count() < 2)
 		{
 			return;
 		}
-		else if(count <= 24)
+		else if(arr_range.count() * TElementSize < BYTES(64))
 		{
 			insertion_sort(arr_range, compare_func);
 			return;
@@ -357,11 +326,32 @@ namespace cpprelude
 			return;
 		}
 
-		usize less_end_index, greater_start_index;
-		_partition_3_way(arr_range, less_end_index, greater_start_index, compare_func);
-		--depth;
-		_quick_sort(arr_range.range(0, less_end_index), depth, compare_func);
-		_quick_sort(arr_range.range(greater_start_index, arr_range.count()), depth, compare_func);
+		auto it = arr_range.begin();
+		auto less_it = it++;
+		auto great_it = arr_range.end();
+		--great_it;
+
+		while(it != great_it + 1)
+		{
+			if(compare_func(*it, *less_it))
+			{
+				std::swap(*less_it, *it);
+				++it;
+				++less_it;
+			}
+			else if(compare_func(*less_it, *it))
+			{
+				std::swap(*great_it, *it);
+				--great_it;
+			}
+			else
+			{
+				++it;
+			}
+		}
+
+		_quick_sort(arr_range.range(arr_range.begin(), less_it), depth - 1, compare_func);
+		_quick_sort(arr_range.range(it, arr_range.end()), depth - 1, compare_func);
 	}
 
 	template<typename TRange,

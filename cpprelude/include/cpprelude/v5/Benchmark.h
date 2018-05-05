@@ -121,7 +121,7 @@ namespace cpprelude
 	inline static Benchmark_Compare_Data
 	detailed(const String_Range& benchmark_name,
 			  TCallable&& callable,
-			 usize atleast_run_count = 3,
+			 usize atleast_run_count = 10,
 			  r64 avg_diff_in_millis = 1.0)
 	{
 		Benchmark_Compare_Data data;
@@ -133,7 +133,7 @@ namespace cpprelude
 	inline static Benchmark_Compare_Data
 	summary(const String_Range& benchmark_name,
 			  TCallable&& callable,
-			  usize atleast_run_count = 3,
+			  usize atleast_run_count = 10,
 			  r64 avg_diff_in_millis = 1.0)
 	{
 		Benchmark_Compare_Data data;

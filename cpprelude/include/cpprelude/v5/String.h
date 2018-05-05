@@ -6,6 +6,7 @@
 #include "cpprelude/v5/OS.h"
 #include "cpprelude/v5/Ranges.h"
 #include "cpprelude/v5/IO.h"
+#include "cpprelude/v5/Hash.h"
 #include <cstring>
 
 namespace cpprelude
@@ -32,6 +33,30 @@ namespace cpprelude
 		String(const String_Range& str_range, const Memory_Context& context = os->global_memory)
 			:mem_context(context)
 		{
+			_bytes_size = str_range.bytes.size + 1;
+
+			_bytes = mem_context.template alloc<byte>(_bytes_size);
+			move<byte>(_bytes.all(), str_range.bytes);
+			_bytes[_bytes_size - 1] = '\0';
+			_runes_count = str_range._runes_count;
+		}
+
+		String(const char* str, const Memory_Context& context = os->global_memory)
+			:mem_context(context)
+		{
+			String_Range str_range(str);
+			_bytes_size = str_range.bytes.size + 1;
+
+			_bytes = mem_context.template alloc<byte>(_bytes_size);
+			move<byte>(_bytes.all(), str_range.bytes);
+			_bytes[_bytes_size - 1] = '\0';
+			_runes_count = str_range._runes_count;
+		}
+
+		String(const char* str, usize count, const Memory_Context& context = os->global_memory)
+			:mem_context(context)
+		{
+			String_Range str_range(str, count);
 			_bytes_size = str_range.bytes.size + 1;
 
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
@@ -273,6 +298,42 @@ namespace cpprelude
 			return internal::_strcmp(_bytes.all(), str.bytes) >= 0;
 		}
 
+		bool
+		operator==(const char* str)
+		{
+			return operator==(String_Range(str));
+		}
+
+		bool
+		operator!=(const char* str) const
+		{
+			return !operator==(str);
+		}
+
+		bool
+		operator<(const char* str) const
+		{
+			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) < 0;
+		}
+
+		bool
+		operator<=(const char* str) const
+		{
+			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) <= 0;
+		}
+
+		bool
+		operator>(const char* str) const
+		{
+			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) > 0;
+		}
+
+		bool
+		operator>=(const char* str) const
+		{
+			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) >= 0;
+		}
+
 		void
 		reserve(usize expected_count)
 		{
@@ -374,6 +435,12 @@ namespace cpprelude
 			return Const_Range_Type(_bytes.range(start_bytes_offset, end_bytes_offset), end - start);
 		}
 
+		Const_Range_Type
+		range(const_iterator start, const_iterator end_it) const
+		{
+			return Const_Range_Type(Slice<const byte>(start.ptr, end_it.ptr - start.ptr));
+		}
+
 		/**
 		 * @return     An Iterator to the beginning of this container
 		 */
@@ -426,6 +493,16 @@ namespace cpprelude
 		cend() const
 		{
 			return _bytes.ptr + _bytes_size;
+		}
+	};
+
+	template<>
+	struct Hash<String>
+	{
+		inline usize
+		operator()(const String& data) const
+		{
+			return murmur_hash(data._bytes.ptr, data._bytes_size);
 		}
 	};
 

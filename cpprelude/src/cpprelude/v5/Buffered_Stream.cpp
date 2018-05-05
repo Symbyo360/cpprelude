@@ -28,7 +28,7 @@ namespace cpprelude
 		//then write directly to the underlying io
 		else
 		{
-			if(!self->_buffer.empty())
+			if(self->_buffer.size() - self->_buffer.cursor() > 0)
 				self->flush();
 			return self->_io->write(data);
 		}
@@ -100,7 +100,7 @@ namespace cpprelude
 		usize available_buffered_size = self->_buffer.size() - self->_buffer.cursor();
 		usize result = min(available_buffered_size, size);
 		self->_buffer.move(result);
-		if(self->_buffer.empty())
+		if(self->_buffer.size() - self->_buffer.cursor() == 0)
 			self->_buffer.clear();
 		return result;
 	}

@@ -113,7 +113,7 @@ namespace cpprelude
 	bool
 	Memory_Stream::empty() const
 	{
-		return ((_buffer.count() - _cursor) == 0);
+		return _buffer.empty();
 	}
 
 	void

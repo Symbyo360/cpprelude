@@ -24,14 +24,16 @@ namespace cpprelude
 			TKey key;
 			TValue value;
 
-			Hash_Pair(){}
+			Hash_Pair()
+				:key(TKey()), value(TValue())
+			{}
 
 			Hash_Pair(const TKey& k)
-				:key(k)
+				:key(k), value(TValue())
 			{}
 
 			Hash_Pair(TKey&& k)
-				:key(std::move(k))
+				:key(std::move(k)), value(TValue())
 			{}
 
 			Hash_Pair(const TKey& k, const TValue& v)
@@ -104,7 +106,7 @@ namespace cpprelude
 		{}
 
 		Hash_Set(const Hash_Set& other)
-			:mem_context(other.memory_context),
+			:mem_context(other.mem_context),
 			 _hasher(other._hasher),
 			 _count(other._count)
 		{
@@ -122,7 +124,7 @@ namespace cpprelude
 			 _hasher(other._hasher),
 			 _count(other._count)
 		{
-			_flags = mem_context.template alloc<u8>(other._flags.count());
+			_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
 			move(_flags, other._flags);
 
 			_values = mem_context.template alloc<Data_Type>(other._values.count());
@@ -147,7 +149,7 @@ namespace cpprelude
 			if(_flags.count() < other._flags.count())
 			{
 				reset();
-				_flags = mem_context.template alloc<u8>(other._flags.count());
+				_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
 				_values = mem_context.template alloc<Data_Type>(other._values.count());
 			}
 			else
@@ -359,13 +361,13 @@ namespace cpprelude
 		Range_Type
 		all()
 		{
-			return Range_Type(begin(), end(), _count);
+			return Range_Type(begin(), end());
 		}
 
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(begin(), end(), _count);
+			return Const_Range_Type(begin(), end());
 		}
 
 		Range_Type
@@ -374,7 +376,11 @@ namespace cpprelude
 			auto it = begin();
 			for(usize i = 0; i < start; ++i)
 				++it;
-			return Range_Type(it, end(), end_count - start);
+
+			auto end_it = it;
+			for(usize i = 0; i < end_count - start; ++i)
+				++end_it;
+			return Range_Type(it, end_it);
 		}
 
 		Const_Range_Type
@@ -383,7 +389,23 @@ namespace cpprelude
 			auto it = begin();
 			for(usize i = 0; i < start; ++i)
 				++it;
-			return Const_Range_Type(it, end(), end_count - start);
+
+			auto end_it = it;
+			for(usize i = 0; i < end_count - start; ++i)
+				++end_it;
+			return Const_Range_Type(it, end_it);
+		}
+
+		Range_Type
+		range(iterator start, iterator end_it)
+		{
+			return Range_Type(start, end_it);
+		}
+
+		Const_Range_Type
+		range(const_iterator start, const_iterator end_it) const
+		{
+			return Const_Range_Type(start, end_it);
 		}
 
 		iterator
@@ -573,7 +595,7 @@ namespace cpprelude
 		{}
 
 		Hash_Map(const Hash_Map& other)
-			:mem_context(other.memory_context),
+			:mem_context(other.mem_context),
 			 _hasher(other._hasher),
 			 _count(other._count)
 		{
@@ -591,7 +613,7 @@ namespace cpprelude
 			 _hasher(other._hasher),
 			 _count(other._count)
 		{
-			_flags = mem_context.template alloc<u8>(other._flags.count());
+			_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
 			move(_flags, other._flags);
 
 			_values = mem_context.template alloc<Data_Type>(other._values.count());
@@ -616,7 +638,7 @@ namespace cpprelude
 			if(_flags.count() < other._flags.count())
 			{
 				reset();
-				_flags = mem_context.template alloc<u8>(other._flags.count());
+				_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
 				_values = mem_context.template alloc<Data_Type>(other._values.count());
 			}
 			else
@@ -1014,13 +1036,13 @@ namespace cpprelude
 		Range_Type
 		all()
 		{
-			return Range_Type(begin(), end(), _count);
+			return Range_Type(begin(), end());
 		}
 
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(begin(), end(), _count);
+			return Const_Range_Type(begin(), end());
 		}
 
 		Range_Type
@@ -1029,7 +1051,11 @@ namespace cpprelude
 			auto it = begin();
 			for(usize i = 0; i < start; ++i)
 				++it;
-			return Range_Type(it, end(), end_count - start);
+
+			auto end_it = it;
+			for(usize i = 0; i < end_count - start; ++i)
+				++end_it;
+			return Range_Type(it, end_it);
 		}
 
 		Const_Range_Type
@@ -1038,7 +1064,23 @@ namespace cpprelude
 			auto it = begin();
 			for(usize i = 0; i < start; ++i)
 				++it;
-			return Const_Range_Type(it, end(), end_count - start);
+
+			auto end_it = it;
+			for(usize i = 0; i < end_count - start; ++i)
+				++end_it;
+			return Const_Range_Type(it, end_it);
+		}
+
+		Range_Type
+		range(iterator start, iterator end_it)
+		{
+			return Range_Type(start, end_it);
+		}
+
+		Const_Range_Type
+		range(const_iterator start, const_iterator end_it) const
+		{
+			return Const_Range_Type(start, end_it);
 		}
 
 		iterator

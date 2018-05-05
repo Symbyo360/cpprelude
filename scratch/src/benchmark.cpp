@@ -47,6 +47,7 @@ Dynamic_Array<usize> RANDOM_ARRAY;
 void
 generate_random_data(usize limit)
 {
+	srand(time(0));
 	RANDOM_ARRAY.clear();
 	for(usize i = 0; i < limit; ++i)
 		RANDOM_ARRAY.insert_back(rand());

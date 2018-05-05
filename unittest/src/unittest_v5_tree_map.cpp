@@ -2,7 +2,7 @@
 #include <cpprelude/v5/Tree_Map.h>
 #include <cpprelude/v5/Dynamic_Array.h>
 #include <cpprelude/v5/Algorithms.h>
-#include <string>
+#include <cpprelude/v5/String.h>
 
 using namespace cpprelude;
 
@@ -661,7 +661,7 @@ TEST_CASE("Tree_Map v5", "[Tree_Map]")
 
 	SECTION("Case 24")
 	{
-		/*Tree_Map<string, usize> str_map;
+		Tree_Map<String, usize> str_map;
 
 		str_map["abcd"] = 1;
 		str_map["ab"] = 1;
@@ -671,7 +671,7 @@ TEST_CASE("Tree_Map v5", "[Tree_Map]")
 		str_map["cdab"] = 1;
 
 		CHECK(str_map.empty() == false);
-		CHECK(str_map.count() == 6);*/
+		CHECK(str_map.count() == 6);
 	}
 
 	SECTION("Case 25")
