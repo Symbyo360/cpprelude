@@ -7,10 +7,21 @@
 #include "cpprelude/fmt.h"
 #include <type_traits>
 #include <stdlib.h>
-#include <future>
 
 namespace cpprelude
 {
+	/**
+	 * @brief      Given two variables it will return the minimum value
+	 *
+	 * @param[in]  a          The first value
+	 * @param[in]  b          The second value
+	 * @param[in]  compare_func  The compare function
+	 *
+	 * @tparam     T          Type of the values
+	 * @tparam     TCompare   Type of the compare function
+	 *
+	 * @return     The minimum value of the two
+	 */
 	template<typename T, typename TCompare = default_less_than<T>>
 	inline static const T&
 	min(const T& a, const T& b, TCompare&& compare_func = TCompare())
@@ -20,6 +31,18 @@ namespace cpprelude
 		return a;
 	}
 
+	/**
+	 * @brief      Given two variables it will return the 
+	 *
+	 * @param[in]  a          The first value
+	 * @param[in]  b          The second value
+	 * @param[in]  compare_func  The compare function
+	 *
+	 * @tparam     T          Type of the values
+	 * @tparam     TCompare   Type of the compare function
+	 *
+	 * @return     The maximum value of the two
+	 */
 	template<typename T, typename TCompare = default_less_than<T>>
 	inline static const T&
 	max(const T& a, const T& b, TCompare&& compare_func = TCompare())
@@ -29,6 +52,19 @@ namespace cpprelude
 		return b;
 	}
 
+	/**
+	 * @brief      Given a value it will clamp it to the minimum value and maximum value
+	 *
+	 * @param[in]  a          The value
+	 * @param[in]  min_val    The minimum value
+	 * @param[in]  max_val    The maximum value
+	 * @param[in]  compare_func  The compare function
+	 *
+	 * @tparam     T          Type of the values
+	 * @tparam     TCompare   Type of the compare function
+	 *
+	 * @return     The clamped value
+	 */
 	template<typename T, typename TCompare = default_less_than<T>>
 	inline static T
 	clamp(const T& a, const T& min_val, const T& max_val, TCompare&& compare_func = TCompare())
@@ -36,6 +72,17 @@ namespace cpprelude
 		return min(max(min_val, a, compare_func), max_val, compare_func);
 	}
 
+	/**
+	 * @brief      Determines if sorted.
+	 *
+	 * @param[in]  range  The range to check
+	 * @param[in]  compare_func  The compare function
+	 *
+	 * @tparam     TRange     Type of the range to check
+	 * @tparam     TCompare   Type of the compare function
+	 *
+	 * @return     True if sorted, False otherwise.
+	 */
 	template<typename TRange,
 			 typename TCompare = 
 				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
@@ -57,6 +104,7 @@ namespace cpprelude
 		return true;
 	}
 
+	//heap sort impl
 	template<typename TRange,
 			 typename TCompare =
 				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
@@ -136,6 +184,15 @@ namespace cpprelude
 			_sift_down(range, i, n, compare_func);
 	}
 
+	/**
+	 * @brief      Heap sorts the provided range
+	 *
+	 * @param[in]  range  The range to sort
+	 * @param[in]  compare_func  The compare function
+	 *
+	 * @tparam     TRange     Type of the range
+	 * @tparam     TCompare   Type of the compare function
+	 */
 	template<typename TRange,
 			 typename TCompare = 
 				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
@@ -154,6 +211,13 @@ namespace cpprelude
 		}
 	}
 
+	/**
+	 * @brief      Given a range it shuffles its content inside
+	 *
+	 * @param[in]  range  The range to shuffle
+	 *
+	 * @tparam     TRange     Type of the range
+	 */
 	template<typename TRange>
 	inline static void
 	shuffle(TRange&& range)
@@ -165,6 +229,15 @@ namespace cpprelude
 		}
 	}
 
+	/**
+	 * @brief      Insertion Sort a range of values
+	 *
+	 * @param[in]  range  The range to sort
+	 * @param[in]  compare_func  The compare function
+	 *
+	 * @tparam     TRange     Type of the range
+	 * @tparam     TCompare   Type of the compare function
+	 */
 	template<typename TRange,
 			 typename TCompare =
 				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
@@ -229,6 +302,15 @@ namespace cpprelude
 		}
 	}
 
+	/**
+	 * @brief      Merge sorts a range
+	 *
+	 * @param[in]  range  The range to sort
+	 * @param[in]  compare_func  The compare function
+	 *
+	 * @tparam     TRange     Type of the range
+	 * @tparam     TCompare   Type of the compare function
+	 */
 	template<typename TRange,
 			 typename TCompare =
 				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
@@ -354,6 +436,15 @@ namespace cpprelude
 		_quick_sort(arr_range.range(it, arr_range.end()), depth - 1, compare_func);
 	}
 
+	/**
+	 * @brief      Quick sorts the range
+	 *
+	 * @param[in]  range  The range to sort
+	 * @param[in]  compare_func  The compare function
+	 *
+	 * @tparam     TRange     Type of the range
+	 * @tparam     TCompare   Type of the compare function
+	 */
 	template<typename TRange,
 			 typename TCompare =
 				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>

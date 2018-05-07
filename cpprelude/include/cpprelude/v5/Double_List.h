@@ -736,12 +736,24 @@ namespace cpprelude
 			return Const_Range_Type(ptr, end_ptr);
 		}
 
+		/**
+		 * @param[in]  start   The start iterator of the range
+		 * @param[in]  end_it  The end iterator of the range
+		 *
+		 * @return     Range viewing the specified values between the iterators
+		 */
 		Range_Type
 		range(iterator start, iterator end_it)
 		{
 			return Range_Type(start, end_it);
 		}
 
+		/**
+		 * @param[in]  start   The start iterator of the range
+		 * @param[in]  end_it  The end iterator of the range
+		 *
+		 * @return     Const range viewing the specified values between the iterators
+		 */
 		Const_Range_Type
 		range(const_iterator start, const_iterator end_it) const
 		{
