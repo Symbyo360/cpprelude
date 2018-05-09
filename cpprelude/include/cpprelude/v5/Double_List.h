@@ -740,7 +740,7 @@ namespace cpprelude
 		 * @param[in]  start   The start iterator of the range
 		 * @param[in]  end_it  The end iterator of the range
 		 *
-		 * @return     Range viewing the specified values between the iterators
+		 * @return     Range viewing the specified values between the iterators [start, end)
 		 */
 		Range_Type
 		range(iterator start, iterator end_it)
@@ -752,7 +752,7 @@ namespace cpprelude
 		 * @param[in]  start   The start iterator of the range
 		 * @param[in]  end_it  The end iterator of the range
 		 *
-		 * @return     Const range viewing the specified values between the iterators
+		 * @return     Const range viewing the specified values between the iterators [start, end)
 		 */
 		Const_Range_Type
 		range(const_iterator start, const_iterator end_it) const

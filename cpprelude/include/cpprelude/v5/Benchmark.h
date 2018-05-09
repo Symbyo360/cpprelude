@@ -6,17 +6,28 @@
 
 namespace cpprelude
 {
+	/**
+	 * @brief      simple stopwatch to measure benchmark times
+	 */
 	struct Stopwatch
 	{
 		r64 _total_nanos = 0.0;
 		std::chrono::time_point<std::chrono::high_resolution_clock> _start;
 
+		/**
+		 * @brief      Starts the stopwatch thus taking a time point in nanoseconds at this call
+		 */
 		void
 		start()
 		{
 			_start = std::chrono::high_resolution_clock::now();
 		}
 
+		/**
+		 * @brief      Stops the stopwatch thus accumulating the interval {start, stop} to the total
+		 *
+		 * @return     The interval between start and stop in nanoseconds a.k.a. lap time
+		 */
 		r64
 		stop()
 		{
@@ -26,6 +37,9 @@ namespace cpprelude
 			return interval;
 		}
 
+		/**
+		 * @brief      Stops the stopwatch and resets the accumulated interval saved in the total time
+		 */
 		void
 		reset()
 		{
@@ -33,30 +47,74 @@ namespace cpprelude
 			_start = std::chrono::high_resolution_clock::now();
 		}
 
+		/**
+		 * @return     total time in seconds
+		 */
 		r64
 		seconds() const
 		{
 			return _total_nanos / 1000000000.0;
 		}
 
+		/**
+		 * @return     total time in milliseconds
+		 */
 		r64
 		milliseconds() const
 		{
 			return _total_nanos / 1000000.0;
 		}
 
+		/**
+		 * @return     total time in microseconds
+		 */
 		r64
 		microseconds() const
 		{
 			return _total_nanos / 1000.0;
 		}
 
+		/**
+		 * @return     total time in nanoseconds
+		 */
 		r64
 		nanoseconds() const
 		{
 			return _total_nanos;
 		}
 	};
+	/**
+	 * [[markdown]]
+	 * # Stopwatch Example
+	 * Example using the stopwatch to time code
+	 * ```c++
+	 * void foo()
+	 * {
+	 * 	Stopwatch watch;
+	 * 	
+	 * 	watch.start();
+	 * 	//my code goes here
+	 * 	r64 first_interval = watch.stop();
+	 * 	
+	 * 	watch.start();
+	 * 	//my other code goes here
+	 * 	r64 second_interval = watch.stop();
+	 * 	
+	 * 	//total = first_interval + second_interval
+	 * 	r64 first_total_in_nanos = watch.nanoseconds();
+	 * 	r64 first_total_in_millis = watch.milliseconds();
+	 * 	
+	 * 	//reset the stopwatch to measure another code
+	 * 	watch.reset();
+	 * 	//another separate code goes here
+	 * 	r64 third_interval = watch.stop();
+	 * 	
+	 * 	//total = third_interval
+	 * 	r64 second_total_in_nanos = watch.nanoseconds();
+	 * 	r64 second_total_in_millis = watch.milliseconds();
+	 * }
+	 * ```
+	 */
 
 	struct Benchmark_Compare_Data
 	{
@@ -117,6 +175,16 @@ namespace cpprelude
 		data.throughput = 1000.0/avg_time;
 	}
 
+	/**
+	 * @brief      Creates benchmark of the provided callable and outputs the measurement to the stdout
+	 *
+	 * @param[in]  benchmark_name      The benchmark name
+	 * @param[in]  callable           The callable -usually lambda- function to call this should have this signature `return_type callable(Stopwatch&)`
+	 * @param[in]  atleast_run_count   lower limit of samples to run
+	 * @param[in]  avg_diff_in_millis  The average difference in milliseconds. `while(abs(sample_avg_time - prev_sample_avg_time) > avg_diff in millis) {run_callable}`
+	 *
+	 * @tparam     TCallable           Type of the callable value to benchmark
+	 */
 	template<typename TCallable>
 	inline static Benchmark_Compare_Data
 	detailed(const String_Range& benchmark_name,
@@ -129,6 +197,16 @@ namespace cpprelude
 		return data;
 	}
 
+	/**
+	 * @brief      Creates benchmark of the provided callable
+	 *
+	 * @param[in]  benchmark_name      The benchmark name
+	 * @param[in]  callable           The callable -usually lambda- function to call this should have this signature `return_type callable(Stopwatch&)`
+	 * @param[in]  atleast_run_count   lower limit of samples to run
+	 * @param[in]  avg_diff_in_millis  The average difference in milliseconds. `while(abs(sample_avg_time - prev_sample_avg_time) > avg_diff in millis) {run_callable}`
+	 *
+	 * @tparam     TCallable           Type of the callable value to benchmark
+	 */
 	template<typename TCallable>
 	inline static Benchmark_Compare_Data
 	summary(const String_Range& benchmark_name,
@@ -141,6 +219,17 @@ namespace cpprelude
 		return data;
 	}
 
+	/**
+	 * @brief      Given a number of benchmarks it runs them and compare the results
+	 *
+	 * @param[in]  args  benchmarks to compare. The first benchmark will be the baseline the 100% mark. other benchmarks throughput will be compared to the baseline thus making
+	 * A 			100.00%
+	 * B 			200.00%
+	 * C 			50.00%
+	 * This is interpreted as A is the baseline at 100%, B is 2 times faster, and C is 2 times slower.
+	 *
+	 * @tparam     TArgs      Type of benchmarks to compare
+	 */
 	template<typename ... TArgs>
 	inline static void
 	compare_benchmarks(TArgs&& ... args)
@@ -176,4 +265,24 @@ namespace cpprelude
 
 		print(CLEAR_COLOR);
 	}
+
+	/**
+	 * [[markdown]]
+	 * # Benchmark Example
+	 * ```C++
+	 * 	compare_benchmarks(
+	 * 		summary("std::sort", [&](Stopwatch& watch){
+	 * 			watch.start();
+	 * 				std::sort(array.begin(), array.end());
+	 * 			watch.stop();
+	 * 		}),
+	 * 		
+	 * 		summary("my_sort", [&](Stopwatch& watch){
+	 * 			watch.start();
+	 * 				my_sort(array.begin(), array.end());
+	 * 			watch.stop();
+	 * 		})
+	 * 	);
+	 * ```
+	 */
 }

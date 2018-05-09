@@ -273,13 +273,13 @@ range(usize start, usize end) const;
 Range_Type
 range(iterator start, iterator end_it);
 ```
- - **param[in]:**  start   The start iterator of the range - **param[in]:**  end_it  The end iterator of the range - **return:**     Range viewing the specified values between the iterators
+ - **param[in]:**  start   The start iterator of the range - **param[in]:**  end_it  The end iterator of the range - **return:**     Range viewing the specified values between the iterators [start, end)
 ## Funciton `range`
 ```C++
 Const_Range_Type
 range(const_iterator start, const_iterator end_it) const;
 ```
- - **param[in]:**  start   The start iterator of the range - **param[in]:**  end_it  The end iterator of the range - **return:**     Const range viewing the specified values between the iterators
+ - **param[in]:**  start   The start iterator of the range - **param[in]:**  end_it  The end iterator of the range - **return:**     Const range viewing the specified values between the iterators [start, end)
 ## Funciton `front`
 ```C++
 Data_Type&
