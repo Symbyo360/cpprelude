@@ -40,23 +40,48 @@ namespace cpprelude
 		return adjustment;
 	}
 
+	/**
+	 * @brief      Memory Context Flags
+	 * 
+	 * - **NONE**: Normal memory context
+	 * - **ALIGNED**: Aligned memory context
+	 */
 	enum MEMORY_CONTEXT_FLAGS
 	{
 		NONE = 0,
 		ALIGNED = 1
 	};
 
+	/**
+	 * @brief      Memory Context is a generic way to pass an allocator to a structure/function
+	 */
 	struct Memory_Context
 	{
 		Allocator_Trait *_allocator;
 		MEMORY_CONTEXT_FLAGS _flags;
 
+		/**
+		 * @brief      Constructs a Memory context from an Allocator_Trait
+		 *
+		 * @param      allocator  The allocator to be used
+		 * @param[in]  flags      The flags of this memory context
+		 */
 		Memory_Context(Allocator_Trait* allocator = nullptr,
 					   MEMORY_CONTEXT_FLAGS flags = MEMORY_CONTEXT_FLAGS::NONE)
 			:_allocator(allocator),
 			 _flags(flags)
 		{}
 
+		/**
+		 * @brief      Allocates the given count of values from the global memory and depending on aligned flag bit it will return an aligned memory
+		 *
+		 * @param[in]  count      The count of values to allocate
+		 * @param[in]  alignment  The alignment of the values
+		 *
+		 * @tparam     T          The type of the values
+		 *
+		 * @return     An Owner pointer to the underlying memory block
+		 */
 		template<typename T>
 		Owner<T>
 		alloc(usize count = 1, usize alignment = alignof(T))
@@ -72,6 +97,13 @@ namespace cpprelude
 			}
 		}
 
+		/**
+		 * @brief      Frees the underlying memory of the given owner pointer
+		 *
+		 * @param      value  The owner pointer to free
+		 *
+		 * @tparam     T      The Type of the values
+		 */
 		template<typename T>
 		void
 		free(Owner<T>& value)
@@ -89,6 +121,13 @@ namespace cpprelude
 			}
 		}
 
+		/**
+		 * @brief      Frees the underlying memory of the given owner pointer
+		 *
+		 * @param      value  The owner pointer to free
+		 *
+		 * @tparam     T      The Type of the values
+		 */
 		template<typename T>
 		void
 		free(Owner<T>&& value)
@@ -106,6 +145,16 @@ namespace cpprelude
 			}
 		}
 
+		/**
+		 * @brief      Allocates and aligns the given count of values from the global memory
+		 *
+		 * @param[in]  count      The count of values to allocate
+		 * @param[in]  alignment  The alignment of the values
+		 *
+		 * @tparam     T          The type of the values
+		 *
+		 * @return     An Owner pointer to the underlying memory block
+		 */
 		template<typename T>
 		Owner<T>
 		alloc_aligned(usize count = 1, usize alignment = alignof(T))
@@ -120,6 +169,13 @@ namespace cpprelude
 			return Owner<T>((T*)aligned_ptr, count * sizeof(T));
 		}
 
+		/**
+		 * @brief      Frees the underlying aligned memory of the given owner pointer
+		 *
+		 * @param      value  The owner pointer to free
+		 *
+		 * @tparam     T      The Type of the values
+		 */
 		template<typename T>
 		void
 		free_aligned(Owner<T>& value)
@@ -131,6 +187,13 @@ namespace cpprelude
 			value.size = 0;
 		}
 
+		/**
+		 * @brief      Frees the underlying aligned memory of the given owner pointer
+		 *
+		 * @param      value  The owner pointer to free
+		 *
+		 * @tparam     T      The Type of the values
+		 */
 		template<typename T>
 		void
 		free_aligned(Owner<T>&& value)
@@ -140,12 +203,18 @@ namespace cpprelude
 			_allocator->template free<T>(own((T*)ptr[-1]));
 		}
 
+		/**
+		 * @return     True if aligned, False otherwise.
+		 */
 		bool
 		is_aligned() const
 		{
 			return _flags == MEMORY_CONTEXT_FLAGS::ALIGNED;
 		}
 
+		/**
+		 * @brief      Sets the aligned bit.
+		 */
 		void
 		set_aligned(bool value)
 		{

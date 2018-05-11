@@ -43,6 +43,9 @@ namespace cpprelude
 		 */
 		using const_iterator = Ring_Iterator<const Data_Type>;
 
+		/**
+		 * Memory context used in this ring array
+		 */
 		Memory_Context mem_context;
 		Owner<Data_Type> _data;
 		usize _head_index, _tail_index;

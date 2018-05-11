@@ -24,44 +24,78 @@ namespace cpprelude
 	inline static usize
 	printf_err(const String_Range& format, TArgs&& ... args);
 
-	struct Parsed_Format
+	/**
+	 * @brief      The Print string format which specifies the desired style of the print_str function
+	 */
+	struct Print_Format
 	{
-		enum ALIGN
+		/**
+		 * @brief      Alignment of the printed string value
+		 * 
+		 * - **NONE**: The invalid alignment
+		 * - **LEFT**: '<' left aligns the value
+		 * - **RIGHT**: '>' right aligns the value
+		 * - **CENTER**: '^' center aligns the value
+		 * - **EQUAL**: '=' used with numbers only for printing values like +000120
+		 */
+		enum class ALIGN
 		{
-			ALIGN_NONE,		//invalid alignment
-			ALIGN_LEFT,		//< left aligns the value
-			ALIGN_RIGHT,	//> right aligns the value
-			ALIGN_CENTER,	//^ center aligns the value
-			ALIGN_EQUAL		//= used with numbers only,
-							//it's used for printing values like +000120.
+			NONE,
+			LEFT,
+			RIGHT,
+			CENTER,
+			EQUAL
 		};
 
-		enum SIGN
+		/**
+		 * @brief      Sign style of the printed numbers
+		 * 
+		 * - **NONE**: The invalid sign
+		 * - **POSITIVE**: always print signs before the number
+		 * - **NEGATIVE**: print only negative signs
+		 * - **SPACE**: print one space for positive numbers
+		 */
+		enum class SIGN
 		{
-			SIGN_NONE,		//invalid sign
-			SIGN_POSITIVE,	//always print signs before the number
-			SIGN_NEGATIVE,	//print only negative signs
-			SIGN_SPACE		//print one space for the positive numbers
+			NONE,
+			POSITIVE,
+			NEGATIVE,
+			SPACE
 		};
 
-		enum TYPE
+		/**
+		 * @brief      The type style of the printed value
+		 * 
+		 * - **NONE**: The invalid type
+		 * - **BINARY**: print in binary format
+		 * - **RUNE**: print as a rune
+		 * - **DECIMAL**: print as decimal value
+		 * - **OCTAL**: print as octal value
+		 * - **HEX_SMALL**: print as a hexadecimal value with small 'abcdef' letters
+		 * - **HEX_CAPITAL**: print as a hexadecimal value with capital `ABCDEF` letters
+		 * - The following options are for floating point only
+		 * - **EXP_SMALL**: print floats as exponent format with small case 'e'
+		 * - **EXP_CAPITAL**: print floats as exponent format with capital case 'E'
+		 * - **FLOAT**: print as floating point value
+		 * - **GENERAL_SMALL**: converts floating point number to decimal or decimal small exponent notation depending on the value and precision
+		 * - **GENERAL_CAPITAL**: converts floating point number to decimal or decimal capital exponent notation depending on the value and precision
+		 */
+		enum class TYPE
 		{
-			TYPE_NONE,			//invalid type
-			TYPE_BINARY,		//binary type
-			TYPE_RUNE,			//rune type
-			TYPE_DECIMAL,		//decimal integer
-			TYPE_OCTAL,			//octal integer
-			TYPE_HEX_SMALL, 	//hex integer with small case letters
-			TYPE_HEX_CAPITAL,	//hex integer with capital case letters
+			NONE,
+			BINARY,
+			RUNE,
+			DECIMAL,
+			OCTAL,
+			HEX_SMALL,
+			HEX_CAPITAL,
 
 			//float only types
-			TYPE_EXP_SMALL, 		//exponent format with small case e
-			TYPE_EXP_CAPITAL,		//exponent format with capital case E
-			TYPE_FLOAT,				//floating point number default percision is 6
-			TYPE_GENERAL_SMALL,		//converts floating-point number to decimal or decimal
-									//exponent notation depending on the value and the precision
-			TYPE_GENERAL_CAPITAL	//converts floating-point number to decimal or decimal
-									//exponent notation depending on the value and the precision
+			EXP_SMALL,
+			EXP_CAPITAL,
+			FLOAT,
+			GENERAL_SMALL,
+			GENERAL_CAPITAL
 		};
 
 		usize index;
@@ -73,15 +107,15 @@ namespace cpprelude
 		usize precision;
 		TYPE type;
 
-		Parsed_Format()
+		Print_Format()
 			:index(0),
-			alignment(ALIGN_NONE),
+			alignment(ALIGN::NONE),
 			pad(' '),
-			sign(SIGN_NONE),
+			sign(SIGN::NONE),
 			prefix(false),
 			width(0),
 			precision(-1),
-			type(TYPE_NONE)
+			type(TYPE::NONE)
 		{}
 	};
 
@@ -108,7 +142,7 @@ namespace cpprelude
 
 		template<typename T>
 		inline static usize
-		_generic_print_str_function(void* _self, const Parsed_Format& format, IO_Trait* trait)
+		_generic_print_str_function(void* _self, const Print_Format& format, IO_Trait* trait)
 		{
 			T* value = (T*)_self;
 			return print_str(trait, format, *value);
@@ -116,7 +150,7 @@ namespace cpprelude
 
 		struct Generic_Print_Str_Value
 		{
-			using print_func = usize(*)(void*, const Parsed_Format&, IO_Trait*);
+			using print_func = usize(*)(void*, const Print_Format&, IO_Trait*);
 			void* _self;
 			print_func _print;
 
@@ -128,7 +162,7 @@ namespace cpprelude
 			}
 
 			usize
-			print(IO_Trait* trait, const Parsed_Format& format)
+			print(IO_Trait* trait, const Print_Format& format)
 			{
 				return _print(_self, format, trait);
 			}
@@ -147,7 +181,7 @@ namespace cpprelude
 									  TFirst&& first_arg,
 									  TArgs&& ... args)
 		{
-			size += print_str(trait, Parsed_Format(), std::forward<TFirst>(first_arg));
+			size += print_str(trait, Print_Format(), std::forward<TFirst>(first_arg));
 			_variadic_print_string_helper(trait, size, std::forward<TArgs>(args)...);
 		}
 
@@ -211,7 +245,7 @@ namespace cpprelude
 		inline static void
 		_parse_format(String_Iterator& it,
 					  const String_Iterator& end,
-					  Parsed_Format& format,
+					  Print_Format& format,
 					  bool& manual_indexing)
 		{
 			Rune c = *it;
@@ -267,19 +301,19 @@ namespace cpprelude
 			//check the alignment
 			if (c == '<')
 			{
-				format.alignment = Parsed_Format::ALIGN_LEFT;
+				format.alignment = Print_Format::ALIGN::LEFT;
 				format.pad = *after_colon;
 				++it;
 			}
 			else if (c == '>')
 			{
-				format.alignment = Parsed_Format::ALIGN_RIGHT;
+				format.alignment = Print_Format::ALIGN::RIGHT;
 				format.pad = *after_colon;
 				++it;
 			}
 			else if (c == '^')
 			{
-				format.alignment = Parsed_Format::ALIGN_CENTER;
+				format.alignment = Print_Format::ALIGN::CENTER;
 				format.pad = *after_colon;
 				++it;
 			}
@@ -289,17 +323,17 @@ namespace cpprelude
 				c = *it;
 				if (c == '<')
 				{
-					format.alignment = Parsed_Format::ALIGN_LEFT;
+					format.alignment = Print_Format::ALIGN::LEFT;
 					++it;
 				}
 				else if (c == '>')
 				{
-					format.alignment = Parsed_Format::ALIGN_RIGHT;
+					format.alignment = Print_Format::ALIGN::RIGHT;
 					++it;
 				}
 				else if (c == '^')
 				{
-					format.alignment = Parsed_Format::ALIGN_CENTER;
+					format.alignment = Print_Format::ALIGN::CENTER;
 					++it;
 				}
 			}
@@ -308,17 +342,17 @@ namespace cpprelude
 			//check the sign
 			if (c == '+')
 			{
-				format.sign = Parsed_Format::SIGN_POSITIVE;
+				format.sign = Print_Format::SIGN::POSITIVE;
 				++it;
 			}
 			else if (c == '-')
 			{
-				format.sign = Parsed_Format::SIGN_NEGATIVE;
+				format.sign = Print_Format::SIGN::NEGATIVE;
 				++it;
 			}
 			else if (c == ' ')
 			{
-				format.sign = Parsed_Format::SIGN_SPACE;
+				format.sign = Print_Format::SIGN::SPACE;
 				++it;
 			}
 
@@ -364,57 +398,57 @@ namespace cpprelude
 			c = *it;
 			if (c == 'c')
 			{
-				format.type = Parsed_Format::TYPE_RUNE;
+				format.type = Print_Format::TYPE::RUNE;
 				++it;
 			}
 			else if (c == 'd')
 			{
-				format.type = Parsed_Format::TYPE_DECIMAL;
+				format.type = Print_Format::TYPE::DECIMAL;
 				++it;
 			}
 			else if(c == 'b')
 			{
-				format.type = Parsed_Format::TYPE_BINARY;
+				format.type = Print_Format::TYPE::BINARY;
 				++it;
 			}
 			else if (c == 'o')
 			{
-				format.type = Parsed_Format::TYPE_OCTAL;
+				format.type = Print_Format::TYPE::OCTAL;
 				++it;
 			}
 			else if (c == 'x')
 			{
-				format.type = Parsed_Format::TYPE_HEX_SMALL;
+				format.type = Print_Format::TYPE::HEX_SMALL;
 				++it;
 			}
 			else if (c == 'X')
 			{
-				format.type = Parsed_Format::TYPE_HEX_CAPITAL;
+				format.type = Print_Format::TYPE::HEX_CAPITAL;
 				++it;
 			}
 			else if (c == 'e')
 			{
-				format.type = Parsed_Format::TYPE_EXP_SMALL;
+				format.type = Print_Format::TYPE::EXP_SMALL;
 				++it;
 			}
 			else if (c == 'E')
 			{
-				format.type = Parsed_Format::TYPE_EXP_CAPITAL;
+				format.type = Print_Format::TYPE::EXP_CAPITAL;
 				++it;
 			}
 			else if (c == 'f')
 			{
-				format.type = Parsed_Format::TYPE_FLOAT;
+				format.type = Print_Format::TYPE::FLOAT;
 				++it;
 			}
 			else if (c == 'g')
 			{
-				format.type = Parsed_Format::TYPE_GENERAL_SMALL;
+				format.type = Print_Format::TYPE::GENERAL_SMALL;
 				++it;
 			}
 			else if (c == 'G')
 			{
-				format.type = Parsed_Format::TYPE_GENERAL_CAPITAL;
+				format.type = Print_Format::TYPE::GENERAL_CAPITAL;
 				++it;
 			}
 
@@ -433,21 +467,21 @@ namespace cpprelude
 
 		template<typename T, usize BUFFER_SIZE>
 		inline static usize
-		_print_integer(IO_Trait* trait, const Parsed_Format& format, const char* pattern, T value)
+		_print_integer(IO_Trait* trait, const Print_Format& format, const char* pattern, T value)
 		{
 			usize result = 0;
 
 			//respect the sign
 			if (value >= 0 &&
-				format.type == Parsed_Format::TYPE_DECIMAL &&
-				format.sign == Parsed_Format::SIGN_POSITIVE)
+				format.type == Print_Format::TYPE::DECIMAL &&
+				format.sign == Print_Format::SIGN::POSITIVE)
 			{
 				char sign = '+';
 				result += trait->write(Slice<byte>((byte*)&sign, 1));
 			}
 			else if(value >= 0 &&
-					format.type == Parsed_Format::TYPE_DECIMAL &&
-					format.sign == Parsed_Format::SIGN_SPACE)
+					format.type == Print_Format::TYPE::DECIMAL &&
+					format.sign == Print_Format::SIGN::SPACE)
 			{
 				char sign = ' ';
 				result += trait->write(Slice<byte>((byte*)&sign, 1));
@@ -461,24 +495,24 @@ namespace cpprelude
 
 			//respect right and center align
 			usize pad_size = 0, pad_str_size = 0;
-			Parsed_Format::ALIGN alignment = format.alignment;
+			Print_Format::ALIGN alignment = format.alignment;
 			if(format.width > (written_size + result))
 			{
 				pad_size = format.width - (written_size + result);
 				pad_str_size = std::strlen((char*)&format.pad.data);
 				//default alignment is LEFt
-				if(alignment == Parsed_Format::ALIGN_NONE)
-					alignment = Parsed_Format::ALIGN_LEFT;
+				if(alignment == Print_Format::ALIGN::NONE)
+					alignment = Print_Format::ALIGN::LEFT;
 			}
 
 			if (pad_size != 0 &&
-				alignment == Parsed_Format::ALIGN_RIGHT)
+				alignment == Print_Format::ALIGN::RIGHT)
 			{
 				for(usize i = 0; i < pad_size; ++i)
 					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
 			}
 			else if(pad_size != 0 &&
-					alignment == Parsed_Format::ALIGN_CENTER)
+					alignment == Print_Format::ALIGN::CENTER)
 			{
 				usize i;
 				for(i = 0; i < pad_size / 2; ++i)
@@ -491,13 +525,13 @@ namespace cpprelude
 
 			//respect left and center align
 			if (pad_size != 0 &&
-				alignment == Parsed_Format::ALIGN_CENTER)
+				alignment == Print_Format::ALIGN::CENTER)
 			{
 				for(usize i = 0; i < pad_size; ++i)
 					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
 			}
 			else if(pad_size != 0 &&
-					alignment == Parsed_Format::ALIGN_LEFT)
+					alignment == Print_Format::ALIGN::LEFT)
 			{
 				for(usize i = 0; i < pad_size; ++i)
 					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
@@ -508,7 +542,7 @@ namespace cpprelude
 
 		template<typename T, usize BUFFER_SIZE, usize PERCISION>
 		inline static usize
-		_print_real(IO_Trait* trait, const Parsed_Format& _format, T value)
+		_print_real(IO_Trait* trait, const Print_Format& _format, T value)
 		{
 			auto format = _format;
 
@@ -516,19 +550,19 @@ namespace cpprelude
 			const char* PATTERN = nullptr;
 			switch(format.type)
 			{
-				case Parsed_Format::TYPE_EXP_SMALL:
+				case Print_Format::TYPE::EXP_SMALL:
 					PATTERN = "%.*e";
 					break;
-				case Parsed_Format::TYPE_EXP_CAPITAL:
+				case Print_Format::TYPE::EXP_CAPITAL:
 					PATTERN = "%.*E";
 					break;
-				case Parsed_Format::TYPE_FLOAT:
+				case Print_Format::TYPE::FLOAT:
 					PATTERN = "%.*f";
 					break;
-				case Parsed_Format::TYPE_GENERAL_SMALL:
+				case Print_Format::TYPE::GENERAL_SMALL:
 					PATTERN = "%.*g";
 					break;
-				case Parsed_Format::TYPE_GENERAL_CAPITAL:
+				case Print_Format::TYPE::GENERAL_CAPITAL:
 				default:
 					PATTERN = "%.*G";
 					break;
@@ -538,13 +572,13 @@ namespace cpprelude
 
 			//second respect the sign
 			if (value >= 0 &&
-				format.sign == Parsed_Format::SIGN_POSITIVE)
+				format.sign == Print_Format::SIGN::POSITIVE)
 			{
 				char s = '+';
 				result += trait->write(Slice<byte>((byte*)&s, 1));
 			}
 			else if(value >= 0 &&
-					format.sign == Parsed_Format::SIGN_SPACE)
+					format.sign == Print_Format::SIGN::SPACE)
 			{
 				char s = ' ';
 				result += trait->write(Slice<byte>((byte*)&s, 1));
@@ -565,18 +599,18 @@ namespace cpprelude
 				pad_size = format.width - (written_size + result);
 				pad_str_size = std::strlen((char*)&format.pad.data);
 				//default alignment is LEFT
-				if (format.alignment == Parsed_Format::ALIGN_NONE)
-					format.alignment = Parsed_Format::ALIGN_LEFT;
+				if (format.alignment == Print_Format::ALIGN::NONE)
+					format.alignment = Print_Format::ALIGN::LEFT;
 			}
 
 			if (pad_size != 0 &&
-				format.alignment == Parsed_Format::ALIGN_RIGHT)
+				format.alignment == Print_Format::ALIGN::RIGHT)
 			{
 				for(usize i = 0; i < pad_size; ++i)
 					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
 			}
 			else if(pad_size != 0 &&
-					format.alignment == Parsed_Format::ALIGN_CENTER)
+					format.alignment == Print_Format::ALIGN::CENTER)
 			{
 				usize i;
 				for(i = 0; i < pad_size / 2; ++i)
@@ -589,13 +623,13 @@ namespace cpprelude
 
 			//sixth respect left and center align
 			if (pad_size != 0 &&
-				format.alignment == Parsed_Format::ALIGN_CENTER)
+				format.alignment == Print_Format::ALIGN::CENTER)
 			{
 				for(usize i = 0; i < pad_size; ++i)
 					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
 			}
 			else if(pad_size != 0 &&
-					format.alignment == Parsed_Format::ALIGN_LEFT)
+					format.alignment == Print_Format::ALIGN::LEFT)
 			{
 				for(usize i = 0; i < pad_size; ++i)
 					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
@@ -605,6 +639,16 @@ namespace cpprelude
 		}
 	}
 
+	/**
+	 * @brief      Writes the binary value to the provided IO_Trait/stream
+	 *
+	 * @param      trait  The IO_Trait to write to
+	 * @param[in]  value  The value to be written
+	 *
+	 * @tparam     T      Type of the written value
+	 *
+	 * @return     The size of the written value in bytes
+	 */
 	template<typename T>
 	inline static usize
 	print_bin(IO_Trait* trait, const T& value)
@@ -612,6 +656,16 @@ namespace cpprelude
 		return trait->write(Slice<byte>((byte*)&value, sizeof(T)));
 	}
 
+	/**
+	 * @brief      Writes the data of the provided slice to the IO_Trait/stream
+	 *
+	 * @param      trait  The IO_Trait to write to
+	 * @param[in]  values  The values to be written
+	 *
+	 * @tparam     T      Type of the written values
+	 *
+	 * @return     The size of the written value in bytes
+	 */
 	template<typename T>
 	inline static usize
 	print_bin(IO_Trait* trait, const Slice<T>& values)
@@ -619,6 +673,16 @@ namespace cpprelude
 		return trait->write(values.template convert<byte>());
 	}
 
+	/**
+	 * @brief      Writes the data of the provided values to the IO_Trait/stream
+	 *
+	 * @param      trait  The IO_Trait to write to
+	 * @param[in]  args  The values to be written
+	 *
+	 * @tparam     TArgs      Types of the written values
+	 *
+	 * @return     The size of the written value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	vprintb(IO_Trait *trait, TArgs&& ... args)
@@ -630,36 +694,46 @@ namespace cpprelude
 
 
 	//print byte
+
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& format, byte value)
+	print_str(IO_Trait* trait, const Print_Format& format, byte value)
 	{
 		//first respect the pattern
 		const char* PATTERN = nullptr;
 		switch(format.type)
 		{
-			case Parsed_Format::TYPE_DECIMAL:
+			case Print_Format::TYPE::DECIMAL:
 				PATTERN = "%hhd";
 				break;
-			case Parsed_Format::TYPE_HEX_SMALL:
+			case Print_Format::TYPE::HEX_SMALL:
 				if(format.prefix)
 					PATTERN = "%#hhx";
 				else
 					PATTERN = "%hhx";
 				break;
-			case Parsed_Format::TYPE_HEX_CAPITAL:
+			case Print_Format::TYPE::HEX_CAPITAL:
 				if(format.prefix)
 					PATTERN = "%#hhX";
 				else
 					PATTERN = "%hhX";
 				break;
-			case Parsed_Format::TYPE_OCTAL:
+			case Print_Format::TYPE::OCTAL:
 				if(format.prefix)
 					PATTERN = "%#hho";
 				else
 					PATTERN = "%hho";
 				break;
-			case Parsed_Format::TYPE_RUNE:
-			case Parsed_Format::TYPE_NONE:
+			case Print_Format::TYPE::RUNE:
+			case Print_Format::TYPE::NONE:
 			default:
 				PATTERN = "%c";
 				break;
@@ -672,40 +746,49 @@ namespace cpprelude
 	}
 
 	//print 8-bit signed int
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, i8 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, i8 value)
 	{
 		auto format = _format;
 		//first respect the pattern
 		const char* PATTERN = nullptr;
 		switch(format.type)
 		{
-			case Parsed_Format::TYPE_RUNE:
+			case Print_Format::TYPE::RUNE:
 				PATTERN = "%c";
 				break;
-			case Parsed_Format::TYPE_HEX_SMALL:
+			case Print_Format::TYPE::HEX_SMALL:
 				if(format.prefix)
 					PATTERN = "%#hhx";
 				else
 					PATTERN = "%hhx";
 				break;
-			case Parsed_Format::TYPE_HEX_CAPITAL:
+			case Print_Format::TYPE::HEX_CAPITAL:
 				if(format.prefix)
 					PATTERN = "%#hhX";
 				else
 					PATTERN = "%hhX";
 				break;
-			case Parsed_Format::TYPE_OCTAL:
+			case Print_Format::TYPE::OCTAL:
 				if(format.prefix)
 					PATTERN = "%#hho";
 				else
 					PATTERN = "%hho";
 				break;
-			case Parsed_Format::TYPE_DECIMAL:
-			case Parsed_Format::TYPE_NONE:
+			case Print_Format::TYPE::DECIMAL:
+			case Print_Format::TYPE::NONE:
 			default:
 				PATTERN = "%hhd";
-				format.type = Parsed_Format::TYPE_DECIMAL;
+				format.type = Print_Format::TYPE::DECIMAL;
 				break;
 		}
 
@@ -716,40 +799,49 @@ namespace cpprelude
 	}
 
 	//print 8-bit unsigned int
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, u8 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, u8 value)
 	{
 		auto format = _format;
 		//first respect the pattern
 		const char* PATTERN = nullptr;
 		switch(format.type)
 		{
-			case Parsed_Format::TYPE_RUNE:
+			case Print_Format::TYPE::RUNE:
 				PATTERN = "%c";
 				break;
-			case Parsed_Format::TYPE_HEX_SMALL:
+			case Print_Format::TYPE::HEX_SMALL:
 				if(format.prefix)
 					PATTERN = "%#hhx";
 				else
 					PATTERN = "%hhx";
 				break;
-			case Parsed_Format::TYPE_HEX_CAPITAL:
+			case Print_Format::TYPE::HEX_CAPITAL:
 				if(format.prefix)
 					PATTERN = "%#hhX";
 				else
 					PATTERN = "%hhX";
 				break;
-			case Parsed_Format::TYPE_OCTAL:
+			case Print_Format::TYPE::OCTAL:
 				if(format.prefix)
 					PATTERN = "%#hho";
 				else
 					PATTERN = "%hho";
 				break;
-			case Parsed_Format::TYPE_DECIMAL:
-			case Parsed_Format::TYPE_NONE:
+			case Print_Format::TYPE::DECIMAL:
+			case Print_Format::TYPE::NONE:
 			default:
 				PATTERN = "%hhu";
-				format.type = Parsed_Format::TYPE_DECIMAL;
+				format.type = Print_Format::TYPE::DECIMAL;
 				break;
 		}
 
@@ -760,40 +852,49 @@ namespace cpprelude
 	}
 
 	//print 16-bit signed int
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, i16 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, i16 value)
 	{
 		auto format = _format;
 		//first respect the pattern
 		const char* PATTERN = nullptr;
 		switch(format.type)
 		{
-			case Parsed_Format::TYPE_RUNE:
+			case Print_Format::TYPE::RUNE:
 				PATTERN = "%c";
 				break;
-			case Parsed_Format::TYPE_HEX_SMALL:
+			case Print_Format::TYPE::HEX_SMALL:
 				if(format.prefix)
 					PATTERN = "%#hx";
 				else
 					PATTERN = "%hx";
 				break;
-			case Parsed_Format::TYPE_HEX_CAPITAL:
+			case Print_Format::TYPE::HEX_CAPITAL:
 				if(format.prefix)
 					PATTERN = "%#hX";
 				else
 					PATTERN = "%hX";
 				break;
-			case Parsed_Format::TYPE_OCTAL:
+			case Print_Format::TYPE::OCTAL:
 				if(format.prefix)
 					PATTERN = "%#ho";
 				else
 					PATTERN = "%ho";
 				break;
-			case Parsed_Format::TYPE_DECIMAL:
-			case Parsed_Format::TYPE_NONE:
+			case Print_Format::TYPE::DECIMAL:
+			case Print_Format::TYPE::NONE:
 			default:
 				PATTERN = "%hd";
-				format.type = Parsed_Format::TYPE_DECIMAL;
+				format.type = Print_Format::TYPE::DECIMAL;
 				break;
 		}
 
@@ -804,40 +905,49 @@ namespace cpprelude
 	}
 
 	//print 16-bit unsigned int
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, u16 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, u16 value)
 	{
 		auto format = _format;
 		//first respect the pattern
 		const char* PATTERN = nullptr;
 		switch(format.type)
 		{
-			case Parsed_Format::TYPE_RUNE:
+			case Print_Format::TYPE::RUNE:
 				PATTERN = "%c";
 				break;
-			case Parsed_Format::TYPE_HEX_SMALL:
+			case Print_Format::TYPE::HEX_SMALL:
 				if(format.prefix)
 					PATTERN = "%#hx";
 				else
 					PATTERN = "%hx";
 				break;
-			case Parsed_Format::TYPE_HEX_CAPITAL:
+			case Print_Format::TYPE::HEX_CAPITAL:
 				if(format.prefix)
 					PATTERN = "%#hX";
 				else
 					PATTERN = "%hX";
 				break;
-			case Parsed_Format::TYPE_OCTAL:
+			case Print_Format::TYPE::OCTAL:
 				if(format.prefix)
 					PATTERN = "%#ho";
 				else
 					PATTERN = "%ho";
 				break;
-			case Parsed_Format::TYPE_DECIMAL:
-			case Parsed_Format::TYPE_NONE:
+			case Print_Format::TYPE::DECIMAL:
+			case Print_Format::TYPE::NONE:
 			default:
 				PATTERN = "%hu";
-				format.type = Parsed_Format::TYPE_DECIMAL;
+				format.type = Print_Format::TYPE::DECIMAL;
 				break;
 		}
 
@@ -848,40 +958,49 @@ namespace cpprelude
 	}
 
 	//print 32-bit signed int
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, i32 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, i32 value)
 	{
 		auto format = _format;
 		//first respect the pattern
 		const char* PATTERN = nullptr;
 		switch(format.type)
 		{
-			case Parsed_Format::TYPE_RUNE:
+			case Print_Format::TYPE::RUNE:
 				PATTERN = "%c";
 				break;
-			case Parsed_Format::TYPE_HEX_SMALL:
+			case Print_Format::TYPE::HEX_SMALL:
 				if(format.prefix)
 					PATTERN = "%#x";
 				else
 					PATTERN = "%x";
 				break;
-			case Parsed_Format::TYPE_HEX_CAPITAL:
+			case Print_Format::TYPE::HEX_CAPITAL:
 				if(format.prefix)
 					PATTERN = "%#X";
 				else
 					PATTERN = "%X";
 				break;
-			case Parsed_Format::TYPE_OCTAL:
+			case Print_Format::TYPE::OCTAL:
 				if(format.prefix)
 					PATTERN = "%#o";
 				else
 					PATTERN = "%o";
 				break;
-			case Parsed_Format::TYPE_DECIMAL:
-			case Parsed_Format::TYPE_NONE:
+			case Print_Format::TYPE::DECIMAL:
+			case Print_Format::TYPE::NONE:
 			default:
 				PATTERN = "%d";
-				format.type = Parsed_Format::TYPE_DECIMAL;
+				format.type = Print_Format::TYPE::DECIMAL;
 				break;
 		}
 
@@ -892,40 +1011,49 @@ namespace cpprelude
 	}
 
 	//print 32-bit unsigned int
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, u32 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, u32 value)
 	{
 		auto format = _format;
 		//first respect the pattern
 		const char* PATTERN = nullptr;
 		switch(format.type)
 		{
-			case Parsed_Format::TYPE_RUNE:
+			case Print_Format::TYPE::RUNE:
 				PATTERN = "%c";
 				break;
-			case Parsed_Format::TYPE_HEX_SMALL:
+			case Print_Format::TYPE::HEX_SMALL:
 				if(format.prefix)
 					PATTERN = "%#x";
 				else
 					PATTERN = "%x";
 				break;
-			case Parsed_Format::TYPE_HEX_CAPITAL:
+			case Print_Format::TYPE::HEX_CAPITAL:
 				if(format.prefix)
 					PATTERN = "%#X";
 				else
 					PATTERN = "%X";
 				break;
-			case Parsed_Format::TYPE_OCTAL:
+			case Print_Format::TYPE::OCTAL:
 				if(format.prefix)
 					PATTERN = "%#o";
 				else
 					PATTERN = "%o";
 				break;
-			case Parsed_Format::TYPE_DECIMAL:
-			case Parsed_Format::TYPE_NONE:
+			case Print_Format::TYPE::DECIMAL:
+			case Print_Format::TYPE::NONE:
 			default:
 				PATTERN = "%u";
-				format.type = Parsed_Format::TYPE_DECIMAL;
+				format.type = Print_Format::TYPE::DECIMAL;
 				break;
 		}
 
@@ -936,8 +1064,17 @@ namespace cpprelude
 	}
 
 	//print 64-bit signed int
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, i64 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, i64 value)
 	{
 		auto format = _format;
 		//first respect the pattern
@@ -946,32 +1083,32 @@ namespace cpprelude
 		{
 			switch(format.type)
 			{
-				case Parsed_Format::TYPE_RUNE:
+				case Print_Format::TYPE::RUNE:
 					PATTERN = "%c";
 					break;
-				case Parsed_Format::TYPE_HEX_SMALL:
+				case Print_Format::TYPE::HEX_SMALL:
 					if(format.prefix)
 						PATTERN = "%#llx";
 					else
 						PATTERN = "%llx";
 					break;
-				case Parsed_Format::TYPE_HEX_CAPITAL:
+				case Print_Format::TYPE::HEX_CAPITAL:
 					if(format.prefix)
 						PATTERN = "%#llX";
 					else
 						PATTERN = "%llX";
 					break;
-				case Parsed_Format::TYPE_OCTAL:
+				case Print_Format::TYPE::OCTAL:
 					if(format.prefix)
 						PATTERN = "%#llo";
 					else
 						PATTERN = "%llo";
 					break;
-				case Parsed_Format::TYPE_DECIMAL:
-				case Parsed_Format::TYPE_NONE:
+				case Print_Format::TYPE::DECIMAL:
+				case Print_Format::TYPE::NONE:
 				default:
 					PATTERN = "%lld";
-					format.type = Parsed_Format::TYPE_DECIMAL;
+					format.type = Print_Format::TYPE::DECIMAL;
 					break;
 			}
 		}
@@ -979,32 +1116,32 @@ namespace cpprelude
 		{
 			switch(format.type)
 			{
-				case Parsed_Format::TYPE_RUNE:
+				case Parsed_Format::TYPE::RUNE:
 					PATTERN = "%c";
 					break;
-				case Parsed_Format::TYPE_HEX_SMALL:
+				case Parsed_Format::TYPE::HEX_SMALL:
 					if(format.prefix)
 						PATTERN = "%#lx";
 					else
 						PATTERN = "%lx";
 					break;
-				case Parsed_Format::TYPE_HEX_CAPITAL:
+				case Parsed_Format::TYPE::HEX_CAPITAL:
 					if(format.prefix)
 						PATTERN = "%#lX";
 					else
 						PATTERN = "%lX";
 					break;
-				case Parsed_Format::TYPE_OCTAL:
+				case Parsed_Format::TYPE::OCTAL:
 					if(format.prefix)
 						PATTERN = "%#lo";
 					else
 						PATTERN = "%lo";
 					break;
-				case Parsed_Format::TYPE_DECIMAL:
-				case Parsed_Format::TYPE_NONE:
+				case Parsed_Format::TYPE::DECIMAL:
+				case Parsed_Format::TYPE::NONE:
 				default:
 					PATTERN = "%ld";
-					format.type = Parsed_Format::TYPE_DECIMAL;
+					format.type = Parsed_Format::TYPE::DECIMAL;
 					break;
 			}
 		}
@@ -1017,8 +1154,17 @@ namespace cpprelude
 	}
 
 	//print 64-bit unsigned int
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, u64 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, u64 value)
 	{
 		auto format = _format;
 		//first respect the pattern
@@ -1027,32 +1173,32 @@ namespace cpprelude
 		{
 			switch(format.type)
 			{
-				case Parsed_Format::TYPE_RUNE:
+				case Print_Format::TYPE::RUNE:
 					PATTERN = "%c";
 					break;
-				case Parsed_Format::TYPE_HEX_SMALL:
+				case Print_Format::TYPE::HEX_SMALL:
 					if(format.prefix)
 						PATTERN = "%#llx";
 					else
 						PATTERN = "%llx";
 					break;
-				case Parsed_Format::TYPE_HEX_CAPITAL:
+				case Print_Format::TYPE::HEX_CAPITAL:
 					if(format.prefix)
 						PATTERN = "%#llX";
 					else
 						PATTERN = "%llX";
 					break;
-				case Parsed_Format::TYPE_OCTAL:
+				case Print_Format::TYPE::OCTAL:
 					if(format.prefix)
 						PATTERN = "%#llo";
 					else
 						PATTERN = "%llo";
 					break;
-				case Parsed_Format::TYPE_DECIMAL:
-				case Parsed_Format::TYPE_NONE:
+				case Print_Format::TYPE::DECIMAL:
+				case Print_Format::TYPE::NONE:
 				default:
 					PATTERN = "%llu";
-					format.type = Parsed_Format::TYPE_DECIMAL;
+					format.type = Print_Format::TYPE::DECIMAL;
 					break;
 			}
 		}
@@ -1060,32 +1206,32 @@ namespace cpprelude
 		{
 			switch(format.type)
 			{
-				case Parsed_Format::TYPE_RUNE:
+				case Parsed_Format::TYPE::RUNE:
 					PATTERN = "%c";
 					break;
-				case Parsed_Format::TYPE_HEX_SMALL:
+				case Parsed_Format::TYPE::HEX_SMALL:
 					if(format.prefix)
 						PATTERN = "%#lx";
 					else
 						PATTERN = "%lx";
 					break;
-				case Parsed_Format::TYPE_HEX_CAPITAL:
+				case Parsed_Format::TYPE::HEX_CAPITAL:
 					if(format.prefix)
 						PATTERN = "%#lX";
 					else
 						PATTERN = "%lX";
 					break;
-				case Parsed_Format::TYPE_OCTAL:
+				case Parsed_Format::TYPE::OCTAL:
 					if(format.prefix)
 						PATTERN = "%#lo";
 					else
 						PATTERN = "%lo";
 					break;
-				case Parsed_Format::TYPE_DECIMAL:
-				case Parsed_Format::TYPE_NONE:
+				case Parsed_Format::TYPE::DECIMAL:
+				case Parsed_Format::TYPE::NONE:
 				default:
 					PATTERN = "%lu";
-					format.type = Parsed_Format::TYPE_DECIMAL;
+					format.type = Parsed_Format::TYPE::DECIMAL;
 					break;
 			}
 		}
@@ -1098,52 +1244,88 @@ namespace cpprelude
 	}
 
 	//print 32-bit float
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, r32 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, r32 value)
 	{
 		return internal::_print_real<r32, 128, 6>(trait, _format, value);
 	}
 
 	//print 64-bit float
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& _format, r64 value)
+	print_str(IO_Trait* trait, const Print_Format& _format, r64 value)
 	{
 		return internal::_print_real<r64, 265, 12>(trait, _format, value);
 	}
 
 	//print pointer as string
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait *trait, const Parsed_Format& format, void* ptr)
+	print_str(IO_Trait *trait, const Print_Format& format, void* ptr)
 	{
 		return print_str(trait, format, reinterpret_cast<usize>(ptr));
 	}
 
 	//print string literal
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& format, const String_Range& str)
+	print_str(IO_Trait* trait, const Print_Format& format, const String_Range& str)
 	{
 		usize result = 0;
 		//respect right and center align
 		usize written_size = str.bytes.size;
 		usize pad_size = 0, pad_str_size = 0;
-		Parsed_Format::ALIGN alignment = format.alignment;
+		Print_Format::ALIGN alignment = format.alignment;
 		if(format.width > (written_size + result))
 		{
 				pad_size = format.width - (written_size + result);
 				pad_str_size = std::strlen((char*)&format.pad.data);
 				//default alignment is LEFt
-				if(alignment == Parsed_Format::ALIGN_NONE)
-					alignment = Parsed_Format::ALIGN_LEFT;
+				if(alignment == Print_Format::ALIGN::NONE)
+					alignment = Print_Format::ALIGN::LEFT;
 		}
 
 		if (pad_size != 0 &&
-			alignment == Parsed_Format::ALIGN_RIGHT)
+			alignment == Print_Format::ALIGN::RIGHT)
 		{
 			for(usize i = 0; i < pad_size; ++i)
 				result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
 		}
 		else if(pad_size != 0 &&
-				alignment == Parsed_Format::ALIGN_CENTER)
+				alignment == Print_Format::ALIGN::CENTER)
 		{
 			usize i;
 			for(i = 0; i < pad_size / 2; ++i)
@@ -1155,13 +1337,13 @@ namespace cpprelude
 
 		//respect left and center align
 		if (pad_size != 0 &&
-			alignment == Parsed_Format::ALIGN_CENTER)
+			alignment == Print_Format::ALIGN::CENTER)
 		{
 			for(usize i = 0; i < pad_size; ++i)
 				result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
 		}
 		else if(pad_size != 0 &&
-				alignment == Parsed_Format::ALIGN_LEFT)
+				alignment == Print_Format::ALIGN::LEFT)
 		{
 			for(usize i = 0; i < pad_size; ++i)
 				result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
@@ -1170,12 +1352,31 @@ namespace cpprelude
 		return result;
 	}
 
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait *trait, const Parsed_Format& format, const char* str)
+	print_str(IO_Trait *trait, const Print_Format& format, const char* str)
 	{
 		return print_str(trait, format, String_Range(str));
 	}
 
+	/**
+	 * @brief      Prints values to the IO_Trait in a string form
+	 *
+	 * @param      trait      The IO_Trait to print to
+	 * @param[in]  args       The arguments to be printed
+	 *
+	 * @tparam     TArgs      arguments types to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	vprints(IO_Trait* trait, TArgs&& ... args)
@@ -1188,9 +1389,20 @@ namespace cpprelude
 	inline static usize
 	vprintf(IO_Trait* trait, const String_Range& str)
 	{
-		return print_str(trait, Parsed_Format(), str);
+		return print_str(trait, Print_Format(), str);
 	}
 
+	/**
+	 * @brief      Prints a formated values
+	 *
+	 * @param      trait      The IO_Trait to print to
+	 * @param[in]  format     The format string
+	 * @param[in]  args       The arguments to be printed
+	 *
+	 * @tparam     TArgs      arguments types to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	vprintf(IO_Trait* trait, const String_Range& format, TArgs&& ... args)
@@ -1254,7 +1466,7 @@ namespace cpprelude
 					continue;
 				}
 
-				Parsed_Format format;
+				Print_Format format;
 				if(!manual_indexing)
 					format.index = default_index++;
 				internal::_parse_format(rune_forward_it, rune_end, format, manual_indexing);
@@ -1306,6 +1518,15 @@ namespace cpprelude
 	API_CPPR void
 	_release_print_err_lock();
 
+	/**
+	 * @brief      Print values to the unbuffered stdout
+	 *
+	 * @param[in]  args       The arguments to be printed
+	 *
+	 * @tparam     TArgs      arguments types to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	print(TArgs&& ... args)
@@ -1317,6 +1538,15 @@ namespace cpprelude
 		return result;
 	}
 
+	/**
+	 * @brief      Print values to the unbuffered stderr
+	 *
+	 * @param[in]  args       The arguments to be printed
+	 *
+	 * @tparam     TArgs      arguments types to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	print_err(TArgs&& ... args)
@@ -1328,6 +1558,15 @@ namespace cpprelude
 		return result;
 	}
 
+	/**
+	 * @brief      Print values + newline at the end of the values to the unbuffered stdout
+	 *
+	 * @param[in]  args       The arguments to be printed
+	 *
+	 * @tparam     TArgs      arguments types to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	println(TArgs&& ... args)
@@ -1339,6 +1578,15 @@ namespace cpprelude
 		return result;
 	}
 
+	/**
+	 * @brief      Print values + newline at the end of the values to the unbuffered stderr
+	 *
+	 * @param[in]  args       The arguments to be printed
+	 *
+	 * @tparam     TArgs      arguments types to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	println_err(TArgs&& ... args)
@@ -1350,6 +1598,16 @@ namespace cpprelude
 		return result;
 	}
 
+	/**
+	 * @brief      Prints a formatted values to the unbuffered stdout
+	 *
+	 * @param[in]  format     The format string
+	 * @param[in]  args       The arguments to be printed
+	 *
+	 * @tparam     TArgs      arguments types to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	printf(const String_Range& format, TArgs&& ... args)
@@ -1361,6 +1619,16 @@ namespace cpprelude
 		return result;
 	}
 
+	/**
+	 * @brief      Prints a formatted values to the unbuffered stderr
+	 *
+	 * @param[in]  format     The format string
+	 * @param[in]  args       The arguments to be printed
+	 *
+	 * @tparam     TArgs      arguments types to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	printf_err(const String_Range& format, TArgs&& ... args)
@@ -1526,6 +1794,17 @@ namespace cpprelude
 	}
 
 	//read_bin
+
+	/**
+	 * @brief      Reads a value as binary format.
+	 *
+	 * @param      trait  The IO_Trait to read from
+	 * @param      value  The value to be read
+	 *
+	 * @tparam     T      Type of the read value
+	 *
+	 * @return     size of the read value in bytes
+	 */
 	template<typename T>
 	inline static usize
 	read_bin(IO_Trait* trait, T& value)
@@ -1533,6 +1812,16 @@ namespace cpprelude
 		return trait->read(Slice<byte>((byte*)&value, sizeof(T)));
 	}
 
+	/**
+	 * @brief      Reads a slice of values as binary format.
+	 *
+	 * @param      trait  The IO_Trait to read from
+	 * @param      values  The slice of values to be read
+	 *
+	 * @tparam     T      Type of the read values
+	 *
+	 * @return     size of the read value in bytes
+	 */
 	template<typename T>
 	inline static usize
 	read_bin(IO_Trait* trait, Slice<T>& values)
@@ -1560,6 +1849,16 @@ namespace cpprelude
 		}
 	}
 
+	/**
+	 * @brief      Reads values from the IO_Trait in a binary form
+	 *
+	 * @param      trait  The IO_Trait to read from
+	 * @param[in]  args   The values to be read
+	 *
+	 * @tparam     TArgs      Types of the args to be read
+	 *
+	 * @return     size of the read value in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	vreadb(IO_Trait* trait, TArgs&& ... args)
@@ -1619,6 +1918,14 @@ namespace cpprelude
 
 	#undef READ_STR_UNSIGNED
 
+	/**
+	 * @brief      Reads an address in a string form.
+	 *
+	 * @param      trait  The Bufio_Trait to read from
+	 * @param      value  The value to be read
+	 *
+	 * @return     size of the read value in bytes
+	 */
 	inline static usize
 	read_str(Bufio_Trait* trait, void*& value)
 	{
@@ -1632,6 +1939,14 @@ namespace cpprelude
 		return trait->skip(parsed_size);
 	}
 
+	/**
+	 * @brief      Reads a value in a string form.
+	 *
+	 * @param      trait  The Bufio_Trait to read from
+	 * @param      value  The value to be read
+	 *
+	 * @return     size of the read value in bytes
+	 */
 	inline static usize
 	read_str(Bufio_Trait* trait, r32& value)
 	{
@@ -1643,6 +1958,14 @@ namespace cpprelude
 		return trait->skip(parsed_size);
 	}
 
+	/**
+	 * @brief      Reads a value in a string form.
+	 *
+	 * @param      trait  The Bufio_Trait to read from
+	 * @param      value  The value to be read
+	 *
+	 * @return     size of the read value in bytes
+	 */
 	inline static usize
 	read_str(Bufio_Trait* trait, r64& value)
 	{
@@ -1674,6 +1997,16 @@ namespace cpprelude
 		}
 	}
 
+	/**
+	 * @brief      Reads values in a string form from the Bufio_Trait
+	 *
+	 * @param      trait  The Bufio_Trait to read from
+	 * @param[in]  args   values to be read
+	 *
+	 * @tparam     TArgs      Types of the args to be read
+	 *
+	 * @return     size of the read values in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	vreads(Bufio_Trait* trait, TArgs&& ... args)
@@ -1683,6 +2016,15 @@ namespace cpprelude
 		return result;
 	}
 
+	/**
+	 * @brief      Reads values in a string form from the buffered stdin
+	 *
+	 * @param[in]  args   values to be read
+	 *
+	 * @tparam     TArgs      Types of the args to be read
+	 *
+	 * @return     size of the read values in bytes
+	 */
 	template<typename ... TArgs>
 	inline static usize
 	read(TArgs&& ... args)

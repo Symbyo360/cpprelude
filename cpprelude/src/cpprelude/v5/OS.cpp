@@ -443,7 +443,7 @@ namespace cpprelude
 		#endif
 	}
 
-	i64
+	bool
 	OS::file_cursor_move(const File_Handle& handle, i64 move_offset)
 	{
 		#if defined(OS_WINDOWS)

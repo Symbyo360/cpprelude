@@ -16,6 +16,14 @@ namespace cpprelude
 	 * Operation System layer is a thin shim between cpprelude and OS-specific functionality
 	 */
 
+	/**
+	 * @brief      Enumeration for all OS error flags
+	 * 
+	 * - **OK**: No error flag
+	 * - **GENERIC_ERROR**: Generic unspecfied error
+	 * - **FILE_ALREADY_EXISTS**: File already exists error
+	 * - **FILE_DOESNOT_EXIST**: File does not exist error
+	 */
 	enum class OS_ERROR
 	{
 		OK,
@@ -34,9 +42,24 @@ namespace cpprelude
 		 */
 		Allocator_Trait* global_memory;
 
+		/**
+		 * The unbuffered standard output IO Trait
+		 */
 		IO_Trait* unbuf_stdout;
+
+		/**
+		 * The unbuffered standard error IO Trait
+		 */
 		IO_Trait* unbuf_stderr;
+
+		/**
+		 * The unbuffered standard input IO Trait
+		 */
 		IO_Trait* unbuf_stdin;
+
+		/**
+		 * The buffered standard input Bufio_Trait
+		 */
 		Bufio_Trait* buf_stdin;
 
 		/**
@@ -99,44 +122,137 @@ namespace cpprelude
 		API_CPPR void
 		_print_memory_report() const;
 
+		/**
+		 * @brief      Dumps a callstack in debug mode, does nothing in release mode.
+		 */
 		API_CPPR void
 		dump_callstack() const;
 
+		/**
+		 * @brief      Opens a file
+		 *
+		 * @param[in]  name       The file name on disk
+		 * @param[in]  io_mode    The i/o mode
+		 * @param[in]  open_mode  The open mode
+		 *
+		 * @return     The result of file handle open which contains a file and an OS error
+		 */
 		API_CPPR Result<File_Handle, OS_ERROR>
 		file_open(const String_Range& filename,
 				  IO_MODE2 io_mode = IO_MODE2::READ_WRITE,
 				  OPEN_MODE2 open_mode = OPEN_MODE2::CREATE_OVERWRITE);
 
+		/**
+		 * @brief      Closes a file handle
+		 *
+		 * @param      handle  The file handle
+		 *
+		 * @return     True if succeeded, false otherwise
+		 */
 		API_CPPR bool
 		file_close(File_Handle& handle);
 
+		/**
+		 * @brief      Closes a file handle
+		 *
+		 * @param      handle  The file handle
+		 *
+		 * @return     True if succeeded, false otherwise
+		 */
 		API_CPPR bool
 		file_close(File_Handle&& handle);
 
+		/**
+		 * @brief      Checks whether the file handle is valid or not
+		 *
+		 * @param[in]  handle  The file handle
+		 *
+		 * @return     Whether the file handle is valid or not
+		 */
 		API_CPPR bool
 		file_valid(const File_Handle& handle);
 
+		/**
+		 * @brief      Writes data to a file handle
+		 *
+		 * @param[in]  handle  The file handle
+		 * @param[in]  data    The data to be written
+		 *
+		 * @return     The size of the written data in bytes
+		 */
 		API_CPPR usize
 		file_write(const File_Handle& handle, const Slice<byte>& data);
 
+		/**
+		 * @brief      Reads data from a file handle
+		 *
+		 * @param[in]  handle  The file handle
+		 * @param      data    The data to be read
+		 *
+		 * @return     The size of the read data in bytes
+		 */
 		API_CPPR usize
 		file_read(const File_Handle& handle, Slice<byte>& data);
 
+		/**
+		 * @brief      Reads data from a file handle
+		 *
+		 * @param[in]  handle  The file handle
+		 * @param      data    The data to be read
+		 *
+		 * @return     The size of the read data in bytes
+		 */
 		API_CPPR usize
 		file_read(const File_Handle& handle, Slice<byte>&& data);
 
+		/**
+		 * @brief      Returns the file size in bytes
+		 *
+		 * @param[in]  handle  The file handle
+		 *
+		 * @return     The size of the file in bytes
+		 */
 		API_CPPR i64
 		file_size(const File_Handle& handle);
 
+		/**
+		 * @brief      Returns the file cursor position in bytes
+		 *
+		 * @param[in]  handle  The file handle
+		 *
+		 * @return     The file cursor position in bytes
+		 */
 		API_CPPR i64
 		file_cursor_position(const File_Handle& handle);
 
-		API_CPPR i64
+		/**
+		 * @brief      Moves the file cursor
+		 *
+		 * @param[in]  handle       The file handle
+		 * @param[in]  move_offset  The move offset in bytes
+		 * 
+		 * @return     True if succeeded, false otherwise
+		 */
+		API_CPPR bool
 		file_cursor_move(const File_Handle& handle, i64 move_offset);
 
+		/**
+		 * @brief      Moves the file cursor to the start of the file
+		 *
+		 * @param[in]  handle  The file handle
+		 *
+		 * @return     True if succeeded, false otherwise
+		 */
 		API_CPPR bool
 		file_cursor_move_to_start(const File_Handle& handle);
 
+		/**
+		 * @brief      Moves the file cursor to the end of the file
+		 *
+		 * @param[in]  handle  The file handle
+		 *
+		 * @return     True if succeeded, false otherwise
+		 */
 		API_CPPR bool
 		file_cursor_move_to_end(const File_Handle& handle);
 	};

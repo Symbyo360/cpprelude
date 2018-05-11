@@ -8,6 +8,9 @@ namespace cpprelude
 	API_CPPR void
 	_os_panic();
 
+	/**
+	 * Prints a message, dumps a callstack in debug mode, and aborts the execution
+	 */
 	[[noreturn]] inline static void
 	panic(const String_Range& str)
 	{
@@ -15,6 +18,9 @@ namespace cpprelude
 		_os_panic();
 	}
 
+	/**
+	 * @brief Prints a formatted message, dumps a callstack in debug mode, and aborts the execution
+	 */
 	template<typename ... TArgs>
 	[[noreturn]] inline static void
 	panic(const String_Range& str, TArgs&& ... args)
@@ -27,6 +33,14 @@ namespace cpprelude
 
 	struct _Unwrap_Tag_Type{};
 
+	/**
+	 * @brief Unwraps a Result of value and error. in case of an error it panics
+	 * 
+	 * @param  result  the result to unwrap
+	 * @param  ok_state  the ok state to check against
+	 * 
+	 * @return  The value of the Result
+	 */
 	template<typename T, typename E>
 	inline static T&&
 	unwrap(Result<T, E>&& result, const E& ok_state = static_cast<E>(0),
@@ -37,6 +51,14 @@ namespace cpprelude
 		return std::move(result.value);
 	}
 
+	/**
+	 * @brief Unwraps a Result of value and error. in case of an error it panics
+	 * 
+	 * @param  result  the result to unwrap
+	 * @param  ok_state  the ok state to check against
+	 * 
+	 * @return  The value of the Result
+	 */
 	template<typename T, typename E>
 	inline static T
 	unwrap(const Result<T, E>& result, const E& ok_state = static_cast<E>(0),
@@ -47,6 +69,15 @@ namespace cpprelude
 		return result.value;
 	}
 
+	/**
+	 * @brief Unwraps a Result of value and error. in case of an error it panics
+	 * 
+	 * @param  result  the result to unwrap
+	 * @param  ok_state  the ok state to check against
+	 * @param  str  the message to print 
+	 * 
+	 * @return  The value of the Result
+	 */
 	template<typename T, typename E>
 	inline static T&&
 	unwrap(Result<T, E>&& result, const E& ok_state, const String_Range& str,
@@ -57,6 +88,15 @@ namespace cpprelude
 		return std::move(result.value);
 	}
 
+	/**
+	 * @brief Unwraps a Result of value and error. in case of an error it panics
+	 * 
+	 * @param  result  the result to unwrap
+	 * @param  ok_state  the ok state to check against
+	 * @param  str  the message to print 
+	 * 
+	 * @return  The value of the Result
+	 */
 	template<typename T, typename E>
 	inline static T
 	unwrap(const Result<T, E>& result, const E& ok_state, const String_Range& str,

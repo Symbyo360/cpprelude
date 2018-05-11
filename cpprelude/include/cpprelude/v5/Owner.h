@@ -97,22 +97,6 @@ namespace cpprelude
 		}
 
 		/**
-		 * Constant pointer cast operator
-		 */
-		// operator const T*() const
-		// {
-		// 	return ptr;
-		// }
-
-		/**
-		 * Pointer cast operator
-		 */
-		// operator T*()
-		// {
-		// 	return ptr;
-		// }
-
-		/**
 		 * Bool cast operator
 		 */
 		operator bool() const
@@ -308,6 +292,14 @@ namespace cpprelude
 		return Owner<T>(value, count * sizeof(T));
 	}
 
+	/**
+	 * @brief      memcpy data from dst to src with size argument of min(dst.size, src.size)
+	 *
+	 * @param[in]  dst   The destination memory
+	 * @param[in]  src   The source memory
+	 *
+	 * @tparam     T     type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	copy(const Owner<T>& dst, const Owner<T>& src)
@@ -316,6 +308,15 @@ namespace cpprelude
 		std::memcpy(dst.ptr, src.ptr, size);
 	}
 
+	/**
+	 * @brief      memcpy data from dst to src
+	 *
+	 * @param[in]  dst    The destination memory
+	 * @param[in]  src    The source memry
+	 * @param[in]  count  The count of values to memcpy
+	 *
+	 * @tparam     T      type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	copy(const Owner<T>& dst, const Owner<T>& src, usize count)
@@ -323,6 +324,14 @@ namespace cpprelude
 		std::memcpy(dst.ptr, src.ptr, count * sizeof(T));
 	}
 
+	/**
+	 * @brief      memcpy data from dst to src with size argument of min(dst.size, src.size)
+	 *
+	 * @param[in]  dst   The destination memory
+	 * @param[in]  src   The source memory
+	 *
+	 * @tparam     T     type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	copy(const typename Owner<T>::Range_Type& dst, const typename Owner<T>::Range_Type& src)
@@ -331,6 +340,14 @@ namespace cpprelude
 		std::memcpy(dst.ptr, src.ptr, size);
 	}
 
+	/**
+	 * @brief      memcpy data from dst to src with size argument of min(dst.size, src.size)
+	 *
+	 * @param[in]  dst   The destination memory
+	 * @param[in]  src   The source memory
+	 *
+	 * @tparam     T     type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	copy(const typename Owner<T>::Range_Type& dst, const typename Owner<T>::Const_Range_Type& src)
@@ -339,6 +356,15 @@ namespace cpprelude
 		std::memcpy(dst.ptr, src.ptr, size);
 	}
 
+	/**
+	 * @brief      memcpy data from dst to src
+	 *
+	 * @param[in]  dst    The destination memory
+	 * @param[in]  src    The source memry
+	 * @param[in]  count  The count of values to memcpy
+	 *
+	 * @tparam     T      type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	copy(const typename Owner<T>::Range_Type& dst,
@@ -347,6 +373,15 @@ namespace cpprelude
 		std::memcpy(dst.ptr, src.ptr, count * sizeof(T));
 	}
 
+	/**
+	 * @brief      memcpy data from dst to src
+	 *
+	 * @param[in]  dst    The destination memory
+	 * @param[in]  src    The source memry
+	 * @param[in]  count  The count of values to memcpy
+	 *
+	 * @tparam     T      type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	copy(const typename Owner<T>::Range_Type& dst,
@@ -355,6 +390,14 @@ namespace cpprelude
 		std::memcpy(dst.ptr, src.ptr, count * sizeof(T));
 	}
 
+	/**
+	 * @brief      memmove data from dst to src with size argument of min(dst.size, src.size)
+	 *
+	 * @param[in]  dst   The destination memory
+	 * @param[in]  src   The source memory
+	 *
+	 * @tparam     T     type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	move(const Owner<T>& dst, const Owner<T>& src)
@@ -363,6 +406,14 @@ namespace cpprelude
 		std::memmove(dst.ptr, src.ptr, size);
 	}
 
+	/**
+	 * @brief      memmove data from dst to src with size argument of min(dst.size, src.size)
+	 *
+	 * @param[in]  dst   The destination memory
+	 * @param[in]  src   The source memory
+	 *
+	 * @tparam     T     type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	move(const Owner<T>& dst, const Owner<T>& src, usize count)
@@ -370,6 +421,14 @@ namespace cpprelude
 		std::memmove(dst.ptr, src.ptr, count * sizeof(T));
 	}
 
+	/**
+	 * @brief      memmove data from dst to src with size argument of min(dst.size, src.size)
+	 *
+	 * @param[in]  dst   The destination memory
+	 * @param[in]  src   The source memory
+	 *
+	 * @tparam     T     type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	move(const typename Owner<T>::Range_Type& dst, const typename Owner<T>::Range_Type& src)
@@ -378,6 +437,14 @@ namespace cpprelude
 		std::memmove(dst.ptr, src.ptr, size);
 	}
 
+	/**
+	 * @brief      memmove data from dst to src with size argument of min(dst.size, src.size)
+	 *
+	 * @param[in]  dst   The destination memory
+	 * @param[in]  src   The source memory
+	 *
+	 * @tparam     T     type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	move(const typename Owner<T>::Range_Type& dst, const typename Owner<T>::Const_Range_Type& src)
@@ -386,6 +453,15 @@ namespace cpprelude
 		std::memmove(dst.ptr, src.ptr, size);
 	}
 
+	/**
+	 * @brief      memmove data from dst to src
+	 *
+	 * @param[in]  dst    The destination memory
+	 * @param[in]  src    The source memory
+	 * @param[in]  count  The count of values to memmove
+	 *
+	 * @tparam     T      type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	move(const typename Owner<T>::Range_Type& dst,
@@ -394,6 +470,15 @@ namespace cpprelude
 		std::memmove(dst.ptr, src.ptr, count * sizeof(T));
 	}
 
+	/**
+	 * @brief      memmove data from dst to src
+	 *
+	 * @param[in]  dst    The destination memory
+	 * @param[in]  src    The source memory
+	 * @param[in]  count  The count of values to memmove
+	 *
+	 * @tparam     T      type of memory buffer
+	 */
 	template<typename T>
 	inline static void
 	move(const typename Owner<T>::Range_Type& dst,

@@ -132,7 +132,15 @@ namespace cpprelude
 		 * Const Range Type of the tree
 		 */
 		using Const_Range_Type = Tree_Range<const Node_Type>;
+
+		/**
+		 * Iterator type of the tree
+		 */
 		using iterator = TIterator;
+
+		/**
+		 * Const iterator type of the tree
+		 */
 		using const_iterator = TConstIterator;
 
 		Node_Type *_root;

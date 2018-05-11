@@ -11,12 +11,34 @@
 
 namespace cpprelude
 {
+	/**
+	 * @brief      A UTF-8 string type
+	 */
 	struct String
 	{
+		/**
+		 * Data type of the string
+		 */
 		using Data_Type = Rune;
+
+		/**
+		 * Range Type of the string
+		 */
 		using Range_Type = String_Range;
+
+		/**
+		 * Const Range Type of the string
+		 */
 		using Const_Range_Type = String_Range;
+
+		/**
+		 * Iterator type of the string
+		 */
 		using iterator = String_Iterator;
+
+		/**
+		 * Const Iterator type of the string
+		 */
 		using const_iterator = String_Iterator;
 
 		Memory_Context mem_context;
@@ -24,12 +46,23 @@ namespace cpprelude
 		usize _bytes_size;
 		mutable usize _runes_count;
 
+		/**
+		 * @brief      Constructs a string
+		 *
+		 * @param[in]   context  The memory context to use for allocation and freeing
+		 */
 		String(const Memory_Context& context = os->global_memory)
 			:mem_context(context),
 			 _bytes_size(0),
 			 _runes_count(-1)
 		{}
 
+		/**
+		 * @brief      Constructs a string from a string range
+		 *
+		 * @param[in]  str_range  The string range to construct the string from
+		 * @param[in]  context  The memory context to use for allocation and freeing
+		 */
 		String(const String_Range& str_range, const Memory_Context& context = os->global_memory)
 			:mem_context(context)
 		{
@@ -41,6 +74,12 @@ namespace cpprelude
 			_runes_count = str_range._runes_count;
 		}
 
+		/**
+		 * @brief      Constructs a string from C string
+		 *
+		 * @param[in]  str      The C string to consruct the string from
+		 * @param[in]  context  The memory context to use for allocation and freeing
+		 */
 		String(const char* str, const Memory_Context& context = os->global_memory)
 			:mem_context(context)
 		{
@@ -53,6 +92,13 @@ namespace cpprelude
 			_runes_count = str_range._runes_count;
 		}
 
+		/**
+		 * @brief      Constructs a string from a C string and a size
+		 *
+		 * @param[in]  str      The C string to consruct the string from
+		 * @param[in]  count    The C string size
+		 * @param[in]  context  The memory context to use for allocation and freeing
+		 */
 		String(const char* str, usize count, const Memory_Context& context = os->global_memory)
 			:mem_context(context)
 		{
@@ -65,6 +111,12 @@ namespace cpprelude
 			_runes_count = str_range._runes_count;
 		}
 
+		/**
+		 * @brief      Constructs a string from a raw memory
+		 *
+		 * @param[in]  data     The data pointer to copy the string data from
+		 * @param[in]  context  The memory context to use for allocation and freeing
+		 */
 		String(const Owner<byte>& data, const Memory_Context& context = os->global_memory)
 			:mem_context(context),
 			 _runes_count(-1)
@@ -74,6 +126,12 @@ namespace cpprelude
 			_bytes_size = data.size;
 		}
 
+		/**
+		 * @brief      Constructs a string from a raw memory
+		 *
+		 * @param[in]  data       The data that will be moved to the string
+		 * @param[in]  context  The memory context to use for allocation and freeing
+		 */
 		String(Owner<byte>&& data, const Memory_Context& context = os->global_memory)
 			:mem_context(context),
 			 _bytes(std::move(data)),
@@ -81,6 +139,11 @@ namespace cpprelude
 			 _runes_count(-1)
 		{}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other  The other string to copy
+		 */
 		String(const String& other)
 			:mem_context(other.mem_context),
 			 _bytes_size(other._bytes_size),
@@ -90,6 +153,12 @@ namespace cpprelude
 			move<byte>(_bytes, other._bytes);
 		}
 
+		/**
+		 * @brief      Copy Constructor
+		 *
+		 * @param[in]  other    The other string to copy
+		 * @param[in]  context  The memory context to use for allocation and freeing
+		 */
 		String(const String& other, const Memory_Context& context)
 			:mem_context(context),
 			 _bytes_size(other._bytes_size),
@@ -99,6 +168,11 @@ namespace cpprelude
 			move<byte>(_bytes, other._bytes);
 		}
 
+		/**
+		 * @brief      Move Constructor
+		 *
+		 * @param[in]  other    The other string to move
+		 */
 		String(String&& other)
 			:mem_context(std::move(other.mem_context)),
 			 _bytes(std::move(other._bytes)),
@@ -109,11 +183,21 @@ namespace cpprelude
 			other._runes_count = -1;
 		}
 
+		/**
+		 * @brief      Destroys the string.
+		 */
 		~String()
 		{
 			reset();
 		}
 
+		/**
+		 * @brief      Copy Assignment operator
+		 *
+		 * @param[in]  other  The other string to copy
+		 *
+		 * @return     This string by reference
+		 */
 		String&
 		operator=(const String& other)
 		{
@@ -129,6 +213,13 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Copy Assignment operator
+		 *
+		 * @param[in]  str   The string range to copy
+		 *
+		 * @return     This string by reference
+		 */
 		String&
 		operator=(const Range_Type& str)
 		{
@@ -145,6 +236,13 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Copy Assignment operator
+		 *
+		 * @param[in]  str   The C string to copy
+		 *
+		 * @return     This string by reference
+		 */
 		String&
 		operator=(const char* str)
 		{
@@ -162,6 +260,13 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Move Assignement operator
+		 *
+		 * @param[in]  other  The other string to copy
+		 *
+		 * @return     This string by reference
+		 */
 		String&
 		operator=(String&& other)
 		{
@@ -175,7 +280,9 @@ namespace cpprelude
 			return *this;
 		}
 
-
+		/**
+		 * @return     The count of runes in the string
+		 */
 		usize
 		count() const
 		{
@@ -184,36 +291,62 @@ namespace cpprelude
 			return _runes_count;
 		}
 
+		/**
+		 * @return     The size of the string in bytes
+		 */
 		usize
 		size() const
 		{
 			return _bytes_size;
 		}
 
+		/**
+		 * @return     The capacity of the string in bytes
+		 */
 		usize
 		capacity() const
 		{
 			return _bytes.count();
 		}
 
+		/**
+		 * @return     Whether the string is empty or not
+		 */
 		bool
 		empty() const
 		{
 			return _bytes_size == 0;
 		}
 
+		/**
+		 * @return     A pointer to the underlying string memory
+		 */
 		const byte*
 		data() const
 		{
 			return _bytes.ptr;
 		}
 
+		/**
+		 * @brief      Access a byte inside the string
+		 *
+		 * @param[in]  index  The index of the byte
+		 *
+		 * @return     The indexed byte by const reference
+		 */
 		const byte&
 		operator[](usize index) const
 		{
 			return _bytes[index];
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string to compare with
+		 *
+		 * @return     Whether the two strings are equal
+		 */
 		bool
 		operator==(const String& other) const
 		{
@@ -226,36 +359,78 @@ namespace cpprelude
 			return true;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string to compare with
+		 *
+		 * @return     Whether the two strings are equal
+		 */
 		bool
 		operator!=(const String& other) const
 		{
 			return !operator==(other);
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string to compare with
+		 *
+		 * @return     Whether the two strings are less than the second string
+		 */
 		bool
 		operator<(const String& other) const
 		{
 			return internal::_strcmp(_bytes.all(), other._bytes.all()) < 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string to compare with
+		 *
+		 * @return     Whether the first string is less than or equal the second string
+		 */
 		bool
 		operator<=(const String& other) const
 		{
 			return internal::_strcmp(_bytes.all(), other._bytes.all()) <= 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string to compare with
+		 *
+		 * @return     Whether the two strings are greater than the second string
+		 */
 		bool
 		operator>(const String& other) const
 		{
 			return internal::_strcmp(_bytes.all(), other._bytes.all()) > 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string to compare with
+		 *
+		 * @return     Whether the first string is greater than or equal the second string
+		 */
 		bool
 		operator>=(const String& other) const
 		{
 			return internal::_strcmp(_bytes.all(), other._bytes.all()) >= 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  str  The other string range to compare with
+		 *
+		 * @return     Whether the two strings are equal
+		 */
 		bool
 		operator==(const Range_Type& str)
 		{
@@ -268,72 +443,154 @@ namespace cpprelude
 			return true;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  str  The other string range to compare with
+		 *
+		 * @return     Whether the two strings are equal
+		 */
 		bool
 		operator!=(const Range_Type& str) const
 		{
 			return !operator==(str);
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string range to compare with
+		 *
+		 * @return     Whether the two strings are less than the second string
+		 */
 		bool
 		operator<(const Range_Type& str) const
 		{
 			return internal::_strcmp(_bytes.all(), str.bytes) < 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string range to compare with
+		 *
+		 * @return     Whether the first string is less than or equal the second string
+		 */
 		bool
 		operator<=(const Range_Type& str) const
 		{
 			return internal::_strcmp(_bytes.all(), str.bytes) <= 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string range to compare with
+		 *
+		 * @return     Whether the two strings are greater than the second string
+		 */
 		bool
 		operator>(const Range_Type& str) const
 		{
 			return internal::_strcmp(_bytes.all(), str.bytes) > 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other string range to compare with
+		 *
+		 * @return     Whether the first string is greater than or equal the second string
+		 */
 		bool
 		operator>=(const Range_Type& str) const
 		{
 			return internal::_strcmp(_bytes.all(), str.bytes) >= 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other c string to compare with
+		 *
+		 * @return     Whether the two strings are equal
+		 */
 		bool
 		operator==(const char* str)
 		{
 			return operator==(String_Range(str));
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other c string to compare with
+		 *
+		 * @return     Whether the two strings are equal
+		 */
 		bool
 		operator!=(const char* str) const
 		{
 			return !operator==(str);
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other c string to compare with
+		 *
+		 * @return     Whether the two strings are less than the second string
+		 */
 		bool
 		operator<(const char* str) const
 		{
 			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) < 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other c string to compare with
+		 *
+		 * @return     Whether the first string is less than or equal the second string
+		 */
 		bool
 		operator<=(const char* str) const
 		{
 			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) <= 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other c string to compare with
+		 *
+		 * @return     Whether the two strings are greater than the second string
+		 */
 		bool
 		operator>(const char* str) const
 		{
 			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) > 0;
 		}
 
+		/**
+		 * @brief      Compares two strings
+		 *
+		 * @param[in]  other  The other c string to compare with
+		 *
+		 * @return     Whether the first string is greater than or equal the second string
+		 */
 		bool
 		operator>=(const char* str) const
 		{
 			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) >= 0;
 		}
 
+		/**
+		 * @brief      Ensures that the string has the capacity for the expected count
+		 *
+		 * @param[in]  expected_count  The expected count of bytes to reserve
+		 */
 		void
 		reserve(usize expected_count)
 		{
@@ -350,6 +607,11 @@ namespace cpprelude
 			_bytes = std::move(new_bytes);
 		}
 
+		/**
+		 * @brief      Concats two strings together
+		 *
+		 * @param[in]  other  The other string that will be appended to the back of this string
+		 */
 		void
 		concat(const String& other)
 		{
@@ -363,6 +625,11 @@ namespace cpprelude
 			_runes_count = -1;
 		}
 
+		/**
+		 * @brief      Concats two strings together
+		 *
+		 * @param[in]  str  The string range that will be appended to the back of this string
+		 */
 		void
 		concat(const Range_Type& str)
 		{
@@ -378,6 +645,11 @@ namespace cpprelude
 			_runes_count = -1;
 		}
 
+		/**
+		 * @brief      Concats two strings together
+		 *
+		 * @param[in]  str  The c string that will be appended to the back of this string
+		 */
 		void
 		concat(const char* str)
 		{
@@ -394,6 +666,15 @@ namespace cpprelude
 			_runes_count = -1;
 		}
 
+		/**
+		 * @brief      Creates a substring of this string
+		 *
+		 * @param[in]  start    The start
+		 * @param[in]  end      The end
+		 * @param[in]  context  The memory context of the new string
+		 *
+		 * @return     The newly created sub string
+		 */
 		String
 		substr(usize start, usize end, const Memory_Context& context = os->global_memory) const
 		{
@@ -403,6 +684,24 @@ namespace cpprelude
 			return String(Range_Type(_bytes.range(start_bytes_offset, end_bytes_offset), end - start), context);
 		}
 
+		/**
+		 * @brief      Creates a substring of this string
+		 *
+		 * @param[in]  start    The start iterator
+		 * @param[in]  end      The end iterator
+		 * @param[in]  context  The memory context of the new string
+		 *
+		 * @return     The newly created sub string
+		 */
+		String
+		substr(iterator start, iterator end, const Memory_Context& context = os->global_memory) const
+		{
+			return String(range(start, end), context);
+		}
+
+		/**
+		 * @brief      Clears the string of content
+		 */
 		void
 		clear()
 		{
@@ -410,6 +709,9 @@ namespace cpprelude
 			_runes_count = -1;
 		}
 
+		/**
+		 * @brief      Clears the string and frees the memory
+		 */
 		void
 		reset()
 		{
@@ -418,6 +720,9 @@ namespace cpprelude
 			_runes_count = -1;
 		}
 
+		/**
+		 * @return     Const range viewing all the string
+		 */
 		Const_Range_Type
 		all() const
 		{
@@ -426,6 +731,12 @@ namespace cpprelude
 			return Const_Range_Type(_bytes.range(0, _bytes_size - 1), count());
 		}
 
+		/**
+		 * @param[in]  start  The start index of the range
+		 * @param[in]  end    The end index of the range
+		 *
+		 * @return     Const range viewing the specified values in the string
+		 */
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
@@ -435,6 +746,12 @@ namespace cpprelude
 			return Const_Range_Type(_bytes.range(start_bytes_offset, end_bytes_offset), end - start);
 		}
 
+		/**
+		 * @param[in]  start   The start iterator of the range
+		 * @param[in]  end_it  The end iterator of the range
+		 *
+		 * @return     Const range viewing the specified values between the iterators [start, end)
+		 */
 		Const_Range_Type
 		range(const_iterator start, const_iterator end_it) const
 		{
@@ -506,18 +823,43 @@ namespace cpprelude
 		}
 	};
 
+	/**
+	 * @brief      Prints a string
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format style of the string
+	 * @param[in]  value   The string to be printed
+	 *
+	 * @return     The size of the printed string in bytes
+	 */
 	inline static usize
-	print_str(IO_Trait* trait, const Parsed_Format& format, const String& value)
+	print_str(IO_Trait* trait, const Print_Format& format, const String& value)
 	{
 		return print_str(trait, format, value.all());
 	}
 
+	/**
+	 * @brief      Writes the string in binary form
+	 *
+	 * @param      trait  The IO_Trait to write to
+	 * @param[in]  value  The string to be written
+	 *
+	 * @return     The size of the written string in bytes
+	 */
 	inline static usize
 	print_bin(IO_Trait* trait, const String& value)
 	{
 		return print_bin(trait, value._bytes.range(0, value._bytes_size));
 	}
 
+	/**
+	 * @brief      Reads a string.
+	 *
+	 * @param      trait  The Bufio_Trait to read the string from
+	 * @param      value  The string that will be read
+	 *
+	 * @return     The size of the read string in bytes
+	 */
 	inline static usize
 	read_str(Bufio_Trait* trait, String& value)
 	{
@@ -616,6 +958,13 @@ namespace cpprelude
 		}
 	}
 
+	/**
+	 * @brief      Reads a line from  the buffered stdin
+	 *
+	 * @param      value  The string that will be read
+	 *
+	 * @return     The size of the read line in bytes
+	 */
 	inline static usize
 	readln(String& value)
 	{

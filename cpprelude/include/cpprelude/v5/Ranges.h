@@ -242,12 +242,28 @@ namespace cpprelude
 			return Const_Range_Type(ptr + start, (end - start) * sizeof(T));
 		}
 
+		/**
+		 * @brief      Range of a subset of the underying memory block
+		 *
+		 * @param[in]  start  The start iterator of the range subset
+		 * @param[in]  end    The end iterator of the range subset
+		 *
+		 * @return     A Range of values with the specified start and end
+		 */
 		Range_Type
 		range(iterator start, iterator end)
 		{
 			return Range_Type(start, (end - start) * sizeof(T));
 		}
 
+		/**
+		 * @brief      Const Range of a subset of the underying memory block
+		 *
+		 * @param[in]  start  The start iterator of the range subset
+		 * @param[in]  end    The end iterator of the range subset
+		 *
+		 * @return     A Const Range of values with the specified start and end
+		 */
 		Const_Range_Type
 		range(const_iterator start, const_iterator end) const
 		{
@@ -2316,6 +2332,9 @@ namespace cpprelude
 		}
 	};
 
+	/**
+	 * @brief      Represents a UTF-8 letter
+	 */
 	struct Rune
 	{
 		u32 data;
@@ -2487,14 +2506,30 @@ namespace cpprelude
 		}
 	}
 
+	/**
+	 * @brief      A UTF-8 string iterator
+	 */
 	struct String_Iterator
 	{
+		/**
+		 * Ptr to string data
+		 */
 		const byte* ptr;
 
+		/**
+		 * @brief      Constructs a string iterator from a pointer
+		 *
+		 * @param[in]  str_ptr  The string pointer
+		 */
 		String_Iterator(const byte* str_ptr = nullptr)
 			:ptr(str_ptr)
 		{}
 
+		/**
+		 * @brief      Moves this iterator to the next UTF-8 Rune
+		 *
+		 * @return     This iterator by reference
+		 */
 		String_Iterator&
 		operator++()
 		{
@@ -2504,6 +2539,11 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Moves this iterator to the next UTF-8 Rune
+		 *
+		 * @return     This iterator before the move
+		 */
 		String_Iterator
 		operator++(int)
 		{
@@ -2514,6 +2554,11 @@ namespace cpprelude
 			return result;
 		}
 
+		/**
+		 * @brief      Moves this iterator to the prev UTF-8 Rune
+		 *
+		 * @return     This iterator by reference
+		 */
 		String_Iterator&
 		operator--()
 		{
@@ -2523,6 +2568,11 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Moves this iterator to the prev UTF-8 Rune
+		 *
+		 * @return     This iterator before the move
+		 */
 		String_Iterator
 		operator--(int)
 		{
@@ -2533,18 +2583,33 @@ namespace cpprelude
 			return result;
 		}
 
+		/**
+		 * @param[in]  other  The other iterator to compare to
+		 *
+		 * @return     Whether the two iterators are equal
+		 */
 		bool
 		operator==(const String_Iterator& other) const
 		{
 			return ptr == other.ptr;
 		}
 
+		/**
+		 * @param[in]  other  The other iterator to compare to
+		 *
+		 * @return     Whether the two iterators are not equal
+		 */
 		bool
 		operator!=(const String_Iterator& other) const
 		{
 			return ptr != other.ptr;
 		}
 
+		/**
+		 * @brief      Dereferences the iterator and extracts the underlying UTF-8 rune
+		 *
+		 * @return     The underlying UTF-8 rune
+		 */
 		Rune
 		operator*() const
 		{
@@ -2566,31 +2631,75 @@ namespace cpprelude
 		}
 	};
 
+	/**
+	 * @brief      A UTF-8 string range
+	 */
 	struct String_Range
 	{
+		/**
+		 * Data type of the string range
+		 */
 		using Data_Type = Rune;
+
+		/**
+		 * Range Type of the string range
+		 */
 		using Range_Type = String_Range;
+
+		/**
+		 * Const Range Type of the string range
+		 */
 		using Const_Range_Type = String_Range;
+
+		/**
+		 * Iterator type of the string range
+		 */
 		using iterator = String_Iterator;
+
+		/**
+		 * Const Iterator type of the string range
+		 */
 		using const_iterator = String_Iterator;
 
+		/**
+		 * Underlying bytes slice
+		 */
 		Slice<const byte> bytes;
 		mutable usize _runes_count;
 
+		/**
+		 * Creates an empty string range
+		 */
 		String_Range()
 			:_runes_count(0)
 		{}
 
+		/**
+		 * @brief      Creates a string range of the provided byte slice
+		 *
+		 * @param[in]  str_range  The string bytes range
+		 */
 		String_Range(const Slice<const byte>& str_range)
 			:bytes(str_range),
 			 _runes_count(-1)
 		{}
 
+		/**
+		 * @brief      Creates a string range of the provided byte slice
+		 *
+		 * @param[in]  str_range  The string bytes range
+		 * @param[in]  runes_count  The count of runes in the UTF-8 string
+		 */
 		String_Range(const Slice<const byte>& str_range, usize runes_count)
 			:bytes(str_range),
 			 _runes_count(runes_count)
 		{}
 
+		/**
+		 * @brief      Creates a string range of the provided C string
+		 *
+		 * @param[in]  str   The C string
+		 */
 		String_Range(const char* str)
 		{
 			bytes.ptr = (byte*)str;
@@ -2598,29 +2707,51 @@ namespace cpprelude
 			_runes_count = -1;
 		}
 
+		/**
+		 * @brief      Creates a string range of the provided C string
+		 *
+		 * @param[in]  str   The C string
+		 * @param[in]  str_size  The size of the C string
+		 */
 		String_Range(const char* str, usize str_size)
 			:bytes(str, str_size),
 			 _runes_count(-1)
 		{}
 
+		/**
+		 * @param[in]  other  The other string range to compare to
+		 *
+		 * @return     Whether the two ranges are equal or not
+		 */
 		bool
 		operator==(const Range_Type& other) const
 		{
 			return bytes == other.bytes;
 		}
 
+		/**
+		 * @param[in]  other  The other string range to compare to
+		 *
+		 * @return     Whether the two ranges are not equal
+		 */
 		bool
 		operator!=(const Range_Type& other) const
 		{
 			return !operator==(other);
 		}
 
+		/**
+		 * @return     Whether the string range is empty or not
+		 */
 		bool
 		empty() const
 		{
 			return bytes.empty();
 		}
 
+		/**
+		 * @return     Count of runes in the string range
+		 */
 		usize
 		count() const
 		{
@@ -2629,6 +2760,9 @@ namespace cpprelude
 			return _runes_count;
 		}
 
+		/**
+		 * @return     The first rune of the string range
+		 */
 		Rune
 		front() const
 		{
@@ -2646,6 +2780,9 @@ namespace cpprelude
 			return rune;
 		}
 
+		/**
+		 * @brief      Pops the front rune of this range
+		 */
 		void
 		pop_front()
 		{
@@ -2655,24 +2792,41 @@ namespace cpprelude
 			--_runes_count;
 		}
 
+		/**
+		 * @return     A Raw pointer to the underlying bytes
+		 */
 		const byte*
 		data() const
 		{
 			return bytes.ptr;
 		}
 
+		/**
+		 * @return     The size of the underlying bytes
+		 */
 		usize
 		size() const
 		{
 			return bytes.size;
 		}
 
+		/**
+		 * @return     A Const Range of entire underlying string range
+		 */
 		Const_Range_Type
 		all() const
 		{
 			return *this;
 		}
 
+		/**
+		 * @brief      Const Range of a subset of the underlying memory block
+		 *
+		 * @param[in]  start  The start index of the range subset
+		 * @param[in]  end    The end index of the range subset
+		 *
+		 * @return     A Const Range of values with the specified start and end
+		 */
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
@@ -2682,6 +2836,14 @@ namespace cpprelude
 			return Const_Range_Type(bytes.range(start_bytes_offset, end_bytes_offset), end - start);
 		}
 
+		/**
+		 * @brief      Const Range of a subset of the underying memory block
+		 *
+		 * @param[in]  start  The start iterator of the range subset
+		 * @param[in]  end    The end iterator of the range subset
+		 *
+		 * @return     A Const Range of values with the specified start and end
+		 */
 		Const_Range_Type
 		range(const_iterator start, const_iterator end_it) const
 		{
@@ -2743,34 +2905,65 @@ namespace cpprelude
 		}
 	};
 
+	/**
+	 * @brief      Const string string literal
+	 *
+	 * @param[in]  str        The C string
+	 * @param[in]  str_count  The string size
+	 *
+	 * @return     A String Range
+	 */
 	inline static String_Range
 	operator""_const_str(const char* str, usize str_count)
 	{
 		return String_Range(str, str_count);
 	}
 
-
+	/**
+	 * @brief      A Hash Table Iterator
+	 *
+	 * @tparam     T       Type of the values in the hash table
+	 * @tparam     TFlags  Type of flags in the hash table
+	 */
 	template<typename T, typename TFlags>
 	struct Hash_Iterator
 	{
 		using Data_Type = T;
 
+		/**
+		 * Ptr to the underlying hash table values
+		 */
 		T* ptr;
 		const TFlags* _flag;
 		usize _capacity;
 
+		/**
+		 * Creates an invalid hash table iterator
+		 */
 		Hash_Iterator()
 			:ptr(nullptr),
 			 _flag(nullptr),
 			 _capacity(0)
 		{}
 
+		/**
+		 * @brief      Creates a hash table iterator
+		 *
+		 * @param      value_ptr  The value pointer
+		 * @param[in]  flag_ptr   The flag pointer
+		 * @param[in]  cap        The capacity of the hash table
+		 */
 		Hash_Iterator(T* value_ptr, const TFlags* flag_ptr, usize cap)
 			:ptr(value_ptr),
 			 _flag(flag_ptr),
 			 _capacity(cap)
 		{}
 
+		/**
+		 * @brief      Moves the iterator to the next hash table value
+		 *
+		 * @return     This hash table iterator by reference
+		 */
 		Hash_Iterator&
 		operator++()
 		{
@@ -2787,6 +2980,11 @@ namespace cpprelude
 			return *this;
 		}
 
+		/**
+		 * @brief      Moves the iterator to the next hash table value
+		 *
+		 * @return     The hash table iterator before moving
+		 */
 		Hash_Iterator
 		operator++(int)
 		{
@@ -2804,18 +3002,31 @@ namespace cpprelude
 			return result;
 		}
 
+		/**
+		 * @param[in]  other  The other hash table iterator
+		 *
+		 * @return     Whether the two iterators are equal
+		 */
 		bool
 		operator==(const Hash_Iterator& other) const
 		{
 			return ptr == other.ptr && _flag == other._flag;
 		}
 
+		/**
+		 * @param[in]  other  The other hash table iterator
+		 *
+		 * @return     Whether the two iterators are not equal
+		 */
 		bool
 		operator!=(const Hash_Iterator& other) const
 		{
 			return !operator==(other);
 		}
 
+		/**
+		 * @return     The underlying value by reference
+		 */
 		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
 		Data_Type&
 		operator*()
@@ -2823,12 +3034,18 @@ namespace cpprelude
 			return *ptr;
 		}
 
+		/**
+		 * @return     The underlying value by const reference
+		 */
 		const Data_Type&
 		operator*() const
 		{
 			return *ptr;
 		}
 
+		/**
+		 * @return     A Pointer to the underlying value 
+		 */
 		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
 		Data_Type*
 		operator->()
@@ -2836,6 +3053,9 @@ namespace cpprelude
 			return ptr;
 		}
 
+		/**
+		 * @return     A Const pointer to the underlying value 
+		 */
 		const Data_Type*
 		operator->() const
 		{
@@ -2843,43 +3063,93 @@ namespace cpprelude
 		}
 	};
 
+	/**
+	 * @brief      A Hash table range
+	 *
+	 * @tparam     T       Type of the hash table values
+	 * @tparam     TFlags  Type of the hash table flags
+	 */
 	template<typename T, typename TFlags>
 	struct Hash_Range
 	{
+		/**
+		 * Data type of the hash range
+		 */
 		using Data_Type = T;
+
+		/**
+		 * Range type of the hash range
+		 */
 		using Range_Type = Hash_Range<T, TFlags>;
+
+		/**
+		 * Const Range Type of the hash range
+		 */
 		using Const_Range_Type = Hash_Range<const T, TFlags>;
+
+		/**
+		 * Iterator type of the hash range
+		 */
 		using iterator = Hash_Iterator<T, TFlags>;
+
+		/**
+		 * Const Iterator type of the hash range
+		 */
 		using const_iterator = Hash_Iterator<const T, TFlags>;
 
 		iterator _begin;
 		iterator _end;
 
+		/**
+		 * Creates an empty hash range
+		 */
 		Hash_Range()
 		{}
 
+		/**
+		 * @brief      Creates a hash range
+		 *
+		 * @param[in]  begin_it  The begin iterator
+		 * @param[in]  end_it    The end iterator
+		 */
 		Hash_Range(const iterator& begin_it, const iterator& end_it)
 			:_begin(begin_it), _end(end_it)
 		{}
 
+		/**
+		 * @param[in]  other  The other hash range
+		 *
+		 * @return     Whether the two ranges are equal
+		 */
 		bool
 		operator==(const Hash_Range& other) const
 		{
 			return _begin == other._begin && _end == other._end;
 		}
 
+		/**
+		 * @param[in]  other  The other hash range
+		 *
+		 * @return     Whether the two ranges are not equal
+		 */
 		bool
 		operator!=(const Hash_Range& other) const
 		{
 			return !operator==(other);
 		}
 
+		/**
+		 * @return     Whether the range is empty or not
+		 */
 		bool
 		empty() const
 		{
 			return _begin == _end;
 		}
 
+		/**
+		 * @return     The front value of the hash range by reference
+		 */
 		template<typename TCond = T, typename = typename std::enable_if<!std::is_const<TCond>::value>::type>
 		Data_Type&
 		front()
@@ -2887,30 +3157,50 @@ namespace cpprelude
 			return *_begin;
 		}
 
+		/**
+		 * @return     The front value of the hash range by const reference
+		 */
 		const Data_Type&
 		front() const
 		{
 			return *_begin;
 		}
 
+		/**
+		 * @brief      Pops a value of the front of the hash range
+		 */
 		void
 		pop_front()
 		{
 			++_begin;
 		}
 
+		/**
+		 * @return     A Range of entire hash range
+		 */
 		Range_Type
 		all()
 		{
 			return *this;
 		}
 
+		/**
+		 * @return     A Const Range of entire hash range
+		 */
 		Const_Range_Type
 		all() const
 		{
 			return Const_Range_Type(_begin, _end);
 		}
 
+		/**
+		 * @brief      Range of a subset of the entire hash range
+		 *
+		 * @param[in]  start  The start index of the range subset
+		 * @param[in]  end    The end index of the range subset
+		 *
+		 * @return     A Range of values with the specified start and end
+		 */
 		Range_Type
 		range(usize start, usize end_count)
 		{
@@ -2924,6 +3214,14 @@ namespace cpprelude
 			return Range_Type(it, end_it);
 		}
 
+		/**
+		 * @brief      Const Range of a subset of the entire hash range
+		 *
+		 * @param[in]  start  The start index of the range subset
+		 * @param[in]  end    The end index of the range subset
+		 *
+		 * @return     A Const Range of values with the specified start and end
+		 */
 		Const_Range_Type
 		range(usize start, usize end_count) const
 		{
@@ -2937,12 +3235,28 @@ namespace cpprelude
 			return Const_Range_Type(it, end_it);
 		}
 
+		/**
+		 * @brief      Range of a subset of the enire hash range
+		 *
+		 * @param[in]  start  The start iterator of the range subset
+		 * @param[in]  end    The end iterator of the range subset
+		 *
+		 * @return     A Range of values with the specified start and end
+		 */
 		Range_Type
 		range(iterator start, iterator end_it)
 		{
 			return Range_Type(start, end_it);
 		}
 
+		/**
+		 * @brief      Const Range of a subset of the enire hash range
+		 *
+		 * @param[in]  start  The start iterator of the range subset
+		 * @param[in]  end    The end iterator of the range subset
+		 *
+		 * @return     A Const Range of values with the specified start and end
+		 */
 		Const_Range_Type
 		range(const_iterator start, const_iterator end_it) const
 		{

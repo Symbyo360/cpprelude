@@ -46,6 +46,7 @@ namespace cpprelude
 		 * Data type of the single linked list
 		 */
 		using Data_Type = T;
+
 		/**
 		 * Node Type of the single linked list
 		 */
@@ -70,9 +71,6 @@ namespace cpprelude
 		 */
 		using const_iterator = typename Range_Type::const_iterator;
 
-		/**
-		 * Memory context used by the container
-		 */
 		Memory_Context mem_context;
 		Node_Type* _head;
 		usize _count;
@@ -537,12 +535,24 @@ namespace cpprelude
 			return Const_Range_Type(ptr, end_it);
 		}
 
+		/**
+		 * @param[in]  start   The start iterator of the range
+		 * @param[in]  end_it  The end iterator of the range
+		 *
+		 * @return     Range viewing the specified values between the iterators [start, end)
+		 */
 		Range_Type
 		range(iterator start, iterator end_it)
 		{
 			return Range_Type(start, end_it);
 		}
 
+		/**
+		 * @param[in]  start   The start iterator of the range
+		 * @param[in]  end_it  The end iterator of the range
+		 *
+		 * @return     Const range viewing the specified values between the iterators [start, end)
+		 */
 		Const_Range_Type
 		range(const_iterator start, const_iterator end_it) const
 		{
