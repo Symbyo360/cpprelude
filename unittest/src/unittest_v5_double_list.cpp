@@ -1,9 +1,9 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Double_List.h>
+#include <cpprelude/Double_List.h>
 
 using namespace cpprelude;
 
-TEST_CASE("double_list v5", "[double_list]")
+TEST_CASE("double_list", "[double_list]")
 {
 	SECTION("Case 01")
 	{

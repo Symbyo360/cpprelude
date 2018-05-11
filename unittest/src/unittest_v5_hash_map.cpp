@@ -1,10 +1,10 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Hash_Map.h>
-#include <cpprelude/v5/String.h>
+#include <cpprelude/Hash_Map.h>
+#include <cpprelude/String.h>
 
 using namespace cpprelude;
 
-TEST_CASE("Hash_Map v5", "[Hash_Map]")
+TEST_CASE("Hash_Map", "[Hash_Map]")
 {
 	SECTION("Case 01")
 	{

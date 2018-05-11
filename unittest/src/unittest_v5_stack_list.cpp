@@ -1,9 +1,9 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Stack_List.h>
+#include <cpprelude/Stack_List.h>
 
 using namespace cpprelude;
 
-TEST_CASE("stack_list v5", "[stack_list]")
+TEST_CASE("stack_list", "[stack_list]")
 {
 	SECTION("Case 01")
 	{

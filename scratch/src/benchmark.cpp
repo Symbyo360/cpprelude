@@ -1,44 +1,43 @@
 #include "benchmark.h"
 
-#include <cpprelude/v5/Dynamic_Array.h>
+#include <cpprelude/Dynamic_Array.h>
 #include <vector>
 
 #include <forward_list>
-#include <cpprelude/v5/Single_List.h>
+#include <cpprelude/Single_List.h>
 
 #include <list>
-#include <cpprelude/v5/Double_List.h>
+#include <cpprelude/Double_List.h>
 
-#include <cpprelude/v5/Stack_Array.h>
-#include <cpprelude/v5/Stack_List.h>
+#include <cpprelude/Stack_Array.h>
+#include <cpprelude/Stack_List.h>
 #include <stack>
 
-#include <cpprelude/v5/Ring_Array.h>
-#include <cpprelude/v5/Queue_List.h>
-#include <cpprelude/v5/Priority_Queue.h>
+#include <cpprelude/Ring_Array.h>
+#include <cpprelude/Queue_List.h>
+#include <cpprelude/Priority_Queue.h>
 #include <queue>
 
-#include <cpprelude/v5/Algorithms.h>
-#include <cpprelude/algorithm.h>
+#include <cpprelude/Algorithms.h>
 #include <algorithm>
 
-#include <cpprelude/v5/Tree_Map.h>
+#include <cpprelude/Tree_Map.h>
 #include <map>
 
-#include <cpprelude/v5/String.h>
+#include <cpprelude/String.h>
 #include <string>
 
-#include <cpprelude/v5/Hash_Map.h>
+#include <cpprelude/Hash_Map.h>
 #include <unordered_set>
 #include <unordered_map>
 
-#include <cpprelude/v5/IO.h>
+#include <cpprelude/IO.h>
 
-#include <cpprelude/v5/Panic.h>
-#include <cpprelude/v5/Memory_Stream.h>
-#include <cpprelude/v5/Buffered_Stream.h>
-#include <cpprelude/v5/File.h>
-#include <cpprelude/v5/Benchmark.h>
+#include <cpprelude/Panic.h>
+#include <cpprelude/Memory_Stream.h>
+#include <cpprelude/Buffered_Stream.h>
+#include <cpprelude/File.h>
+#include <cpprelude/Benchmark.h>
 
 using namespace cpprelude;
 

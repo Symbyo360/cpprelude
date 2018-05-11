@@ -1,10 +1,9 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Ring_Array.h>
-#include <cpprelude/fmt.h>
+#include <cpprelude/Ring_Array.h>
 
 using namespace cpprelude;
 
-TEST_CASE("ring_array v5", "[ring_array]")
+TEST_CASE("ring_array", "[ring_array]")
 {
 	SECTION("Case 01")
 	{

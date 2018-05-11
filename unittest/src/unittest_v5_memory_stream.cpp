@@ -1,12 +1,12 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Memory_Stream.h>
-#include <cpprelude/v5/Buffered_Stream.h>
-#include <cpprelude/v5/String.h>
-#include <cpprelude/v5/IO.h>
+#include <cpprelude/Memory_Stream.h>
+#include <cpprelude/Buffered_Stream.h>
+#include <cpprelude/String.h>
+#include <cpprelude/IO.h>
 
 using namespace cpprelude;
 
-TEST_CASE("Memory_Stream v5", "[Memory_Stream]")
+TEST_CASE("Memory_Stream", "[Memory_Stream]")
 {
 	SECTION("Case 01")
 	{

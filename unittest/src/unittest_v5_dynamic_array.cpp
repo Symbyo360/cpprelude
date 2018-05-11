@@ -1,9 +1,9 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Dynamic_Array.h>
+#include <cpprelude/Dynamic_Array.h>
 
 using namespace cpprelude;
 
-TEST_CASE("dynamic_array v5", "[dynamic_array]")
+TEST_CASE("dynamic_array", "[dynamic_array]")
 {
 	SECTION("Case 01")
 	{

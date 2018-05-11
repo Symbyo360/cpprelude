@@ -1,8 +1,8 @@
 #include <catch.hpp>
-#include <cpprelude/v5/String.h>
+#include <cpprelude/String.h>
 using namespace cpprelude;
 
-TEST_CASE("string v5", "[string]")
+TEST_CASE("string", "[string]")
 {
 	SECTION("Case 01")
 	{

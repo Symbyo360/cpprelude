@@ -1,24 +1,13 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
-  <!-- Allocators -->
-  <Type Name="cpprelude::arena_t">
-    <DisplayString>arena allocator</DisplayString>
-    <Expand>
-      <Item Name="memory">_memory</Item>
-      <Item Name="allocation head">_allocation_head</Item>
-      <Item Name="free memory">_memory.size - _allocation_head</Item>
-      <Item Name="uses virtual memory">_uses_virtual_memory</Item>
-    </Expand>
-  </Type>
-
   <!-- Memory -->
-  <Type Name="cpprelude::slice&lt;*&gt;">
+  <Type Name="cpprelude::Slice&lt;*&gt;">
     <DisplayString Condition="size == 0">empty</DisplayString>
     <DisplayString Condition="size != 0">{{ count={size/sizeof($T1)} }}</DisplayString>
   </Type>
 
-  <Type Name="cpprelude::memory_context_t">
-    <DisplayString>memory_context</DisplayString>
+  <Type Name="cpprelude::Allocator_Trait">
+    <DisplayString>Allocator_Trait</DisplayString>
     <Expand>
       <Item Name="alloc">_alloc</Item>
       <Item Name="realloc">_realloc</Item>
@@ -26,174 +15,151 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::memory_watcher_t">
-    <DisplayString Condition="name == nullptr">memory_watcher</DisplayString>
-    <DisplayString Condition="name != nullptr">{{ {name} }}</DisplayString>
+  <Type Name="cpprelude::Memory_Context">
+    <DisplayString>Memory_Context</DisplayString>
     <Expand>
-      <Item Name="alive_allocations" ExcludeView="simple" Condition="_b_alive_allocations == 0">_a_alive_allocations</Item>
-      <Item Name="alive_allocations" ExcludeView="simple" Condition="_b_alive_allocations != 0">_b_alive_allocations - _a_alive_allocations</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
+      <Item Name="[Flags]" ExcludeView="simple">_flags</Item>
     </Expand>
   </Type>
 
 
   <!-- Types -->
-  <Type Name="cpprelude::string">
-    <DisplayString Condition="_data.size == 0">empty</DisplayString>
-    <DisplayString Condition="_data.size != 0" Encoding="Utf8">{_data.ptr,[_data.size - 1]s8}</DisplayString>
+  <Type Name="cpprelude::String">
+    <DisplayString Condition="_bytes.size == 0">empty</DisplayString>
+    <DisplayString Condition="_bytes.size != 0" Encoding="Utf8">{_bytes.ptr,[_bytes_size - 1]s8}</DisplayString>
   </Type>
 
-  <Type Name="cpprelude::Slice&lt;*&gt;">
+  <Type Name="cpprelude::Slice&lt;byte&gt;">
     <DisplayString Condition="size == 0">empty</DisplayString>
     <DisplayString Condition="size != 0" Encoding="Utf8">{ptr,[size]s8}</DisplayString>
   </Type>
 
-  <Type Name="cpprelude::rune">
+  <Type Name="cpprelude::Rune">
     <DisplayString Encoding="Utf8">{data,c}</DisplayString>
   </Type>
 
 
   <!-- Containers -->
-  <Type Name="cpprelude::dynamic_array&lt;*&gt;">
-    <Intrinsic Name="capacity" Expression="_data_block.size / sizeof($T1)"/>
+  <Type Name="cpprelude::Dynamic_Array&lt;*&gt;">
+    <Intrinsic Name="capacity" Expression="_data.size / sizeof($T1)"/>
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
       <Item Name="[capacity]" ExcludeView="simple">capacity()</Item>
-      <Item Name="[memory_context]" ExcludeView="simple">_context</Item>
+      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
       <ArrayItems>
         <Size>_count</Size>
-        <ValuePointer>_data_block.ptr</ValuePointer>
+        <ValuePointer>_data.ptr</ValuePointer>
       </ArrayItems>
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::slinked_list&lt;*&gt;">
+  <Type Name="cpprelude::Single_List&lt;*&gt;">
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[memory_context]" ExcludeView="simple">_context</Item>
+      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
       <LinkedListItems>
         <HeadPointer>_head</HeadPointer>
         <NextPointer>next</NextPointer>
-        <ValueNode>data</ValueNode>
+        <ValueNode>value</ValueNode>
       </LinkedListItems>
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::dlinked_list&lt;*&gt;">
+  <Type Name="cpprelude::Double_List&lt;*&gt;">
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[memory_context]" ExcludeView="simple">_context</Item>
+      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
       <LinkedListItems>
         <Size>_count</Size>
         <HeadPointer>_head->next</HeadPointer>
         <NextPointer>next</NextPointer>
-        <ValueNode>data</ValueNode>
+        <ValueNode>value</ValueNode>
       </LinkedListItems>
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::bucket_array&lt;*&gt;">
-    <Intrinsic Name="capacity" Expression="_bucket_count * $T2"/>
-    <DisplayString Condition="_count == 0">empty</DisplayString>
-    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
+  <Type Name="cpprelude::Stack_Array&lt;*&gt;">
+    <DisplayString Condition="_array._count == 0">empty</DisplayString>
+    <DisplayString Condition="_array._count != 0">{{ count={_array._count} }}</DisplayString>
     <Expand>
-      <Item Name="[capacity]" ExcludeView="simple">capacity()</Item>
-      <Item Name="[memory_context]" ExcludeView="simple">_context</Item>
-      <IndexListItems>
-        <Size>_count</Size>
-        <ValueNode>_begin._bucket_it[$i / $T2][$i % $T2]</ValueNode>
-      </IndexListItems>
-    </Expand>
-  </Type>
-
-  <Type Name="cpprelude::stack_array&lt;*&gt;">
-    <DisplayString Condition="_count == 0">empty</DisplayString>
-    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
-    <Expand>
-      <Item Name="[dynamic_array]" ExcludeView="simple">_array</Item>
-      <Item Name="[memory_context]" ExcludeView="simple">_array._context</Item>
-      <Item Name="count">_count</Item>
-    </Expand>
-  </Type>
-
-  <Type Name="cpprelude::stack_list&lt;*&gt;">
-    <DisplayString Condition="_list._count == 0">empty</DisplayString>
-    <DisplayString Condition="_list._count != 0">{{ count={_list._count} }}</DisplayString>
-    <Expand>
-      <Item Name="[slinked_list]" ExcludeView="simple">_list</Item>
-      <Item Name="[memory_context]" ExcludeView="simple">_list._context</Item>
-      <Item Name="count">_count</Item>
-    </Expand>
-  </Type>
-
-  <Type Name="cpprelude::queue_list&lt;*&gt;">
-    <DisplayString Condition="_list._count == 0">empty</DisplayString>
-    <DisplayString Condition="_list._count != 0">{{ count={_list._count} }}</DisplayString>
-    <Expand>
-      <Item Name="[dlinked_list]" ExcludeView="simple">_list</Item>
-      <Item Name="[memory_context]" ExcludeView="simple">_list._context</Item>
-      <Item Name="count">_count</Item>
-    </Expand>
-  </Type>
-
-  <Type Name="cpprelude::queue_array&lt;*&gt;">
-    <DisplayString Condition="_count == 0">empty</DisplayString>
-    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
-    <Expand>
-      <Item Name="[bucket_array]" ExcludeView="simple">_array</Item>
-      <Item Name="[memory_context]" ExcludeView="simple">_array._context</Item>
-      <Item Name="count">_count</Item>
-    </Expand>
-  </Type>
-
-  <Type Name="cpprelude::priority_queue&lt;*&gt;">
-    <DisplayString Condition="_count == 0">empty</DisplayString>
-    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
-    <Expand>
-      <Item Name="[dynamic_array]" ExcludeView="simple">_array</Item>
-      <Item Name="[memory_context]" ExcludeView="simple">_array._context</Item>
-      <Item Name="count">_count</Item>
+      <Item Name="[Dynamic_Array]" ExcludeView="simple">_array</Item>
+      <Item Name="count">_array._count</Item>
       <ArrayItems>
-        <Size>_count</Size>
-        <ValuePointer>_array._data_block.ptr</ValuePointer>
+        <Size>_array._count</Size>
+        <ValuePointer>_array._data.ptr</ValuePointer>
       </ArrayItems>
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::hash_array&lt;*&gt;">
-	<AlternativeType Name="cpprelude::hash_set&lt;*&gt;" />
-    <DisplayString Condition="_count == 0">empty</DisplayString>
-    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
+  <Type Name="cpprelude::Stack_List&lt;*&gt;">
+    <DisplayString Condition="_list._count == 0">empty</DisplayString>
+    <DisplayString Condition="_list._count != 0">{{ count={_list._count} }}</DisplayString>
     <Expand>
-      <Item Name="[memory_context]" ExcludeView="simple">_keys._context</Item>
-      <CustomListItems>
-        <Variable Name="i" InitialValue="0"/>
-        <Loop>
-          <If Condition="i >= _keys._count">
-            <Break/>
-          </If>
-          <If Condition="i == 0">
-            <Item Name="Key">"Value",sb</Item>
-          </If>
-          <If Condition="_flags[i] != 0">
-            <Item Name="{_keys[i]}">_values[i]</Item>
-          </If>
-          <Exec>i = i + 1</Exec>
-        </Loop>
-      </CustomListItems>
+      <Item Name="[Single_List]" ExcludeView="simple">_list</Item>
+      <Item Name="[Memory_Context]" ExcludeView="simple">_list.mem_context</Item>
+      <Item Name="count">_list._count</Item>
+      <LinkedListItems>
+        <HeadPointer>_list._head</HeadPointer>
+        <NextPointer>next</NextPointer>
+        <ValueNode>value</ValueNode>
+      </LinkedListItems>
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::red_black_tree&lt;*&gt;">
-    <AlternativeType Name="cpprelude::red_black_map&lt;*&gt;" />
-    <AlternativeType Name="cpprelude::tree_map&lt;*&gt;" />
-    <AlternativeType Name="cpprelude::tree_set&lt;*&gt;" />
+  <Type Name="cpprelude::Ring_Array&lt;*&gt;">
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[memory_context]" ExcludeView="simple">_context</Item>
+      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <Item Name="count">_count</Item>
+      <IndexListItems>
+        <Size>_count</Size>
+        <ValueNode>_data.ptr[(_tail_index + 1 + $i) % (_data.size / sizeof($T1))]</ValueNode>
+      </IndexListItems>
+    </Expand>
+  </Type>
+
+  <Type Name="cpprelude::Queue_List&lt;*&gt;">
+    <DisplayString Condition="_list._count == 0">empty</DisplayString>
+    <DisplayString Condition="_list._count != 0">{{ count={_list._count} }}</DisplayString>
+    <Expand>
+      <Item Name="[Double_List]" ExcludeView="simple">_list</Item>
+      <Item Name="[Memory_Context]" ExcludeView="simple">_list.mem_context</Item>
+      <Item Name="count">_list._count</Item>
+      <LinkedListItems>
+        <HeadPointer>_list._head->next</HeadPointer>
+        <NextPointer>next</NextPointer>
+        <ValueNode>value</ValueNode>
+      </LinkedListItems>
+    </Expand>
+  </Type>
+
+  <Type Name="cpprelude::Priority_Queue&lt;*&gt;">
+    <DisplayString Condition="_count == 0">empty</DisplayString>
+    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
+    <Expand>
+      <Item Name="[Dynamic_Array]" ExcludeView="simple">_array</Item>
+      <Item Name="[Memory_Context]" ExcludeView="simple">_array.mem_context</Item>
+      <Item Name="count">_count</Item>
+      <ArrayItems>
+        <Size>_count</Size>
+        <ValuePointer>_array._data.ptr</ValuePointer>
+      </ArrayItems>
+    </Expand>
+  </Type>
+
+  <Type Name="cpprelude::Red_Black_Tree&lt;*&gt;">
+    <AlternativeType Name="cpprelude::Red_Black_Map&lt;*&gt;" />
+    <AlternativeType Name="cpprelude::Tree_Map&lt;*&gt;" />
+    <AlternativeType Name="cpprelude::Tree_Set&lt;*&gt;" />
+    <DisplayString Condition="_count == 0">empty</DisplayString>
+    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
+    <Expand>
+      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
       <TreeItems>
         <Size>_count</Size>
         <HeadPointer>_root</HeadPointer>
@@ -203,40 +169,48 @@
       </TreeItems>
     </Expand>
   </Type>
-  <!-- By Nora-->
-  <Type Name="cpprelude::quick_find">
-	
-	<DisplayString Condition="_nodes._count == 0"> empty </DisplayString>
-	<DisplayString Condition="_nodes._count != 0">{{ count = {_nodes._count} }}</DisplayString>
-	<Expand>
-      <CustomListItems>
-        <Variable Name="i" InitialValue="0"/>
-        <Loop>
-          <If Condition="i >= _nodes._count">
-            <Break/>
-          </If>
-            <Item Name="group[{i}]"> _nodes[i]</Item>
-          <Exec>i = i + 1</Exec>
-        </Loop>
-      </CustomListItems>
-	</Expand>
-  </Type>
-  
-  <Type Name="cpprelude::quick_union">
-	<DisplayString Condition="_nodes._count == 0"> empty </DisplayString>
-	<DisplayString Condition="_nodes._count != 0">{{ count = {_nodes._count} }} </DisplayString>
+
+  <Type Name="cpprelude::Hash_Set&lt;*&gt;">
+    <DisplayString Condition="_count == 0">empty</DisplayString>
+    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
+      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
       <CustomListItems>
         <Variable Name="i" InitialValue="0"/>
         <Loop>
-          <If Condition="i >= _nodes._count">
+          <If Condition="i >= (_values.size / sizeof($T1))">
             <Break/>
           </If>
-            <Item Name="group[{i}]"> _nodes[i]</Item>
+          <If Condition="_flags.ptr[i] == 1">
+            <Item>_values.ptr[i]</Item>
+          </If>
           <Exec>i = i + 1</Exec>
         </Loop>
       </CustomListItems>
-	</Expand>
+    </Expand>
+  </Type>
+
+  <Type Name="cpprelude::Hash_Map&lt;*&gt;">
+    <DisplayString Condition="_count == 0">empty</DisplayString>
+    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
+    <Expand>
+      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <CustomListItems>
+        <Variable Name="i" InitialValue="0"/>
+        <Loop>
+          <If Condition="i >= (_values.size / sizeof($T1))">
+            <Break/>
+          </If>
+          <If Condition="i == 0">
+            <Item Name="Key">"Value",sb</Item>
+          </If>
+          <If Condition="_flags.ptr[i] == 1">
+            <Item Name="{_values.ptr[i].key}">_values.ptr[i].value</Item>
+          </If>
+          <Exec>i = i + 1</Exec>
+        </Loop>
+      </CustomListItems>
+    </Expand>
   </Type>
   
 </AutoVisualizer>

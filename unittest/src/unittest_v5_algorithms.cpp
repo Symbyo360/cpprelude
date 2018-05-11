@@ -1,10 +1,10 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Algorithms.h>
-#include <cpprelude/v5/Dynamic_Array.h>
+#include <cpprelude/Algorithms.h>
+#include <cpprelude/Dynamic_Array.h>
 
 using namespace cpprelude;
 
-TEST_CASE("algorithms v5", "[algorithms]")
+TEST_CASE("algorithms", "[algorithms]")
 {
 	SECTION("Case 01")
 	{

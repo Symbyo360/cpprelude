@@ -1,9 +1,9 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Stack_Array.h>
+#include <cpprelude/Stack_Array.h>
 
 using namespace cpprelude;
 
-TEST_CASE("stack_array v5", "[stack_array]")
+TEST_CASE("stack_array", "[stack_array]")
 {
 	SECTION("Case 01")
 	{

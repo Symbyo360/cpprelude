@@ -1,9 +1,9 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Single_List.h>
+#include <cpprelude/Single_List.h>
 
 using namespace cpprelude;
 
-TEST_CASE("single_list v5", "[single_list]")
+TEST_CASE("single_list", "[single_list]")
 {
 	SECTION("Case 01")
 	{

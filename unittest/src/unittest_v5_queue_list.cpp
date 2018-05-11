@@ -1,10 +1,10 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Queue_List.h>
+#include <cpprelude/Queue_List.h>
 
 using namespace cpprelude;
 
 
-TEST_CASE("queue_list v5", "[queue_list]")
+TEST_CASE("queue_list", "[queue_list]")
 {
 	SECTION("Case 01")
 	{

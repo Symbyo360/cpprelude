@@ -1,12 +1,12 @@
 #include "catch.hpp"
-#include <cpprelude/v5/Tree_Map.h>
-#include <cpprelude/v5/Dynamic_Array.h>
-#include <cpprelude/v5/Algorithms.h>
-#include <cpprelude/v5/String.h>
+#include <cpprelude/Tree_Map.h>
+#include <cpprelude/Dynamic_Array.h>
+#include <cpprelude/Algorithms.h>
+#include <cpprelude/String.h>
 
 using namespace cpprelude;
 
-TEST_CASE("Tree_Map v5", "[Tree_Map]")
+TEST_CASE("Tree_Map", "[Tree_Map]")
 {
 	SECTION("Case 01")
 	{
