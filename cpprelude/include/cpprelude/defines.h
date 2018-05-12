@@ -13,10 +13,8 @@
 #define MEGABYTES(amount) (KILOBYTES(amount) * 1024ULL)
 #define GIGABYTES(amount) (MEGABYTES(amount) * 1024ULL)
 
-// #define MAX(a, b) a > b ? a : b
-// #define MIN(a, b) a > b ? b : a
 
-namespace cpprelude {
+namespace cppr {
 	//type definitions
 	using ubyte = unsigned char;
 	using byte = char;

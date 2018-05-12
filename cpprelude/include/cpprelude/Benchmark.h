@@ -4,7 +4,7 @@
 #include "cpprelude/Algorithms.h"
 #include <chrono>
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      simple stopwatch to measure benchmark times

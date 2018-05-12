@@ -3,7 +3,7 @@
 #include "cpprelude/defines.h"
 #include "cpprelude/Ranges.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      IO trait. Every stream should implement this trait.

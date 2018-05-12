@@ -5,41 +5,8 @@
 #include "cpprelude/Allocator_Trait.h"
 #include <utility>
 
-namespace cpprelude
+namespace cppr
 {
-	static inline u8
-	_align_forward(const void* address, u8 alignment)
-	{
-		u8 adjustment = alignment -
-			(reinterpret_cast<usize>(address) & static_cast<usize>(alignment - 1));
-
-		//if already aligned then no need to adjust
-		if(adjustment == alignment)
-			return 0;
-		return adjustment;
-	}
-
-	static inline u8
-	_align_header_forward(const void* address, u8 alignment, u8 header_size)
-	{
-		u8 adjustment = _align_forward(address, alignment);
-
-		//if the result adjustment is less than the header then we must make sure we have header_size
-		if(adjustment < header_size)
-		{
-			//compute the remaining size that's not covered with adjustment
-			header_size -= adjustment;
-
-			//increase the adjustment to fit the header
-			adjustment += alignment * (header_size / alignment);
-
-			//realign the adjustment
-			if(header_size % alignment > 0)
-				adjustment += alignment;
-		}
-		return adjustment;
-	}
-
 	/**
 	 * @brief      Memory Context Flags
 	 * 
@@ -76,7 +43,7 @@ namespace cpprelude
 		 * @brief      Allocates the given count of values from the global memory and depending on aligned flag bit it will return an aligned memory
 		 *
 		 * @param[in]  count      The count of values to allocate
-		 * @param[in]  alignment  The alignment of the values
+		 * @param[in]  alignment  The alignment of the values should be powers of two
 		 *
 		 * @tparam     T          The type of the values
 		 *
@@ -149,7 +116,7 @@ namespace cpprelude
 		 * @brief      Allocates and aligns the given count of values from the global memory
 		 *
 		 * @param[in]  count      The count of values to allocate
-		 * @param[in]  alignment  The alignment of the values
+		 * @param[in]  alignment  The alignment of the values should be powers of two
 		 *
 		 * @tparam     T          The type of the values
 		 *
@@ -159,14 +126,18 @@ namespace cpprelude
 		Owner<T>
 		alloc_aligned(usize count = 1, usize alignment = alignof(T))
 		{
-			const usize header_size = sizeof(void*);
-			const usize additional_size = header_size > alignment ? header_size : alignment;
-			void** ptr = (void**)_allocator->template
-							alloc<byte>(sizeof(T) * count + additional_size).ptr;
-			u8 adjustment = _align_header_forward(ptr, alignment, header_size);
-			void** aligned_ptr = ptr + adjustment;
+			usize offset = alignment - 1 + sizeof(void*);
+			usize request_size = sizeof(T) * count + offset;
+			void* ptr = _allocator->template alloc<byte>(request_size).ptr;
+			#ifdef DEBUG
+			{
+				if(_allocator == os->global_memory)
+					os->allocation_size -= request_size;
+			}
+			#endif
+			void** aligned_ptr = (void**)(((usize)(ptr) + offset) &~ (alignment - 1));
 			aligned_ptr[-1] = ptr;
-			return Owner<T>((T*)aligned_ptr, count * sizeof(T));
+			return Owner<T>((T*)aligned_ptr, sizeof(T) * count);
 		}
 
 		/**
@@ -181,8 +152,7 @@ namespace cpprelude
 		free_aligned(Owner<T>& value)
 		{
 			void** ptr = (void**)value.ptr;
-			//we don't care about the size here
-			_allocator->template free<T>(own((T*)ptr[-1]));
+			_allocator->template free<T>(Owner<T>((T*)ptr[-1], 0));
 			value.ptr = nullptr;
 			value.size = 0;
 		}
@@ -199,8 +169,7 @@ namespace cpprelude
 		free_aligned(Owner<T>&& value)
 		{
 			void** ptr = (void**)value.ptr;
-			//we don't care about the size here
-			_allocator->template free<T>(own((T*)ptr[-1]));
+			_allocator->template free<T>(Owner<T>((T*)ptr[-1], 0));
 		}
 
 		/**

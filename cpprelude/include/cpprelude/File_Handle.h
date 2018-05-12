@@ -2,7 +2,7 @@
 
 #include "cpprelude/defines.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      OPEN_MODE enum
@@ -14,7 +14,7 @@ namespace cpprelude
 	 * - **OPEN_OVERWRITE**: opens the file if it exist and overwrite its content. if it doesn't exist it fails.
 	 * - **OPEN_APPEND**: opens the file it it exists and append to its content. if it doesn't exist it fails.
 	 */
-	enum class OPEN_MODE2
+	enum class OPEN_MODE
 	{
 		CREATE_ONLY,
 		CREATE_OVERWRITE,
@@ -31,7 +31,7 @@ namespace cpprelude
 	 * - **WRITE**: only performs writes to the file
 	 * - **READ_WRITE**: performs both reads and writes to the file
 	 */
-	enum class IO_MODE2
+	enum class IO_MODE
 	{
 		READ,
 		WRITE,

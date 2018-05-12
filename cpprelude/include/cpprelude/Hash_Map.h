@@ -7,7 +7,7 @@
 #include "cpprelude/Hash.h"
 #include <cstring>
 
-namespace cpprelude
+namespace cppr
 {
 	namespace internal
 	{

@@ -1,7 +1,7 @@
 #include "cpprelude/Buffered_Stream.h"
 #include "cpprelude/Algorithms.h"
 
-namespace cpprelude
+namespace cppr
 {
 	usize
 	_default_buffered_stream_write(void* _self, const Slice<byte>& data)

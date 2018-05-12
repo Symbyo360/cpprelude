@@ -4,7 +4,7 @@
 #include <cpprelude/String.h>
 #include <cpprelude/IO.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("Memory_Stream", "[Memory_Stream]")
 {

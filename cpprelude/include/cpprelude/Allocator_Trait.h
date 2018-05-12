@@ -3,7 +3,7 @@
 #include "cpprelude/defines.h"
 #include "cpprelude/Owner.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      The Allocator trait

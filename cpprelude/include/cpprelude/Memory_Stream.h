@@ -7,7 +7,7 @@
 #include "cpprelude/IO_Trait.h"
 #include "cpprelude/OS.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      A Memory IO stream implementation

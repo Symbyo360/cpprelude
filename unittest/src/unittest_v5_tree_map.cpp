@@ -4,13 +4,13 @@
 #include <cpprelude/Algorithms.h>
 #include <cpprelude/String.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("Tree_Map", "[Tree_Map]")
 {
 	SECTION("Case 01")
 	{
-		Tree_Map<cpprelude::byte, bool> tree;
+		Tree_Map<cppr::byte, bool> tree;
 		tree.insert('e');
 		CHECK(tree._is_red_black_tree());
 		tree.insert('c');
@@ -70,7 +70,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		};
 		array.inorder_traverse(insert);
 
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 	}
 
@@ -94,7 +94,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		array.inorder_traverse(insert);
 
 		CHECK(arr.count() == 3);
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 	}
 
@@ -118,7 +118,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		array.inorder_traverse(insert);
 
 		CHECK(arr.count() == 3);
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 	}
 
@@ -143,7 +143,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 
 		CHECK(arr.count() == 3);
 
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 	}
 
@@ -167,7 +167,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		array.inorder_traverse(insert);
 
 		CHECK(arr.count() == 3);
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 	}
 
@@ -199,7 +199,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		tree.inorder_traverse(insert);
 
 		CHECK(arr1.count() == 3);
-		CHECK(cpprelude::is_sorted(arr1.all()));
+		CHECK(cppr::is_sorted(arr1.all()));
 
 		CHECK(tree._is_red_black_tree());
 		//search
@@ -228,7 +228,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		tree2.inorder_traverse(insert);
 
 		CHECK(tree2.count() == 2);
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(tree2._is_red_black_tree());
 
 		tree2.insert(4);
@@ -241,7 +241,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 
 		tree.inorder_traverse(insert);
 
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(tree2._is_red_black_tree());
 	}
 
@@ -265,7 +265,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		array.inorder_traverse(insert);
 		CHECK(arr.count() == 3);
 
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 		CHECK(arr.count() == 3);
 		//search
@@ -314,7 +314,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		tree.inorder_traverse(insert);
 		CHECK(arr.count() == 8);
 		CHECK(tree._is_red_black_tree());
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 	}
 
 	//deleting root
@@ -415,7 +415,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		array.inorder_traverse(insert);
 
 		CHECK(arr.count() == 7);
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 	}
 
@@ -454,7 +454,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 
 		array.inorder_traverse(insert);
 		CHECK(arr.count() == count);
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 	}
 
@@ -492,7 +492,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		};
 		array.inorder_traverse(insert);
 		CHECK(arr.count() == count);
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 	}
 
@@ -530,7 +530,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 		};
 		array.inorder_traverse(insert);
 		CHECK(arr.count() == count);
-		CHECK(cpprelude::is_sorted(arr.all()));
+		CHECK(cppr::is_sorted(arr.all()));
 		CHECK(array._is_red_black_tree());
 	}
 

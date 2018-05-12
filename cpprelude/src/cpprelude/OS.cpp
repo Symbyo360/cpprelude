@@ -4,8 +4,6 @@
 #include <stdlib.h>
 
 #if defined(OS_WINDOWS)
-#define UNICODE
-#define _UNICODE
 #include <Windows.h>
 #include <Psapi.h>
 #include <DbgHelp.h>
@@ -26,7 +24,7 @@
 #endif
 
 
-namespace cpprelude
+namespace cppr
 {
 	OS::~OS()
 	{
@@ -143,10 +141,43 @@ namespace cpprelude
 		#endif
 	}
 
+	Owner<byte>
+	OS::virtual_alloc(void* address_hint, usize size)
+	{
+		if(size == 0)
+			return Owner<byte>();
+
+		void* result = nullptr;
+
+		#if defined(OS_WINDOWS)
+			result = VirtualAlloc(address_hint, size, MEM_RESERVE|MEM_COMMIT, PAGE_READWRITE);
+		#elif defined(OS_LINUX)
+			result = mmap(address_hint, size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+		#endif
+
+		return own((byte*)result, size);
+	}
+
+	bool
+	OS::virtual_free(Owner<byte>& data)
+	{
+		#if defined(OS_WINDOWS)
+			return VirtualFree(data.ptr, 0, MEM_RELEASE) != NULL;
+		#elif defined(OS_LINUX)
+			return munmap(data.ptr, data.size) == 0;
+		#endif
+	}
+
+	bool
+	OS::virtual_free(Owner<byte>&& data)
+	{
+		return virtual_free(data);
+	}
+
 	//file stuff
 	Result<File_Handle, OS_ERROR>
 	OS::file_open(const String_Range& filename,
-				  IO_MODE2 io_mode, OPEN_MODE2 open_mode)
+				  IO_MODE io_mode, OPEN_MODE open_mode)
 	{
 		File_Handle handle;
 		OS_ERROR err = OS_ERROR::OK;
@@ -156,15 +187,15 @@ namespace cpprelude
 			DWORD desired_access;
 			switch(io_mode)
 			{
-				case IO_MODE2::READ:
+				case IO_MODE::READ:
 					desired_access = GENERIC_READ;
 					break;
 
-				case IO_MODE2::WRITE:
+				case IO_MODE::WRITE:
 					desired_access = GENERIC_WRITE;
 					break;
 
-				case IO_MODE2::READ_WRITE:
+				case IO_MODE::READ_WRITE:
 				default:
 					desired_access = GENERIC_READ | GENERIC_WRITE;
 					break;
@@ -174,24 +205,24 @@ namespace cpprelude
 			DWORD creation_disposition;
 			switch(open_mode)
 			{
-				case OPEN_MODE2::CREATE_ONLY:
+				case OPEN_MODE::CREATE_ONLY:
 					creation_disposition = CREATE_NEW;
 					break;
 
-				case OPEN_MODE2::OPEN_OVERWRITE:
+				case OPEN_MODE::OPEN_OVERWRITE:
 					creation_disposition = TRUNCATE_EXISTING;
 					break;
 
-				case OPEN_MODE2::OPEN_ONLY:
-				case OPEN_MODE2::OPEN_APPEND:
+				case OPEN_MODE::OPEN_ONLY:
+				case OPEN_MODE::OPEN_APPEND:
 					creation_disposition = OPEN_EXISTING;
 					break;
 
-				case OPEN_MODE2::CREATE_APPEND:
+				case OPEN_MODE::CREATE_APPEND:
 					creation_disposition = OPEN_ALWAYS;
 					break;
 
-				case OPEN_MODE2::CREATE_OVERWRITE:
+				case OPEN_MODE::CREATE_OVERWRITE:
 				default:
 					creation_disposition = CREATE_ALWAYS;
 					break;
@@ -241,8 +272,8 @@ namespace cpprelude
 			}
 
 			//move the cursor to the end of the file
-			if (open_mode == OPEN_MODE2::CREATE_APPEND ||
-				open_mode == OPEN_MODE2::OPEN_APPEND)
+			if (open_mode == OPEN_MODE::CREATE_APPEND ||
+				open_mode == OPEN_MODE::OPEN_APPEND)
 			{
 				SetFilePointer (handle.windows_handle,	//file handle
 								NULL,					//distance to move low part

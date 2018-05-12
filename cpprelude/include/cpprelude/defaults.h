@@ -2,33 +2,7 @@
 
 #include "cpprelude/defines.h"
 
-namespace cpprelude
+namespace cppr
 {
-	template<typename T>
-	struct default_less_than
-	{
-		bool operator()(const T& a, const T& b)
-		{
-			return a < b;
-		}
-
-		bool operator()(const T& a, const T& b) const
-		{
-			return a < b;
-		}
-	};
-
-	template<typename T>
-	struct default_great_than
-	{
-		bool operator()(const T& a, const T& b)
-		{
-			return a > b;
-		}
-
-		bool operator()(const T& a, const T& b) const
-		{
-			return a > b;
-		}
-	};
+	
 }

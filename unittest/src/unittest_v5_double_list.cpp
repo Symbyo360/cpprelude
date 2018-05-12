@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <cpprelude/Double_List.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("double_list", "[double_list]")
 {

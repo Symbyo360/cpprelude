@@ -9,7 +9,7 @@
 #include <limits>
 #include <cstdlib>
 
-namespace cpprelude
+namespace cppr
 {
 	//forward declare the print to error stream functions for panicing purposes
 	template<typename ... TArgs>

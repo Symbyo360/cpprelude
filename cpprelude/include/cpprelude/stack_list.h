@@ -4,7 +4,7 @@
 #include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      A Stack implmentation with a single linked list as the base container

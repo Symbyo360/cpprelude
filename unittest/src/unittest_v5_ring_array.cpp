@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <cpprelude/Ring_Array.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("ring_array", "[ring_array]")
 {

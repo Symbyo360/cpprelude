@@ -4,7 +4,7 @@
 #include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      A Stack implmentation with a dynamic array as the base container

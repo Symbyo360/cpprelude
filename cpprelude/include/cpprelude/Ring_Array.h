@@ -6,7 +6,7 @@
 #include "cpprelude/OS.h"
 #include "cpprelude/Ranges.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * [[markdown]]

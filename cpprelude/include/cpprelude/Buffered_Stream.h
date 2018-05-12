@@ -7,7 +7,7 @@
 #include "cpprelude/OS.h"
 #include "cpprelude/Ranges.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      Buffers an IO_Trait a.k.a. stream

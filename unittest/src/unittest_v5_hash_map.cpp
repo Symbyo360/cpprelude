@@ -2,7 +2,7 @@
 #include <cpprelude/Hash_Map.h>
 #include <cpprelude/String.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("Hash_Map", "[Hash_Map]")
 {

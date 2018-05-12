@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?> 
 <AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
   <!-- Memory -->
-  <Type Name="cpprelude::Slice&lt;*&gt;">
+  <Type Name="cppr::Slice&lt;*&gt;">
     <DisplayString Condition="size == 0">empty</DisplayString>
     <DisplayString Condition="size != 0">{{ count={size/sizeof($T1)} }}</DisplayString>
   </Type>
 
-  <Type Name="cpprelude::Allocator_Trait">
+  <Type Name="cppr::Allocator_Trait">
     <DisplayString>Allocator_Trait</DisplayString>
     <Expand>
       <Item Name="alloc">_alloc</Item>
@@ -15,7 +15,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Memory_Context">
+  <Type Name="cppr::Memory_Context">
     <DisplayString>Memory_Context</DisplayString>
     <Expand>
       <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
@@ -25,23 +25,23 @@
 
 
   <!-- Types -->
-  <Type Name="cpprelude::String">
+  <Type Name="cppr::String">
     <DisplayString Condition="_bytes.size == 0">empty</DisplayString>
     <DisplayString Condition="_bytes.size != 0" Encoding="Utf8">{_bytes.ptr,[_bytes_size - 1]s8}</DisplayString>
   </Type>
 
-  <Type Name="cpprelude::Slice&lt;byte&gt;">
+  <Type Name="cppr::Slice&lt;byte&gt;">
     <DisplayString Condition="size == 0">empty</DisplayString>
     <DisplayString Condition="size != 0" Encoding="Utf8">{ptr,[size]s8}</DisplayString>
   </Type>
 
-  <Type Name="cpprelude::Rune">
+  <Type Name="cppr::Rune">
     <DisplayString Encoding="Utf8">{data,c}</DisplayString>
   </Type>
 
 
   <!-- Containers -->
-  <Type Name="cpprelude::Dynamic_Array&lt;*&gt;">
+  <Type Name="cppr::Dynamic_Array&lt;*&gt;">
     <Intrinsic Name="capacity" Expression="_data.size / sizeof($T1)"/>
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
@@ -55,7 +55,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Single_List&lt;*&gt;">
+  <Type Name="cppr::Single_List&lt;*&gt;">
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
@@ -68,7 +68,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Double_List&lt;*&gt;">
+  <Type Name="cppr::Double_List&lt;*&gt;">
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
@@ -82,7 +82,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Stack_Array&lt;*&gt;">
+  <Type Name="cppr::Stack_Array&lt;*&gt;">
     <DisplayString Condition="_array._count == 0">empty</DisplayString>
     <DisplayString Condition="_array._count != 0">{{ count={_array._count} }}</DisplayString>
     <Expand>
@@ -95,7 +95,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Stack_List&lt;*&gt;">
+  <Type Name="cppr::Stack_List&lt;*&gt;">
     <DisplayString Condition="_list._count == 0">empty</DisplayString>
     <DisplayString Condition="_list._count != 0">{{ count={_list._count} }}</DisplayString>
     <Expand>
@@ -110,7 +110,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Ring_Array&lt;*&gt;">
+  <Type Name="cppr::Ring_Array&lt;*&gt;">
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
@@ -123,7 +123,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Queue_List&lt;*&gt;">
+  <Type Name="cppr::Queue_List&lt;*&gt;">
     <DisplayString Condition="_list._count == 0">empty</DisplayString>
     <DisplayString Condition="_list._count != 0">{{ count={_list._count} }}</DisplayString>
     <Expand>
@@ -138,7 +138,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Priority_Queue&lt;*&gt;">
+  <Type Name="cppr::Priority_Queue&lt;*&gt;">
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
@@ -152,10 +152,10 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Red_Black_Tree&lt;*&gt;">
-    <AlternativeType Name="cpprelude::Red_Black_Map&lt;*&gt;" />
-    <AlternativeType Name="cpprelude::Tree_Map&lt;*&gt;" />
-    <AlternativeType Name="cpprelude::Tree_Set&lt;*&gt;" />
+  <Type Name="cppr::Red_Black_Tree&lt;*&gt;">
+    <AlternativeType Name="cppr::Red_Black_Map&lt;*&gt;" />
+    <AlternativeType Name="cppr::Tree_Map&lt;*&gt;" />
+    <AlternativeType Name="cppr::Tree_Set&lt;*&gt;" />
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
@@ -170,7 +170,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Hash_Set&lt;*&gt;">
+  <Type Name="cppr::Hash_Set&lt;*&gt;">
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
@@ -190,7 +190,7 @@
     </Expand>
   </Type>
 
-  <Type Name="cpprelude::Hash_Map&lt;*&gt;">
+  <Type Name="cppr::Hash_Map&lt;*&gt;">
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>

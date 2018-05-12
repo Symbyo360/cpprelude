@@ -1,7 +1,7 @@
 #include "cpprelude/Panic.h"
 #include "cpprelude/OS.h"
 
-namespace cpprelude
+namespace cppr
 {
 	void
 	_os_panic()

@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <cpprelude/Dynamic_Array.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("dynamic_array", "[dynamic_array]")
 {

@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <cpprelude/Stack_Array.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("stack_array", "[stack_array]")
 {

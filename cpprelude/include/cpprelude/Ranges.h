@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <cstring>
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * [[markdown]]
@@ -95,6 +95,35 @@ namespace cpprelude
 	 * - **all:** returns a range of all the values in the container
 	 * - **range:** returns a range of a subset of the values in the container
 	 */
+
+	//helper structure
+	template<typename T>
+	struct Default_Less_Than
+	{
+		bool operator()(const T& a, const T& b)
+		{
+			return a < b;
+		}
+
+		bool operator()(const T& a, const T& b) const
+		{
+			return a < b;
+		}
+	};
+
+	template<typename T>
+	struct Default_Greater_Than
+	{
+		bool operator()(const T& a, const T& b)
+		{
+			return a > b;
+		}
+
+		bool operator()(const T& a, const T& b) const
+		{
+			return a > b;
+		}
+	};
 
 	/**
 	 * @brief      A Slice is a contigous block of memory and it's a Random Access Range
@@ -2454,7 +2483,7 @@ namespace cpprelude
 
 		template<typename TForwardRange1, typename TForwardRange2,
 				 typename TCompare = 
-				 	default_less_than<typename std::remove_reference_t<TForwardRange1>::Data_Type>>
+				 	Default_Less_Than<typename std::remove_reference_t<TForwardRange1>::Data_Type>>
 		inline static isize
 		_strcmp(TForwardRange1&& range_a, TForwardRange2&& range_b,
 				TCompare&& compare_func = TCompare())

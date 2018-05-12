@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <cpprelude/Queue_List.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 
 TEST_CASE("queue_list", "[queue_list]")

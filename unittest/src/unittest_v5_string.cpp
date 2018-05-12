@@ -1,6 +1,6 @@
 #include <catch.hpp>
 #include <cpprelude/String.h>
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("string", "[string]")
 {

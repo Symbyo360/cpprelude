@@ -4,7 +4,7 @@
 #include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      A Queue implementation with a double linked list as the base container

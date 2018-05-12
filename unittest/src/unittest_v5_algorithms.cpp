@@ -2,7 +2,7 @@
 #include <cpprelude/Algorithms.h>
 #include <cpprelude/Dynamic_Array.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("algorithms", "[algorithms]")
 {

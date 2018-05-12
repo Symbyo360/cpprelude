@@ -1,5 +1,7 @@
 #include "benchmark.h"
 
+#include <cpprelude/Allocators.h>
+
 #include <cpprelude/Dynamic_Array.h>
 #include <vector>
 
@@ -39,9 +41,12 @@
 #include <cpprelude/File.h>
 #include <cpprelude/Benchmark.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 Dynamic_Array<usize> RANDOM_ARRAY;
+
+Stack_Allocator stack(MEGABYTES(250));
+Arena_Allocator arena;
 
 void
 generate_random_data(usize limit)
@@ -116,6 +121,47 @@ bm_Single_List(Stopwatch &watch, usize limit)
 	return r;
 }
 
+usize
+bm_Stack_Allocator_Single_List(Stopwatch &watch, usize limit)
+{
+	usize r = rand();
+
+	stack.free_all();
+	watch.start();
+	{
+		Single_List<usize> list(stack);
+		for(usize i = 0; i < limit; ++i)
+			list.insert_front(i + r);
+
+		for (const auto& number : list)
+			if (number % 2 == 0)
+				r += number;
+	}
+	watch.stop();
+	return r;
+}
+
+usize
+bm_Arena_Allocator_Single_List(Stopwatch &watch, usize limit)
+{
+	usize r = rand();
+
+	watch.start();
+	{
+		Single_List<usize> list(arena);
+		for(usize i = 0; i < limit; ++i)
+			list.insert_front(i + r);
+
+		for (const auto& number : list)
+			if (number % 2 == 0)
+				r += number;
+	}
+	watch.stop();
+
+	arena.reset();
+
+	return r;
+}
 
 usize
 bm_forward_list(Stopwatch &watch, usize limit)
@@ -430,6 +476,49 @@ bm_Hash_Set(Stopwatch &watch, usize limit)
 }
 
 usize
+bm_Stack_Allocator_Hash_Set(Stopwatch &watch, usize limit)
+{
+	usize r = rand();
+
+	stack.free_all();
+	watch.start();
+	{
+		Hash_Set<usize> s(stack);
+		for(usize i = 0; i < limit; ++i)
+			s.insert(r + i);
+		for(usize i = r; i < limit + r; ++i)
+			if(i % 2 == 0)
+				s.remove(i);
+		for(const auto& num: s)
+			r += num;
+	}
+	watch.stop();
+	return r;
+}
+
+usize
+bm_Arena_Allocator_Hash_Set(Stopwatch &watch, usize limit)
+{
+	usize r = rand();
+
+	watch.start();
+	{
+		Hash_Set<usize> s(arena);
+		for(usize i = 0; i < limit; ++i)
+			s.insert(r + i);
+		for(usize i = r; i < limit + r; ++i)
+			if(i % 2 == 0)
+				s.remove(i);
+		for(const auto& num: s)
+			r += num;
+	}
+	watch.stop();
+
+	arena.reset();
+	return r;
+}
+
+usize
 bm_unordered_set(Stopwatch &watch, usize limit)
 {
 	usize r = rand();
@@ -525,13 +614,13 @@ bm_string(Stopwatch &watch, usize limit)
 bool
 bm_heap_sort(Stopwatch &watch, usize limit)
 {
-	Dynamic_Array<cpprelude::usize> array = RANDOM_ARRAY;
+	Dynamic_Array<cppr::usize> array = RANDOM_ARRAY;
 
 	watch.start();
-		cpprelude::heap_sort(array.all());
+		cppr::heap_sort(array.all());
 	watch.stop();
 
-	bool result = cpprelude::is_sorted(array.all());
+	bool result = cppr::is_sorted(array.all());
 	assert(result);
 
 	return result;
@@ -540,7 +629,7 @@ bm_heap_sort(Stopwatch &watch, usize limit)
 bool
 bm_std_heap_sort(Stopwatch &watch, usize limit)
 {
-	std::vector<cpprelude::usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
+	std::vector<cppr::usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
 
 	watch.start();
 		std::make_heap(array.begin(), array.end());
@@ -557,13 +646,13 @@ bm_std_heap_sort(Stopwatch &watch, usize limit)
 bool
 bm_merge_sort(Stopwatch &watch, usize limit)
 {
-	Dynamic_Array<cpprelude::usize> array = RANDOM_ARRAY;
+	Dynamic_Array<cppr::usize> array = RANDOM_ARRAY;
 
 	watch.start();
-		cpprelude::merge_sort(array.all());
+		cppr::merge_sort(array.all());
 	watch.stop();
 
-	bool result = cpprelude::is_sorted(array.all());
+	bool result = cppr::is_sorted(array.all());
 	assert(result);
 
 	return result;
@@ -572,7 +661,7 @@ bm_merge_sort(Stopwatch &watch, usize limit)
 bool
 bm_std_merge_sort(Stopwatch &watch, usize limit)
 {
-	std::vector<cpprelude::usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
+	std::vector<cppr::usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
 
 	watch.start();
 		std::stable_sort(array.begin(), array.end());
@@ -588,13 +677,13 @@ bm_std_merge_sort(Stopwatch &watch, usize limit)
 bool
 bm_quick_sort(Stopwatch &watch, usize limit)
 {
-	Dynamic_Array<cpprelude::usize> array = RANDOM_ARRAY;
+	Dynamic_Array<cppr::usize> array = RANDOM_ARRAY;
 
 	watch.start();
-		cpprelude::quick_sort(array.all());
+		cppr::quick_sort(array.all());
 	watch.stop();
 
-	bool result = cpprelude::is_sorted(array.all());
+	bool result = cppr::is_sorted(array.all());
 	assert(result);
 
 	return result;
@@ -603,7 +692,7 @@ bm_quick_sort(Stopwatch &watch, usize limit)
 bool
 bm_std_quick_sort(Stopwatch &watch, usize limit)
 {
-	std::vector<cpprelude::usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
+	std::vector<cppr::usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
 
 	watch.start();
 		std::sort(array.begin(), array.end());
@@ -615,29 +704,51 @@ bm_std_quick_sort(Stopwatch &watch, usize limit)
 	return result;
 }
 
+void
+debug()
+{
+	Memory_Context con = os->global_memory;
+	con.set_aligned(true);
 
+	{
+		auto a = con.alloc<int>(4, 16);
+		for(usize i = 0; i < a.count(); ++i)
+			a[i] = 0;
+		assert(((usize)a.ptr) % 16 == 0);
+		con.free(a);
+	}
+
+	{
+		auto a = con.alloc<int>(4, 32);
+		for(usize i = 0; i < a.count(); ++i)
+			a[i] = 0;
+		assert(((usize)a.ptr) % 32 == 0);
+		con.free(a);
+	}
+
+	{
+		auto a = con.alloc<int>(4, 8);
+		for(usize i = 0; i < a.count(); ++i)
+			a[i] = 0;
+		assert(((usize)a.ptr) % 8 == 0);
+		con.free(a);
+	}
+
+	{
+		auto a = con.alloc<int>(4, 4);
+		for(usize i = 0; i < a.count(); ++i)
+			a[i] = 0;
+		assert(((usize)a.ptr) % 4 == 0);
+		con.free(a);
+	}
+}
 
 
 void
 do_benchmark()
 {
-	cpprelude::usize limit = 1000;
-	
-	//Memory_Stream stream;
-	//vprintf(stream, "Hello!, My name is {}, and my age is {}.", "Mostafa", 25);
-
-	/*File file = unwrap(File::open("leak.txt"_const_str, IO_MODE2::READ, OPEN_MODE2::OPEN_ONLY), OS_ERROR::OK, "My File didn't open");
-	
-	while(true)
-	{
-		String value;
-		usize read_size = readln(value);
-		cpprelude::printf("read_size: {}, word: ({})\n", read_size, value);
-		if (value == "close" ||
-			value == "اغلق")
-			break;
-	}
-	return;*/
+	debug();
+	cppr::usize limit = 1000;
 
 	compare_benchmarks(
 		summary("std::vector", [&](Stopwatch& watch)
@@ -676,6 +787,16 @@ do_benchmark()
 		summary("Single_List", [&](Stopwatch& watch)
 		{
 			bm_Single_List(watch, limit);
+		}),
+
+		summary("Single_List Stack_Allocator", [&](Stopwatch& watch)
+		{
+			bm_Stack_Allocator_Single_List(watch, limit);
+		}),
+
+		summary("Single_List Arena_Allocator", [&](Stopwatch& watch)
+		{
+			bm_Arena_Allocator_Single_List(watch, limit);
 		})
 	);
 
@@ -770,6 +891,16 @@ do_benchmark()
 		summary("Hash_Set", [&](Stopwatch& watch)
 		{
 			bm_Hash_Set(watch, limit);
+		}),
+
+		summary("Hash_Set Stack_Allocator", [&](Stopwatch& watch)
+		{
+			bm_Stack_Allocator_Hash_Set(watch, limit);
+		}),
+
+		summary("Hash_Set Arena_Allocator", [&](Stopwatch& watch)
+		{
+			bm_Arena_Allocator_Hash_Set(watch, limit);
 		})
 	);
 

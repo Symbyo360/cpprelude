@@ -7,7 +7,7 @@
 #include "cpprelude/OS.h"
 #include <utility>
 
-namespace cpprelude
+namespace cppr
 {
 	namespace internal
 	{
@@ -110,7 +110,7 @@ namespace cpprelude
 	 * @tparam     TCompare            Compare function used by the tree
 	 */
 	template<typename T,
-			 typename TCompare = default_less_than<T>,
+			 typename TCompare = Default_Less_Than<T>,
 			 typename TNode = internal::Red_Black_Tree_Node<T>,
 			 typename TColor = typename TNode::Color_Type,
 			 typename TIterator = Red_Black_Tree_Iterator<const TNode>,
@@ -1267,9 +1267,9 @@ namespace cpprelude
 	 * @tparam     TCompare            Compare function used by the tree
 	 */
 	template<typename TKey, typename TValue,
-			 typename TCompare = default_less_than<Pair_Node<const TKey, TValue>>>
+			 typename TCompare = Default_Less_Than<Pair_Node<const TKey, TValue>>>
 	struct Red_Black_Map:
-		Red_Black_Tree<Pair_Node<const TKey, TValue>, default_less_than<Pair_Node<const TKey, TValue>>,
+		Red_Black_Tree<Pair_Node<const TKey, TValue>, Default_Less_Than<Pair_Node<const TKey, TValue>>,
 			internal::Red_Black_Tree_Node<Pair_Node<const TKey, TValue>>,
 			typename internal::Red_Black_Tree_Node<Pair_Node<const TKey, TValue>>::Color_Type,
 			Red_Black_Tree_Iterator<internal::Red_Black_Tree_Node<Pair_Node<const TKey, TValue>>>,
@@ -1283,7 +1283,7 @@ namespace cpprelude
 		using Color_Type = typename Node_Type::Color_Type;
 		using iterator = Red_Black_Tree_Iterator<internal::Red_Black_Tree_Node<Pair_Node<const TKey, TValue>>>;
 		using const_iterator = Red_Black_Tree_Iterator<const internal::Red_Black_Tree_Node<Pair_Node<const TKey, TValue>>>;
-		using _impl = Red_Black_Tree<Pair_Node<const TKey, TValue>, default_less_than<Pair_Node<const TKey, TValue>>,
+		using _impl = Red_Black_Tree<Pair_Node<const TKey, TValue>, Default_Less_Than<Pair_Node<const TKey, TValue>>,
 						internal::Red_Black_Tree_Node<Pair_Node<const TKey, TValue>>,
 						typename internal::Red_Black_Tree_Node<Pair_Node<const TKey, TValue>>::Color_Type,
 						Red_Black_Tree_Iterator<internal::Red_Black_Tree_Node<Pair_Node<const TKey, TValue>>>,
@@ -1632,10 +1632,10 @@ namespace cpprelude
 	 * A Tree_Map is a Red_Black_Map
 	 */
 	template<typename T,
-			 typename TCompare = default_less_than<T>>
+			 typename TCompare = Default_Less_Than<T>>
 	using Tree_Set = Red_Black_Tree<T, TCompare>;
 
 	template<typename TKey, typename TValue,
-			 typename TCompare = default_less_than<Pair_Node<TKey, TValue>>>
+			 typename TCompare = Default_Less_Than<Pair_Node<TKey, TValue>>>
 	using Tree_Map = Red_Black_Map<TKey, TValue, TCompare>;
 }

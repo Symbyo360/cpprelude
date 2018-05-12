@@ -1,12 +1,12 @@
 #include "catch.hpp"
 #include <cpprelude/array.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 
 TEST_CASE("Array test", "[array]")
 {
-	array<i32, 128> array1;
+	Array<i32, 128> array1;
 
 	for(usize i = 0; i < array1.count(); ++i)
 		array1[i] = i;
@@ -24,7 +24,7 @@ TEST_CASE("Array test", "[array]")
 
 	SECTION("Case 02")
 	{
-		array<i32, 128> array2;
+		Array<i32, 128> array2;
 		CHECK(array1.count() == 128);
 		CHECK(array2.count() == 128);
 
@@ -36,7 +36,7 @@ TEST_CASE("Array test", "[array]")
 
 	SECTION("Case 03")
 	{
-		array<i32, 128> array2;
+		Array<i32, 128> array2;
 		CHECK(array1.count() == 128);
 		CHECK(array2.count() == 128);
 
@@ -52,7 +52,7 @@ TEST_CASE("Array test", "[array]")
 
 	SECTION("Case 04")
 	{
-		array<i32, 5> array2 = {1, 2, 3, 4, 5};
+		Array<i32, 5> array2 = {1, 2, 3, 4, 5};
 
 		for(usize i = 0; i < array2.count(); ++i)
 			CHECK(array2[i] == i+1);

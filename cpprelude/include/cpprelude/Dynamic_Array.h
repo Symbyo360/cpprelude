@@ -9,7 +9,7 @@
 #include <new>
 
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      A Dynamic array container

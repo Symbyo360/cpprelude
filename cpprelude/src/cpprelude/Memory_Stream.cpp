@@ -2,7 +2,7 @@
 #include "cpprelude/Algorithms.h"
 #include "cpprelude/Owner.h"
 
-namespace cpprelude
+namespace cppr
 {
 	usize
 	_default_memory_stream_write(void *_self, const Slice<byte>& data)

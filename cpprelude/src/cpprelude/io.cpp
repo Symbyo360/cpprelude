@@ -1,7 +1,7 @@
 #include "cpprelude/IO.h"
 #include <mutex>
 
-namespace cpprelude
+namespace cppr
 {
 	std::recursive_mutex*
 	_print_lock()

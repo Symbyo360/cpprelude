@@ -8,7 +8,7 @@
 #include "cpprelude/IO_Trait.h"
 #include <utility>
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * [[markdown]]
@@ -129,6 +129,37 @@ namespace cpprelude
 		dump_callstack() const;
 
 		/**
+		 * @brief      Allocates memory from OS virtual memory
+		 *
+		 * @param      address_hint  The address hint
+		 * @param[in]  size          The size of the memory in bytes
+		 *
+		 * @return     An Owner pointer to the underlying memory block
+		 */
+		API_CPPR Owner<byte>
+		virtual_alloc(void* address_hint, usize size);
+
+		/**
+		 * @brief      Frees the underlying virtual memory of the given owner pointer
+		 *
+		 * @param      value  The owner pointer to free
+		 *
+		 * @return     True if succeeded, false otherwise
+		 */
+		API_CPPR bool
+		virtual_free(Owner<byte>& data);
+
+		/**
+		 * @brief      Frees the underlying virtual memory of the given owner pointer
+		 *
+		 * @param      value  The owner pointer to free
+		 *
+		 * @return     True if succeeded, false otherwise
+		 */
+		API_CPPR bool
+		virtual_free(Owner<byte>&& data);
+
+		/**
 		 * @brief      Opens a file
 		 *
 		 * @param[in]  name       The file name on disk
@@ -139,8 +170,8 @@ namespace cpprelude
 		 */
 		API_CPPR Result<File_Handle, OS_ERROR>
 		file_open(const String_Range& filename,
-				  IO_MODE2 io_mode = IO_MODE2::READ_WRITE,
-				  OPEN_MODE2 open_mode = OPEN_MODE2::CREATE_OVERWRITE);
+				  IO_MODE io_mode = IO_MODE::READ_WRITE,
+				  OPEN_MODE open_mode = OPEN_MODE::CREATE_OVERWRITE);
 
 		/**
 		 * @brief      Closes a file handle

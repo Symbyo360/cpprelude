@@ -77,12 +77,30 @@ API_CPPR void
 dump_callstack() const;
 ```
  - **brief:**      Dumps a callstack in debug mode, does nothing in release mode.
+## Funciton `virtual_alloc`
+```C++
+API_CPPR Owner<byte>
+virtual_alloc(void* address_hint, usize size);
+```
+ - **brief:**      Allocates memory from OS virtual memory - **param:**      address_hint  The address hint - **param[in]:**  size          The size of the memory in bytes - **return:**     An Owner pointer to the underlying memory block
+## Funciton `virtual_free`
+```C++
+API_CPPR bool
+virtual_free(Owner<byte>& data);
+```
+ - **brief:**      Frees the underlying virtual memory of the given owner pointer - **param:**      value  The owner pointer to free - **return:**     True if succeeded, false otherwise
+## Funciton `virtual_free`
+```C++
+API_CPPR bool
+virtual_free(Owner<byte>&& data);
+```
+ - **brief:**      Frees the underlying virtual memory of the given owner pointer - **param:**      value  The owner pointer to free - **return:**     True if succeeded, false otherwise
 ## Funciton `file_open`
 ```C++
 API_CPPR Result<File_Handle, OS_ERROR>
 file_open(const String_Range& filename,
-		  IO_MODE2 io_mode = IO_MODE2::READ_WRITE,
-		  OPEN_MODE2 open_mode = OPEN_MODE2::CREATE_OVERWRITE);
+		  IO_MODE io_mode = IO_MODE::READ_WRITE,
+		  OPEN_MODE open_mode = OPEN_MODE::CREATE_OVERWRITE);
 ```
  - **brief:**      Opens a file - **param[in]:**  name       The file name on disk - **param[in]:**  io_mode    The i/o mode - **param[in]:**  open_mode  The open mode - **return:**     The result of file handle open which contains a file and an OS error
 ## Funciton `file_close`

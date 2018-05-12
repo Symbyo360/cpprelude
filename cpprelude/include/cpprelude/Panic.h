@@ -3,7 +3,7 @@
 #include "cpprelude/IO.h"
 #include "cpprelude/Ranges.h"
 
-namespace cpprelude
+namespace cppr
 {
 	API_CPPR void
 	_os_panic();

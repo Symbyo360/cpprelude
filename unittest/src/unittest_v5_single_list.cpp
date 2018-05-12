@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <cpprelude/Single_List.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("single_list", "[single_list]")
 {

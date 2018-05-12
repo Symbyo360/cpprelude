@@ -9,7 +9,7 @@
 #include "cpprelude/Hash.h"
 #include <cstring>
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      A UTF-8 string type

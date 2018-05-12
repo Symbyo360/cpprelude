@@ -8,7 +8,7 @@
 #include "cpprelude/Result.h"
 #include "cpprelude/OS.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      An on-disk file stream
@@ -153,8 +153,8 @@ namespace cpprelude
 		 */
 		API_CPPR static Result<File, OS_ERROR>
 		open(const String_Range& name,
-			 IO_MODE2 io_mode = IO_MODE2::READ_WRITE,
-			 OPEN_MODE2 open_mode = OPEN_MODE2::CREATE_OVERWRITE);
+			 IO_MODE io_mode = IO_MODE::READ_WRITE,
+			 OPEN_MODE open_mode = OPEN_MODE::CREATE_OVERWRITE);
 
 		/**
 		 * @brief      Closes the given file

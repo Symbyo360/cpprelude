@@ -7,7 +7,7 @@
 #include <type_traits>
 #include <stdlib.h>
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      Given two variables it will return the minimum value
@@ -21,7 +21,7 @@ namespace cpprelude
 	 *
 	 * @return     The minimum value of the two
 	 */
-	template<typename T, typename TCompare = default_less_than<T>>
+	template<typename T, typename TCompare = Default_Less_Than<T>>
 	inline static const T&
 	min(const T& a, const T& b, TCompare&& compare_func = TCompare())
 	{
@@ -42,7 +42,7 @@ namespace cpprelude
 	 *
 	 * @return     The maximum value of the two
 	 */
-	template<typename T, typename TCompare = default_less_than<T>>
+	template<typename T, typename TCompare = Default_Less_Than<T>>
 	inline static const T&
 	max(const T& a, const T& b, TCompare&& compare_func = TCompare())
 	{
@@ -64,7 +64,7 @@ namespace cpprelude
 	 *
 	 * @return     The clamped value
 	 */
-	template<typename T, typename TCompare = default_less_than<T>>
+	template<typename T, typename TCompare = Default_Less_Than<T>>
 	inline static T
 	clamp(const T& a, const T& min_val, const T& max_val, TCompare&& compare_func = TCompare())
 	{
@@ -84,7 +84,7 @@ namespace cpprelude
 	 */
 	template<typename TRange,
 			 typename TCompare = 
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
 	inline static bool
 	is_sorted(TRange&& range, TCompare&& compare_func = TCompare())
 	{
@@ -106,7 +106,7 @@ namespace cpprelude
 	//heap sort impl
 	template<typename TRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
 	inline static void
 	_percolate(TRange&& range, usize parent, usize end, TCompare&& compare_func = TCompare())
 	{
@@ -148,7 +148,7 @@ namespace cpprelude
 
 	template<typename TRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
 	inline static void
 	_sift_down(TRange&& range, usize parent, usize end, TCompare&& compare_func = TCompare())
 	{
@@ -174,7 +174,7 @@ namespace cpprelude
 
 	template<typename TRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
 	inline static void
 	_heapify(TRange&& range, TCompare&& compare_func = TCompare())
 	{
@@ -194,7 +194,7 @@ namespace cpprelude
 	 */
 	template<typename TRange,
 			 typename TCompare = 
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
 	inline static void
 	heap_sort(TRange&& range, TCompare&& compare_func = TCompare())
 	{
@@ -239,7 +239,7 @@ namespace cpprelude
 	 */
 	template<typename TRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
 	inline static void
 	insertion_sort(TRange&& range, TCompare&& compare_func = TCompare())
 	{
@@ -265,7 +265,7 @@ namespace cpprelude
 	//Merge sort
 	template<typename TRange1, typename TRange2, typename TResultRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange1>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange1>::Data_Type>>
 	inline static void
 	_merge_ranges(TRange1&& range_a, TRange2&& range_b, TResultRange&& range_res,
 				  TCompare&& compare_func = TCompare())
@@ -312,7 +312,7 @@ namespace cpprelude
 	 */
 	template<typename TRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
 	inline static void
 	merge_sort(TRange&& arr_range, TCompare&& compare_func = TCompare())
 	{
@@ -358,7 +358,7 @@ namespace cpprelude
 	//Quick Sort
 	template<typename TRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
 	typename std::remove_reference_t<TRange>::Data_Type&
 	_median_of_3(TRange&& range, TCompare&& compare_func = TCompare())
 	{
@@ -387,7 +387,7 @@ namespace cpprelude
 
 	template<typename TRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>,
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>,
 			 usize TElementSize = sizeof(typename std::remove_reference_t<TRange>::Data_Type)>
 	inline static void
 	_quick_sort(TRange&& arr_range, usize depth, TCompare&& compare_func = TCompare())
@@ -446,7 +446,7 @@ namespace cpprelude
 	 */
 	template<typename TRange,
 			 typename TCompare =
-				default_less_than<typename std::remove_reference_t<TRange>::Data_Type>>
+				Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
 	inline static void
 	quick_sort(TRange&& arr_range, TCompare&& compare_func = TCompare())
 	{

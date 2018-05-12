@@ -1,7 +1,7 @@
 #include "catch.hpp"
 #include <cpprelude/Stack_List.h>
 
-using namespace cpprelude;
+using namespace cppr;
 
 TEST_CASE("stack_list", "[stack_list]")
 {

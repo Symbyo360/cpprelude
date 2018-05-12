@@ -5,7 +5,7 @@
 #include "cpprelude/OS.h"
 #include "cpprelude/defaults.h"
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      A Priority Queue implementation as a heap
@@ -13,7 +13,7 @@ namespace cpprelude
 	 * @tparam     T      Type of the values in the queue
 	 * @tparam  TCompare  Type of the comparator to use
 	 */
-	template<typename T, typename TCompare = default_less_than<T>>
+	template<typename T, typename TCompare = Default_Less_Than<T>>
 	struct Priority_Queue
 	{
 		/**

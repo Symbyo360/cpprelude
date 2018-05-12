@@ -1,6 +1,6 @@
 #include "cpprelude/File.h"
 
-namespace cpprelude
+namespace cppr
 {
 	usize
 	_default_file_write(void* _self, const Slice<byte>& data)
@@ -123,7 +123,7 @@ namespace cpprelude
 	}
 
 	Result<File, OS_ERROR>
-	File::open(const String_Range& name, IO_MODE2 io_mode, OPEN_MODE2 open_mode)
+	File::open(const String_Range& name, IO_MODE io_mode, OPEN_MODE open_mode)
 	{
 		File result;
 		auto handle_result = os->file_open(name, io_mode, open_mode);

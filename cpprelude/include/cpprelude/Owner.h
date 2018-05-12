@@ -5,7 +5,7 @@
 #include <cassert>
 #include <cstring>
 
-namespace cpprelude
+namespace cppr
 {
 	template<typename T>
 	struct Slice;
@@ -101,7 +101,7 @@ namespace cpprelude
 		 */
 		operator bool() const
 		{
-			return ptr != nullptr && size > 0;
+			return ptr != nullptr;
 		}
 
 		/**
@@ -206,7 +206,7 @@ namespace cpprelude
 		bool
 		empty() const
 		{
-			return ptr == nullptr || count() == 0;
+			return ptr == nullptr;
 		}
 
 		/**

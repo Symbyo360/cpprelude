@@ -1,6 +1,6 @@
 #pragma once
 
-namespace cpprelude
+namespace cppr
 {
 	/**
 	 * @brief      Result of an operation that can fail
