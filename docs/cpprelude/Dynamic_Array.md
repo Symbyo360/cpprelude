@@ -91,6 +91,18 @@ usize
 count() const;
 ```
  - **return:**     The count of values in this dynamic array
+## Funciton `data`
+```C++
+const T*
+data() const;
+```
+ - **return:**     A Const Pointer to the content of the dynamic array
+## Funciton `data`
+```C++
+T*
+data();
+```
+ - **return:**     A Pointer to the content of the dynamic array
 ## Funciton `operator[]`
 ```C++
 Data_Type&
@@ -126,7 +138,31 @@ expand_back(usize additional_count, const Data_Type& value);
 void
 shrink_back(usize shrinkage_count);
 ```
- - **brief:**      Removes element of the back of the dynamic array and shrinks the memory - **param[in]:**  shrinkage_count  The shrinkage count to remove
+ - **brief:**      Removes element of the back of the dynamic array - **param[in]:**  shrinkage_count  The shrinkage count to remove
+## Funciton `expand_back_raw`
+```C++
+void
+expand_back_raw(usize additional_count);
+```
+ - **brief:**      Adds the specified count of elements **Uninitialized** to the back of the array - **param[in]:**  additional_count  The additional count
+## Funciton `shrink_back_raw`
+```C++
+void
+shrink_back_raw(usize shrinkage_count);
+```
+ - **brief:**      Removes the specified count of elements **Undestructed** of the back of the array - **param[in]:**  shrinkage_count  The shrinkage count
+## Funciton `resize`
+```C++
+void
+resize(usize new_count);
+```
+ - **brief:**      Changes the count of the array to be the new provided count and ensures the existance of the needed memory - **param[in]:**  new_count  The new count
+## Funciton `resize_raw`
+```C++
+void
+resize_raw(usize new_count);
+```
+ - **brief:**      Changes the count of the array to be the new provided count and ensures the existance of the needed memory, and it does so in an uninitialized/undestructed way. - **param[in]:**  new_count  The new count
 ## Funciton `emplace_back`
 ```C++
 template<typename ... TArgs>

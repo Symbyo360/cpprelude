@@ -8,14 +8,6 @@
 
 namespace cppr
 {
-	template<typename T>
-	struct Owner{};
-
-
-	#define API_CPPR 
-
-	struct Allocator_Trait{};
-	struct Memory_Context{};
 	/**
 	 * @brief      A Stack like allocator
 	 */

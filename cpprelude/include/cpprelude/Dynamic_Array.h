@@ -227,6 +227,25 @@ namespace cppr
 		}
 
 		/**
+		 * @return     A Const Pointer to the content of the dynamic array
+		 */
+		const T*
+		data() const
+		{
+			return _data.ptr;
+		}
+
+		/**
+		 * @return     A Pointer to the content of the dynamic array
+		 */
+		T*
+		data()
+		{
+			return _data.ptr;
+		}
+
+
+		/**
 		 * @param[in]  index  The index of the value
 		 *                    
 		 * @return     A Reference of the value
@@ -305,7 +324,7 @@ namespace cppr
 		}
 
 		/**
-		 * @brief      Removes element of the back of the dynamic array and shrinks the memory
+		 * @brief      Removes element of the back of the dynamic array
 		 *
 		 * @param[in]  shrinkage_count  The shrinkage count to remove
 		 */
@@ -313,7 +332,60 @@ namespace cppr
 		shrink_back(usize shrinkage_count)
 		{
 			remove_back(shrinkage_count);
-			shrink_to_fit();
+		}
+
+		/**
+		 * @brief      Adds the specified count of elements **Uninitialized** to the back of the array
+		 *
+		 * @param[in]  additional_count  The additional count
+		 */
+		void
+		expand_back_raw(usize additional_count)
+		{
+			reserve(additional_count);
+			_count += additional_count;
+		}
+
+		/**
+		 * @brief      Removes the specified count of elements **Undestructed** of the back of the array
+		 *
+		 * @param[in]  shrinkage_count  The shrinkage count
+		 */
+		void
+		shrink_back_raw(usize shrinkage_count)
+		{
+			if(shrinkage_count > _count)
+				shrinkage_count = _count;
+
+			_count -= shrinkage_count;
+		}
+
+		/**
+		 * @brief      Changes the count of the array to be the new provided count and ensures the existance of the needed memory
+		 *
+		 * @param[in]  new_count  The new count
+		 */
+		void
+		resize(usize new_count)
+		{
+			if(new_count > _count)
+				expand_back(new_count - _count);
+			else if(new_count < _count)
+				shrink_back(_count - new_count);
+		}
+
+		/**
+		 * @brief      Changes the count of the array to be the new provided count and ensures the existance of the needed memory, and it does so in an uninitialized/undestructed way.
+		 *
+		 * @param[in]  new_count  The new count
+		 */
+		void
+		resize_raw(usize new_count)
+		{
+			if(new_count > _count)
+				expand_back_raw(new_count - _count);
+			else if(new_count < _count)
+				shrink_back_raw(_count - new_count);
 		}
 
 		/**

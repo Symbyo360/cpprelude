@@ -168,7 +168,7 @@ TEST_CASE("dynamic_array", "[dynamic_array]")
 		array.shrink_back(10);
 
 		CHECK(array.count() == 0);
-		CHECK(array.capacity() == 0);
+		CHECK(array.capacity() >= 1);
 		CHECK(array.empty() == true);
 	}
 
