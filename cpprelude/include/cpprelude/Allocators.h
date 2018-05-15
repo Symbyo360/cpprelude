@@ -194,7 +194,7 @@ namespace cppr
 		 */
 		Memory_Context mem_context;
 		internal::Arena_Node* _head;
-		usize block_size;
+		usize block_size, arena_size, used_size;
 
 		/**
 		 * @brief      Creates an arena allocator
@@ -247,6 +247,18 @@ namespace cppr
 		 */
 		API_CPPR void
 		reset();
+
+		/**
+		 * @return     The size of the used arena memory in bytes
+		 */
+		API_CPPR usize
+		used_memory_size() const;
+
+		/**
+		 * @return     The size of the unused arena memory in bytes
+		 */
+		API_CPPR usize
+		unused_memory_size() const;
 
 		/**
 		 * @brief      Implicit cast operator to Allocator Trait

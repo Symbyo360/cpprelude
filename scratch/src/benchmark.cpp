@@ -196,6 +196,8 @@ bm_Double_List(Stopwatch &watch, usize limit)
 			else
 				list.emplace_front(i + r);
 
+		auto d = list.all();
+		auto d2 = list.range(0, 10);
 		for(const auto& number: list)
 			if(number % 2 == 0)
 				r += number;

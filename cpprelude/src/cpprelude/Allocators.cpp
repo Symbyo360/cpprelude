@@ -123,6 +123,7 @@ namespace cppr
 		self->grow(size);
 		auto result = own((byte*)self->_head->alloc_head, size);
 		self->_head->alloc_head += size;
+		self->used_size += size;
 		return result;
 	}
 
@@ -135,9 +136,10 @@ namespace cppr
 	Arena_Allocator::Arena_Allocator(const Memory_Context& context)
 		:mem_context(context),
 		 _head(nullptr),
-		 block_size(MEGABYTES(1))
+		 block_size(MEGABYTES(1)),
+		 arena_size(0),
+		 used_size(0)
 	{
-
 		_allocator_trait._self = this;
 		_allocator_trait._alloc = _arena_allocator_alloc;
 		_allocator_trait._free = _arena_allocator_free;
@@ -147,11 +149,15 @@ namespace cppr
 		:_allocator_trait(std::move(other._allocator_trait)),
 		 mem_context(std::move(other.mem_context)),
 		 _head(other._head),
-		 block_size(other.block_size)
+		 block_size(other.block_size),
+		 arena_size(other.arena_size),
+		 used_size(other.used_size)
 	{
 		_allocator_trait._self = this;
 		
 		other._head = nullptr;
+		other.arena_size = 0;
+		other.used_size = 0;
 	}
 
 	Arena_Allocator&
@@ -163,10 +169,14 @@ namespace cppr
 		mem_context = std::move(other.mem_context);
 		_head = other._head;
 		block_size = other.block_size;
+		arena_size = other.arena_size;
+		used_size = other.used_size;
 
 		_allocator_trait._self = this;
 
 		other._head = nullptr;
+		other.arena_size = 0;
+		other.used_size = 0;
 		return *this;
 	}
 
@@ -186,6 +196,7 @@ namespace cppr
 			request_size += node_size;
 
 			internal::Arena_Node* new_node = (internal::Arena_Node*)mem_context.template alloc<byte>(request_size).ptr;
+			arena_size += request_size - node_size;
 
 			::new (new_node) internal::Arena_Node(own(((byte*) new_node) + node_size, request_size - node_size));
 			new_node->next_node = _head;
@@ -202,5 +213,18 @@ namespace cppr
 			mem_context.template free<byte>(own((byte*)_head, _head->header.size + sizeof(internal::Arena_Node)));
 			_head = next;
 		}
+		arena_size = 0;
+	}
+
+	usize
+	Arena_Allocator::used_memory_size() const
+	{
+		return used_size;
+	}
+
+	usize
+	Arena_Allocator::unused_memory_size() const
+	{
+		return arena_size - used_size;
 	}
 }
