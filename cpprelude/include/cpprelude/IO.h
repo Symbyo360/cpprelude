@@ -1116,32 +1116,32 @@ namespace cppr
 		{
 			switch(format.type)
 			{
-				case Parsed_Format::TYPE::RUNE:
+				case Print_Format::TYPE::RUNE:
 					PATTERN = "%c";
 					break;
-				case Parsed_Format::TYPE::HEX_SMALL:
+				case Print_Format::TYPE::HEX_SMALL:
 					if(format.prefix)
 						PATTERN = "%#lx";
 					else
 						PATTERN = "%lx";
 					break;
-				case Parsed_Format::TYPE::HEX_CAPITAL:
+				case Print_Format::TYPE::HEX_CAPITAL:
 					if(format.prefix)
 						PATTERN = "%#lX";
 					else
 						PATTERN = "%lX";
 					break;
-				case Parsed_Format::TYPE::OCTAL:
+				case Print_Format::TYPE::OCTAL:
 					if(format.prefix)
 						PATTERN = "%#lo";
 					else
 						PATTERN = "%lo";
 					break;
-				case Parsed_Format::TYPE::DECIMAL:
-				case Parsed_Format::TYPE::NONE:
+				case Print_Format::TYPE::DECIMAL:
+				case Print_Format::TYPE::NONE:
 				default:
 					PATTERN = "%ld";
-					format.type = Parsed_Format::TYPE::DECIMAL;
+					format.type = Print_Format::TYPE::DECIMAL;
 					break;
 			}
 		}
@@ -1206,32 +1206,32 @@ namespace cppr
 		{
 			switch(format.type)
 			{
-				case Parsed_Format::TYPE::RUNE:
+				case Print_Format::TYPE::RUNE:
 					PATTERN = "%c";
 					break;
-				case Parsed_Format::TYPE::HEX_SMALL:
+				case Print_Format::TYPE::HEX_SMALL:
 					if(format.prefix)
 						PATTERN = "%#lx";
 					else
 						PATTERN = "%lx";
 					break;
-				case Parsed_Format::TYPE::HEX_CAPITAL:
+				case Print_Format::TYPE::HEX_CAPITAL:
 					if(format.prefix)
 						PATTERN = "%#lX";
 					else
 						PATTERN = "%lX";
 					break;
-				case Parsed_Format::TYPE::OCTAL:
+				case Print_Format::TYPE::OCTAL:
 					if(format.prefix)
 						PATTERN = "%#lo";
 					else
 						PATTERN = "%lo";
 					break;
-				case Parsed_Format::TYPE::DECIMAL:
-				case Parsed_Format::TYPE::NONE:
+				case Print_Format::TYPE::DECIMAL:
+				case Print_Format::TYPE::NONE:
 				default:
 					PATTERN = "%lu";
-					format.type = Parsed_Format::TYPE::DECIMAL;
+					format.type = Print_Format::TYPE::DECIMAL;
 					break;
 			}
 		}

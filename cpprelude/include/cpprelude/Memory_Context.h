@@ -3,6 +3,7 @@
 #include "cpprelude/defines.h"
 #include "cpprelude/Owner.h"
 #include "cpprelude/Allocator_Trait.h"
+#include "cpprelude/OS.h"
 #include <utility>
 
 namespace cppr

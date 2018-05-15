@@ -1,4 +1,5 @@
 #include "cpprelude/Allocators.h"
+#include <new>
 
 namespace cppr
 {
@@ -184,9 +185,9 @@ namespace cppr
 			usize request_size = grow_size > block_size ? grow_size : block_size;
 			request_size += node_size;
 
-			auto new_node = (internal::Arena_Node*)mem_context.template alloc<byte>(request_size).ptr;
+			internal::Arena_Node* new_node = (internal::Arena_Node*)mem_context.template alloc<byte>(request_size).ptr;
 
-			::new (new_node) internal::Arena_Node(own((byte*) new_node + node_size, request_size - node_size));
+			::new (new_node) internal::Arena_Node(own(((byte*) new_node) + node_size, request_size - node_size));
 			new_node->next_node = _head;
 			_head = new_node;
 		}

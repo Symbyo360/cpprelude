@@ -288,15 +288,15 @@ namespace cppr
 			//translate the io mode
 			switch(io_mode)
 			{
-				case IO_MODE2::READ:
+				case IO_MODE::READ:
 					flags |= O_RDONLY;
 					break;
 
-				case IO_MODE2::WRITE:
+				case IO_MODE::WRITE:
 					flags |= O_WRONLY;
 					break;
 
-				case IO_MODE2::READ_WRITE:
+				case IO_MODE::READ_WRITE:
 				default:
 					flags |= O_RDWR;
 					break;
@@ -305,29 +305,29 @@ namespace cppr
 			//translate the open mode
 			switch(open_mode)
 			{
-				case OPEN_MODE2::CREATE_ONLY:
+				case OPEN_MODE::CREATE_ONLY:
 					flags |= O_CREAT;
 					flags |= O_EXCL;
 					break;
 
-				case OPEN_MODE2::CREATE_APPEND:
+				case OPEN_MODE::CREATE_APPEND:
 					flags |= O_CREAT;
 					flags |= O_APPEND;
 					break;
 
-				case OPEN_MODE2::OPEN_ONLY:
+				case OPEN_MODE::OPEN_ONLY:
 					//do nothing
 					break;
 
-				case OPEN_MODE2::OPEN_OVERWRITE:
+				case OPEN_MODE::OPEN_OVERWRITE:
 					flags |= O_TRUNC;
 					break;
 
-				case OPEN_MODE2::OPEN_APPEND:
+				case OPEN_MODE::OPEN_APPEND:
 					flags |= O_APPEND;
 					break;
 
-				case OPEN_MODE2::CREATE_OVERWRITE:
+				case OPEN_MODE::CREATE_OVERWRITE:
 				default:
 					flags |= O_CREAT;
 					flags |= O_TRUNC;
