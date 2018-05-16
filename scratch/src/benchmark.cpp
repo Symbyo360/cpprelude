@@ -196,8 +196,6 @@ bm_Double_List(Stopwatch &watch, usize limit)
 			else
 				list.emplace_front(i + r);
 
-		auto d = list.all();
-		auto d2 = list.range(0, 10);
 		for(const auto& number: list)
 			if(number % 2 == 0)
 				r += number;
@@ -709,47 +707,18 @@ bm_std_quick_sort(Stopwatch &watch, usize limit)
 void
 debug()
 {
-	Memory_Context con = os->global_memory;
-	con.set_aligned(true);
+	cppr::printf("Hello, my name is {}, my age is {:.2f}\n", "Mostafa", 25.0f);
+	for(usize i = 0; i < 10; ++i)
+		cppr::printf("My Random number is {:_^+10}\n", rand());
 
-	{
-		auto a = con.alloc<int>(4, 16);
-		for(usize i = 0; i < a.count(); ++i)
-			a[i] = 0;
-		assert(((usize)a.ptr) % 16 == 0);
-		con.free(a);
-	}
-
-	{
-		auto a = con.alloc<int>(4, 32);
-		for(usize i = 0; i < a.count(); ++i)
-			a[i] = 0;
-		assert(((usize)a.ptr) % 32 == 0);
-		con.free(a);
-	}
-
-	{
-		auto a = con.alloc<int>(4, 8);
-		for(usize i = 0; i < a.count(); ++i)
-			a[i] = 0;
-		assert(((usize)a.ptr) % 8 == 0);
-		con.free(a);
-	}
-
-	{
-		auto a = con.alloc<int>(4, 4);
-		for(usize i = 0; i < a.count(); ++i)
-			a[i] = 0;
-		assert(((usize)a.ptr) % 4 == 0);
-		con.free(a);
-	}
+	cppr::printf("Person {{ Name: {}, Age: {} }\n", "Mostafa", 25);
 }
 
 
 void
 do_benchmark()
 {
-	debug();
+	//debug();
 	cppr::usize limit = 1000;
 
 	compare_benchmarks(

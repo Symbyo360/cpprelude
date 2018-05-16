@@ -31,34 +31,35 @@ For Philosophy and coding standard please refer to this [link](https://moustapha
 
 ## Content
 
-- **[algorithm](Files/algorithm.md):** a collection algorithms that could be used with the provided containers.
-- **[allocator](Files/allocator.md):** allocators that could be used with the provided containers.
-- **[array](Files/array.md):** a fixed size array.
-- **[bucket_array](Files/bucket_array.md):** a bucket array container.
-- **[bufio](Files/bufio.md):** a buffered input/output.
-- **[defines](Files/defines.md):** languages primitives.
-- **[dlinked_list](Files/dlinked_list.md):** a double linked list.
-- **[dynamic_array](Files/dynamic_array.md):** a dynamic grow-able array.
-- **[error](Files/error.md):** a collection of error reporting functions.
-- **[file](Files/file.md):** a file stream.
-- **[file_defs](Files/file_defs.md):** OS specific file handles
-- **[fmt](Files/fmt.md):** a collection standard print/scan functions
-- **[hash_array](Files/hash_array.md):** a hash array implementation.
-- **[io](Files/io.md):** a basic stream input/output implementation.
-- **[memory](Files/memory.md):** a basic memory slice primitive.
-- **[memory_context](Files/memory_context.md):** a memory context/allocator trait.
-- **[memory_watcher](Files/memory_watcher.md):** a memory leak scope watcher.
-- **[platform](Files/platform.md):** an abstraction on the actual OS.
-- **[priority_queue](Files/priority_queue.md):** a heap implementation.
-- **[queue_array](Files/queue_array.md):** a queue implementation based on a dynamic_array data structure.
-- **[queue_list](Files/queue_list.md):** a queue implementation based on a dlinked_list data structure.
-- **[result](Files/result.md):** a result the combines a value and an error into the same structure in a transparent manner.
-- **[slinked_list](Files/slinked_list.md):** a single linked list implementation.
-- **[stack_array](Files/stack_array.md):** a stack implementation based on a dynamic_array data structure.
-- **[stack_list](Files/stack_list.md):** a stack implementation based on a slinked_list data structure.
-- **[stream](Files/stream.md):** a memory stream implementation.
-- **[string](Files/string.md):** an UTF-8 string implementation.
-- **[tree_map](Files/tree_map.md):** a red black tree implementation.
+- **[Algorithms](cpprelude/Algorithms.md):** Documentation of the included algorithms
+- **[Allocator_Trait](cpprelude/Allocator_Trait.md):** Documentation of the Allocator_Trait type.
+- **[Allocators](cpprelude/Allocators.md):** Documentation of the available allocators.
+- **[Array](cpprelude/Array.md):** Documentation of the static Array type. 
+- **[Benchmark](cpprelude/Benchmark.md):** Documentation of the micro benchmark library.
+- **[defines](cpprelude/defines.md):** Documentation of the available basic types and some macros.
+- **[Double_List](cpprelude/Double_List.md):** Documentation of the Double_List type.
+- **[Dynamic_Array](cpprelude/Dynamic_Array.md):** Documentation of the Dynamic_Array type.
+- **[File](cpprelude/File.md):** Documentation of the File type.
+- **[File_Handle](cpprelude/File_Handle.md):** Documentation of the File_Handle type.
+- **[Hash](cpprelude/Hash.md):** Documentation of the Hash functions.
+- **[Hash_Map](cpprelude/Hash_Map.md):** Documentation of the Hash_Map and Hash_Set type.
+- **[IO](cpprelude/IO.md):** Documentation of the IO functions.
+- **[IO_Trait](cpprelude/IO_Trait.md):** Documentation of the IO_Trait type.
+- **[Memory_Context](cpprelude/Memory_Context.md):** Documentation of the Memory_Context type.
+- **[Memory_Stream](cpprelude/Memory_Stream.md):** Documentation of the Memory_Stream type.
+- **[OS](cpprelude/OS.md):** Documentation of the OS type.
+- **[Owner](cpprelude/Owner.md):** Documentation of the Owner type.
+- **[Panic](cpprelude/Panic.md):** Documentation of the panic functions.
+- **[Priority_Queue](cpprelude/Priority_Queue.md):** Documentation of the Priority_Queue type.
+- **[Queue_List](cpprelude/Queue_List.md):** Documentation of the Queue_List type.
+- **[Ranges](cpprelude/Ranges.md):** Documentation of the Ranges types.
+- **[Result](cpprelude/Result.md):** Documentation of the Result type.
+- **[Ring_Array](cpprelude/Ring_Array.md):** Documentation of the Ring_Array type.
+- **[Single_List](cpprelude/Single_List.md):** Documentation of the Single_List type.
+- **[Stack_Array](cpprelude/Stack_Array.md):** Documentation of the Stack_Array type.
+- **[Stack_List](cpprelude/Stack_List.md):** Documentation of the Stack_List type.
+- **[String](cpprelude/String.md):** Documentation of the String type.
+- **[Tree_Map](cpprelude/Tree_Map.md):** Documentation of the Tree_Map type.
 
 ## How to contribute
 

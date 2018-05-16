@@ -179,6 +179,18 @@
     </Expand>
   </Type>
 
+  <Type Name="cppr::Ring_Range&lt;*&gt;">
+    <DisplayString Condition="_count == 0">empty</DisplayString>
+    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
+    <Expand>
+      <Item Name="count">_count</Item>
+      <IndexListItems>
+        <Size>_count</Size>
+        <ValueNode>ptr[(_tail_index + 1 + $i) % (_capacity)]</ValueNode>
+      </IndexListItems>
+    </Expand>
+  </Type>
+
   <Type Name="cppr::Queue_List&lt;*&gt;">
     <DisplayString Condition="_list._count == 0">empty</DisplayString>
     <DisplayString Condition="_list._count != 0">{{ count={_list._count} }}</DisplayString>
@@ -209,8 +221,6 @@
   </Type>
 
   <Type Name="cppr::Red_Black_Tree&lt;*&gt;">
-    <AlternativeType Name="cppr::Red_Black_Map&lt;*&gt;" />
-    <AlternativeType Name="cppr::Tree_Map&lt;*&gt;" />
     <AlternativeType Name="cppr::Tree_Set&lt;*&gt;" />
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
@@ -222,6 +232,22 @@
         <LeftPointer>left</LeftPointer>
         <RightPointer>right</RightPointer>
         <ValueNode>data</ValueNode>
+      </TreeItems>
+    </Expand>
+  </Type>
+
+  <Type Name="cppr::Red_Black_Map&lt;*&gt;">
+    <AlternativeType Name="cppr::Tree_Map&lt;*&gt;" />
+    <DisplayString Condition="_count == 0">empty</DisplayString>
+    <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
+    <Expand>
+      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <TreeItems>
+        <Size>_count</Size>
+        <HeadPointer>_root</HeadPointer>
+        <LeftPointer>left</LeftPointer>
+        <RightPointer>right</RightPointer>
+        <ValueNode Name="{data.key}">data.value</ValueNode>
       </TreeItems>
     </Expand>
   </Type>
