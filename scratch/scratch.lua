@@ -1,5 +1,3 @@
-local benchpress_path = "deps/benchpress"
-
 project "scratch"
 	language "C++"
 	kind "ConsoleApp"
@@ -10,8 +8,7 @@ project "scratch"
 
 	includedirs {
 		"include/",
-		cpprelude_path .. "/include/",
-		benchpress_path .. "/src/benchpress/"
+		cpprelude_path .. "/include/"
 	}
 
 	links {"cpprelude"}

@@ -718,7 +718,7 @@ debug()
 void
 do_benchmark()
 {
-	panic("Halp");
+	//panic("Halp");
 	//debug();
 	//return;
 	cppr::usize limit = 1000;

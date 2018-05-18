@@ -39,7 +39,6 @@ project "cpprelude"
 	filter "configurations:release"
 		defines {"NDEBUG", "CPPR_DLL"}
 		optimize "On"
-		symbols "On"
 
 	filter "platforms:x86"
 		architecture "x32"

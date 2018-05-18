@@ -15,7 +15,7 @@
 #define _LARGEFILE64_SOURCE 1
 #include <sys/mman.h>
 #include <sys/sysinfo.h>
-#include <sys/stat.h>SymCleanup(GetCurrentProcess())
+#include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <execinfo.h>
@@ -30,7 +30,7 @@ namespace cppr
 {
 	OS::~OS()
 	{
-		#if defined(OS_WINDOWS)
+		#if defined(OS_WINDOWS) && defined(DEBUG)
 		{
 			if(debug_configured)
 				if(SymCleanup(GetCurrentProcess()))
@@ -665,8 +665,12 @@ namespace cppr
 			_stderr_handle.windows_handle = GetStdHandle(STD_ERROR_HANDLE);
 			_stdin_handle.windows_handle = GetStdHandle(STD_INPUT_HANDLE);
 
-			if(SymInitialize(GetCurrentProcess(), NULL, true))
-				_os.debug_configured = true;
+			#if defined(DEBUG)
+			{
+				if(SymInitialize(GetCurrentProcess(), NULL, true))
+					_os.debug_configured = true;
+			}
+			#endif
 		}
 		#elif defined(OS_LINUX)
 		{
