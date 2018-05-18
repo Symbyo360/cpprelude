@@ -2366,9 +2366,9 @@ namespace cppr
 	 */
 	struct Rune
 	{
-		u32 data;
+		i32 data;
 
-		Rune(u32 c = 0)
+		Rune(i32 c = 0)
 			:data(c)
 		{}
 

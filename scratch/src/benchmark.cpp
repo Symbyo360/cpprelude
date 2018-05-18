@@ -707,6 +707,9 @@ bm_std_quick_sort(Stopwatch &watch, usize limit)
 void
 debug()
 {
+	Rune csd = 'م';
+	println(csd);
+	return;
 	File koko = unwrap(File::open("test.txt", IO_MODE::READ, OPEN_MODE::OPEN_ONLY));
 	Buffered_Stream stream(koko);
 	String line;
