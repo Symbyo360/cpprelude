@@ -592,11 +592,23 @@ read_str(Bufio_Trait* trait, String& value);
 # Funciton `readln`
 ```C++
 inline static usize
+readln(Bufio_Trait* trait, String& value);
+```
+ - **brief:**      Reads a line from the Buffered IO
+
+ - **param:**      trait  The Bufio_Trait to read from
+ - **param:**      value  The string that will be read into
+
+ - **return:**     The size of the read line in bytes
+
+# Funciton `readln`
+```C++
+inline static usize
 readln(String& value);
 ```
  - **brief:**      Reads a line from  the buffered stdin
 
- - **param:**      value  The string that will be read
+ - **param:**      value  The string that will be read into
 
  - **return:**     The size of the read line in bytes
 

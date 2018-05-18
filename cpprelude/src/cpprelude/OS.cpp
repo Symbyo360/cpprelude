@@ -4,6 +4,8 @@
 #include <stdlib.h>
 
 #if defined(OS_WINDOWS)
+#define NOMINMAX
+#define WIN32_LEAN_AND_MEAN
 #include <Windows.h>
 #include <Psapi.h>
 #include <DbgHelp.h>
@@ -13,7 +15,7 @@
 #define _LARGEFILE64_SOURCE 1
 #include <sys/mman.h>
 #include <sys/sysinfo.h>
-#include <sys/stat.h>
+#include <sys/stat.h>SymCleanup(GetCurrentProcess())
 #include <fcntl.h>
 #include <errno.h>
 #include <execinfo.h>
@@ -28,6 +30,13 @@ namespace cppr
 {
 	OS::~OS()
 	{
+		#if defined(OS_WINDOWS)
+		{
+			if(debug_configured)
+				if(SymCleanup(GetCurrentProcess()))
+					debug_configured = false;
+		}
+		#endif
 		_print_memory_report();
 	}
 
@@ -655,6 +664,9 @@ namespace cppr
 			_stdout_handle.windows_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 			_stderr_handle.windows_handle = GetStdHandle(STD_ERROR_HANDLE);
 			_stdin_handle.windows_handle = GetStdHandle(STD_INPUT_HANDLE);
+
+			if(SymInitialize(GetCurrentProcess(), NULL, true))
+				_os.debug_configured = true;
 		}
 		#elif defined(OS_LINUX)
 		{

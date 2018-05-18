@@ -940,13 +940,13 @@ namespace cppr
 		if(newline_offset != -1)
 		{
 			usize additional_skip = 1;
-			#if defined(OS_WINDOWS)
+			if(newline_offset > 0 &&
+			   bytes[newline_offset - 1] == '\r')
 			{
 				//because of the \r\n on window
 				--newline_offset;
 				++additional_skip;
 			}
-			#endif
 
 			value.concat(String_Range(bytes.range(0, newline_offset).template convert<const byte>()));
 			return trait->skip(newline_offset + additional_skip) - additional_skip;
@@ -959,9 +959,23 @@ namespace cppr
 	}
 
 	/**
+	 * @brief      Reads a line from the Buffered IO
+	 *
+	 * @param      trait  The Bufio_Trait to read from
+	 * @param      value  The string that will be read into
+	 *
+	 * @return     The size of the read line in bytes
+	 */
+	inline static usize
+	readln(Bufio_Trait* trait, String& value)
+	{
+		return _readln(trait, value);
+	}
+
+	/**
 	 * @brief      Reads a line from  the buffered stdin
 	 *
-	 * @param      value  The string that will be read
+	 * @param      value  The string that will be read into
 	 *
 	 * @return     The size of the read line in bytes
 	 */

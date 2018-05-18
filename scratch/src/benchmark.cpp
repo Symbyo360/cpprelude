@@ -707,18 +707,20 @@ bm_std_quick_sort(Stopwatch &watch, usize limit)
 void
 debug()
 {
-	cppr::printf("Hello, my name is {}, my age is {:.2f}\n", "Mostafa", 25.0f);
-	for(usize i = 0; i < 10; ++i)
-		cppr::printf("My Random number is {:_^+10}\n", rand());
-
-	cppr::printf("Person {{ Name: {}, Age: {} }\n", "Mostafa", 25);
+	File koko = unwrap(File::open("test.txt", IO_MODE::READ, OPEN_MODE::OPEN_ONLY));
+	Buffered_Stream stream(koko);
+	String line;
+	while(readln(stream, line) > 0)
+		println(line);
 }
 
 
 void
 do_benchmark()
 {
+	panic("Halp");
 	//debug();
+	//return;
 	cppr::usize limit = 1000;
 
 	compare_benchmarks(
