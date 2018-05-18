@@ -408,6 +408,19 @@ print_str(IO_Trait* trait, const Print_Format& _format, r64 value);
 
  - **return:**     size of the printed value in bytes
 
+ # Funciton `print_str`
+```C++
+inline static usize
+print_str(IO_Trait* trait, const Print_Format& _format, Rune value);
+```
+ - **brief:**      Prints a value in string form
+
+ - **param:**      trait   The IO_Trait to print to
+ - **param[in]:**  format  The format of the string
+ - **param[in]:**  value   The value to be printed
+
+ - **return:**     size of the printed value in bytes
+
 # Funciton `print_str`
 ```C++
 inline static usize

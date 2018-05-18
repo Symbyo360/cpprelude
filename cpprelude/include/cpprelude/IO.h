@@ -1132,7 +1132,7 @@ namespace cppr
 		switch(format.type)
 		{
 			case Print_Format::TYPE::RUNE:
-				PATTERN = "%c";
+				PATTERN = "%lc";
 				break;
 			case Print_Format::TYPE::HEX_SMALL:
 				if(format.prefix)
@@ -1397,6 +1397,23 @@ namespace cppr
 												 format,
 												 PATTERN,
 												 value);
+	}
+
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
+	inline static usize
+	print_str(IO_Trait* trait, const Print_Format& format, Rune r)
+	{
+		auto new_format = format;
+		new_format.type = Print_Format::TYPE::RUNE;
+		return print_str(trait, new_format, r.data);
 	}
 
 	//print 32-bit float

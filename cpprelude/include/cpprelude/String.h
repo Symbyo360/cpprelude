@@ -838,14 +838,6 @@ namespace cppr
 		return print_str(trait, format, value.all());
 	}
 
-	inline static usize
-	print_str(IO_Trait* trait, const Print_Format& format, const Rune& r)
-	{
-		auto new_format = format;
-		new_format.type = Print_Format::TYPE::RUNE;
-		return print_str(trait, new_format, r.data);
-	}
-
 	/**
 	 * @brief      Writes the string in binary form
 	 *

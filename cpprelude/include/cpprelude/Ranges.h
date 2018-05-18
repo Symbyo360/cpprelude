@@ -2428,6 +2428,21 @@ namespace cppr
 		}
 
 		inline static usize
+		_utf8_sequence_length(Rune r)
+		{
+			usize result = 0;
+			byte* b = (byte*)&r.data;
+			result += (*b != 0);
+			++b;
+			result += (*b != 0);
+			++b;
+			result += (*b != 0);
+			++b;
+			result += (*b != 0);
+			return result;
+		}
+
+		inline static usize
 		_utf8_count_chars(const byte* chars, usize& str_size)
 		{
 			usize result = 0;
