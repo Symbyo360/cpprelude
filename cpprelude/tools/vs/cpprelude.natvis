@@ -30,6 +30,11 @@
     <DisplayString Condition="_bytes.size != 0" Encoding="Utf8">{_bytes.ptr,[_bytes_size - 1]s8}</DisplayString>
   </Type>
 
+  <Type Name="cppr::String_Range">
+    <DisplayString Condition="bytes.size == 0">empty</DisplayString>
+    <DisplayString Condition="bytes.size != 0" Encoding="Utf8">{bytes.ptr,[bytes.size]s8}</DisplayString>
+  </Type>
+
   <Type Name="cppr::Slice&lt;byte&gt;">
     <DisplayString Condition="size == 0">empty</DisplayString>
     <DisplayString Condition="size != 0" Encoding="Utf8">{ptr,[size]s8}</DisplayString>

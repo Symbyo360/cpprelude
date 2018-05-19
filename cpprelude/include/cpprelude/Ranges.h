@@ -2361,6 +2361,53 @@ namespace cppr
 		}
 	};
 
+	namespace internal
+	{
+		inline static usize
+		_utf8_sequence_length(i32 r)
+		{
+			byte* b = (byte*)&r;
+			return ((b[0] != 0) +
+					(b[1] != 0) +
+					(b[2] != 0) +
+					(b[3] != 0));
+		}
+
+		inline static i32
+		_utf8_to_big_endian(i32 r)
+		{
+			usize seq_count = _utf8_sequence_length(r);
+
+			i32 result = 0;
+			switch (seq_count)
+			{
+				case 1:
+					result = r;
+					break;
+				case 2:
+					result |= ((r & 0x000000FF) << 8);
+					result |= ((r & 0x0000FF00) >> 8);
+					break;
+				case 3:
+					result |= ((r & 0x000000FF) << 16);
+					result |= ((r & 0x0000FF00));
+					result |= ((r & 0x00FF0000) >> 16);
+					break;
+				case 4:
+					result |= ((r & 0x000000FF) << 24);
+					result |= ((r & 0x0000FF00) << 8);
+					result |= ((r & 0x00FF0000) >> 8);
+					result |= ((r & 0xFF000000) >> 24);
+					break;
+			
+				default:
+					break;
+			}
+
+			return result;
+		}
+	}
+
 	/**
 	 * @brief      Represents a UTF-8 letter
 	 */
@@ -2369,7 +2416,7 @@ namespace cppr
 		i32 data;
 
 		Rune(i32 c = 0)
-			:data(c)
+			:data(internal::_utf8_to_big_endian(c))
 		{}
 
 		Rune(char c)
@@ -2424,21 +2471,6 @@ namespace cppr
 				result += ((*chars & 0xC0) != 0x80);
 				++chars;
 			}
-			return result;
-		}
-
-		inline static usize
-		_utf8_sequence_length(Rune r)
-		{
-			usize result = 0;
-			byte* b = (byte*)&r.data;
-			result += (*b != 0);
-			++b;
-			result += (*b != 0);
-			++b;
-			result += (*b != 0);
-			++b;
-			result += (*b != 0);
 			return result;
 		}
 

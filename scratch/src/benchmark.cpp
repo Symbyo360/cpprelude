@@ -707,10 +707,20 @@ bm_std_quick_sort(Stopwatch &watch, usize limit)
 void
 debug()
 {
-	//Rune csd = 'م';
-	//println(csd);
-	//u16 a = 0xD985;
-	//::printf("%lc\n", a);
+	Rune csd = 'م';
+	println(csd);
+	String_Range test((byte*)&csd, 2);
+	println(test);
+	String csd2 = "م";
+	println(csd2);
+
+	while(true)
+	{
+		read(csd);
+		println(csd);
+		if(csd == 'x')
+			break;
+	}
 	//p<u8, u8, u8>(0xE2, 0x99, 0xA0);
 	//sprintf("%c%c%c\n", );
 	return;
@@ -720,7 +730,6 @@ debug()
 	while(readln(stream, line) > 0)
 		println(line);
 }
-
 
 void
 do_benchmark()

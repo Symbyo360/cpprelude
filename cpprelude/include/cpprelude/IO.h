@@ -1399,23 +1399,6 @@ namespace cppr
 												 value);
 	}
 
-	/**
-	 * @brief      Prints a value in string form
-	 *
-	 * @param      trait   The IO_Trait to print to
-	 * @param[in]  format  The format of the string
-	 * @param[in]  value   The value to be printed
-	 *
-	 * @return     size of the printed value in bytes
-	 */
-	inline static usize
-	print_str(IO_Trait* trait, const Print_Format& format, Rune r)
-	{
-		auto new_format = format;
-		new_format.type = Print_Format::TYPE::RUNE;
-		return print_str(trait, new_format, r.data);
-	}
-
 	//print 32-bit float
 	/**
 	 * @brief      Prints a value in string form
@@ -1523,6 +1506,21 @@ namespace cppr
 		}
 
 		return result;
+	}
+
+	/**
+	 * @brief      Prints a value in string form
+	 *
+	 * @param      trait   The IO_Trait to print to
+	 * @param[in]  format  The format of the string
+	 * @param[in]  value   The value to be printed
+	 *
+	 * @return     size of the printed value in bytes
+	 */
+	inline static usize
+	print_str(IO_Trait* trait, const Print_Format& format, Rune r)
+	{
+		return print_str(trait, format, String_Range((byte*)&r, internal::_utf8_sequence_length(r.data)));
 	}
 
 	/**
@@ -2148,6 +2146,32 @@ namespace cppr
 			return 0;
 		value = tmp_value;
 		return trait->skip(parsed_size);
+	}
+
+	inline static usize
+	read_str(Bufio_Trait* trait, Rune& value)
+	{
+		_guarantee_text_chunk(trait, KILOBYTES(1));
+		auto bytes = trait->peek();
+		usize non_whitespace_count = 0;
+		for(const auto& byte: bytes)
+		{
+			if(_is_whitespace(byte))
+				break;
+			++non_whitespace_count;
+		}
+
+		if(non_whitespace_count == 0)
+			return 0;
+
+		Rune rune;
+		byte* result = (byte*)&rune;
+		const byte* it = bytes.ptr;
+		*result++ = *it++;
+		while (*it && ((*it & 0xC0) == 0x80))
+			*result++ = *it++;
+		value = rune;
+		return trait->skip(it - bytes.ptr);
 	}
 
 	namespace internal
