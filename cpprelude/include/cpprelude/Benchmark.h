@@ -2,6 +2,7 @@
 
 #include "cpprelude/IO.h"
 #include "cpprelude/Algorithms.h"
+#include <cmath>
 #include <chrono>
 
 namespace cppr

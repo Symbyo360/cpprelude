@@ -704,36 +704,105 @@ bm_std_quick_sort(Stopwatch &watch, usize limit)
 	return result;
 }
 
+struct Screamer
+{
+	Screamer()
+	{
+		println("Screamer()");
+	}
+
+	Screamer(const Screamer& other)
+	{
+		println("Screamer(const Screamer&)");
+	}
+
+	Screamer(Screamer&& other)
+	{
+		println("Screamer(Screamer&&)");
+	}
+
+	Screamer&
+	operator=(const Screamer& other)
+	{
+		println("operator=(const Screamer&)");
+		return *this;
+	}
+
+	Screamer&
+	operator=(Screamer&& other)
+	{
+		println("operator=(Screamer&&");
+		return *this;
+	}
+
+	~Screamer()
+	{
+		println("~Screamer()");
+	}
+};
+
 void
 debug()
 {
-	Rune csd = 'م';
-	println(csd);
-	String_Range test((byte*)&csd, 2);
-	println(test);
-	String csd2 = "م";
-	println(csd2);
-
-	while(true)
 	{
-		read(csd);
-		println(csd);
-		if(csd == 'x')
-			break;
+		std::vector<Screamer> std_tst;
+
+		std_tst.emplace_back(Screamer());
+		std_tst.emplace_back(Screamer());
+		std_tst.emplace_back(Screamer());
+		std_tst.emplace_back(Screamer());
+		std_tst.emplace_back(Screamer());
+		std_tst.emplace_back(Screamer());
+		std_tst.emplace_back(Screamer());
+		std_tst.emplace_back(Screamer());
+		std_tst.emplace_back(Screamer());
+		std_tst.emplace_back(Screamer());
 	}
-	//p<u8, u8, u8>(0xE2, 0x99, 0xA0);
-	//sprintf("%c%c%c\n", );
-	return;
-	File koko = unwrap(File::open("test.txt", IO_MODE::READ, OPEN_MODE::OPEN_ONLY));
-	Buffered_Stream stream(koko);
-	String line;
-	while(readln(stream, line) > 0)
-		println(line);
+	println("\nSeparator\n");
+	{
+		Dynamic_Array<Screamer> tst;
+
+		tst.emplace_back(Screamer());
+		tst.emplace_back(Screamer());
+		tst.emplace_back(Screamer());
+		tst.emplace_back(Screamer());
+		tst.emplace_back(Screamer());
+		tst.emplace_back(Screamer());
+		tst.emplace_back(Screamer());
+		tst.emplace_back(Screamer());
+		tst.emplace_back(Screamer());
+		tst.emplace_back(Screamer());
+	}
+	// Rune csd = u8'م';
+	// println(csd);
+	// String_Range test((byte*)&csd, 2);
+	// println(test);
+	// String csd2 = u8"م";
+	// println(csd2);
+
+	// while(true)
+	// {
+	// 	read(csd);
+	// 	println(csd);
+	// 	if(csd == 'x')
+	// 		break;
+	// }
+	// //p<u8, u8, u8>(0xE2, 0x99, 0xA0);
+	// //sprintf("%c%c%c\n", );
+	// return;
+	// File koko = unwrap(File::open("test.txt", IO_MODE::READ, OPEN_MODE::OPEN_ONLY));
+	// Buffered_Stream stream(koko);
+	// String line;
+	// while(readln(stream, line) > 0)
+	// 	println(line);
 }
 
 void
 do_benchmark()
 {
+	debug();
+	return;
+	//_os_panic();
 	//panic("Halp");
 	//debug();
 	//return;

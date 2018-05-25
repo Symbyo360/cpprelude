@@ -2831,7 +2831,7 @@ namespace cppr
 		usize
 		count() const
 		{
-			if(_runes_count == -1)
+			if(_runes_count == static_cast<usize>(-1))
 				_runes_count = internal::_utf8_count_chars(bytes);
 			return _runes_count;
 		}

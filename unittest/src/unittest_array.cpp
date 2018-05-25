@@ -1,5 +1,5 @@
 #include "catch.hpp"
-#include <cpprelude/array.h>
+#include <cpprelude/Array.h>
 
 using namespace cppr;
 

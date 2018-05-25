@@ -740,7 +740,7 @@ namespace cppr
 				result += trait->write(Slice<byte>((byte*)&s, 1));
 			}
 
-			if(format.precision == -1)
+			if(format.precision == static_cast<usize>(-1))
 				format.precision = PERCISION;
 
 			//third render the value and calc it's written size

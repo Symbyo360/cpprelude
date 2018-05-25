@@ -286,7 +286,7 @@ namespace cppr
 		usize
 		count() const
 		{
-			if(_runes_count == -1)
+			if(_runes_count == static_cast<usize>(-1))
 				_runes_count = internal::_utf8_count_chars(_bytes.range(0, _bytes_size));
 			return _runes_count;
 		}
@@ -937,7 +937,7 @@ namespace cppr
 
 		auto bytes = trait->peek();
 		value.clear();
-		if(newline_offset != -1)
+		if(newline_offset != static_cast<usize>(-1))
 		{
 			usize additional_skip = 1;
 			if(newline_offset > 0 &&
