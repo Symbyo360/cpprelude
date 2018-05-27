@@ -265,7 +265,7 @@
       <CustomListItems>
         <Variable Name="i" InitialValue="0"/>
         <Loop>
-          <If Condition="i >= (_values.size / sizeof($T1))">
+          <If Condition="i >= (_flags.size)">
             <Break/>
           </If>
           <If Condition="_flags.ptr[i] == 1">
@@ -285,7 +285,7 @@
       <CustomListItems>
         <Variable Name="i" InitialValue="0"/>
         <Loop>
-          <If Condition="i >= (_values.size / sizeof($T1))">
+          <If Condition="i >= (_flags.size)">
             <Break/>
           </If>
           <If Condition="i == 0">

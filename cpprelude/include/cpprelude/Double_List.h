@@ -802,7 +802,7 @@ namespace cppr
 		iterator
 		begin()
 		{
-			return iterator(_head);
+			return iterator(_head->next);
 		}
 
 		/**
@@ -811,7 +811,7 @@ namespace cppr
 		const_iterator
 		begin() const
 		{
-			return const_iterator(_head);
+			return const_iterator(_head->next);
 		}
 
 		/**
@@ -820,7 +820,7 @@ namespace cppr
 		const_iterator
 		cbegin() const
 		{
-			return const_iterator(_head);
+			return const_iterator(_head->next);
 		}
 
 		/**
