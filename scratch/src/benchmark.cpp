@@ -800,8 +800,8 @@ debug()
 void
 do_benchmark()
 {
-	debug();
-	return;
+	//debug();
+	//return;
 	//_os_panic();
 	//panic("Halp");
 	//debug();

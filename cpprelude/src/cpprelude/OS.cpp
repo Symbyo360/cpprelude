@@ -661,9 +661,17 @@ namespace cppr
 		//Get the standard handles
 		#if defined(OS_WINDOWS)
 		{
+
+			constexpr const u32 MY_ENABLE_VIRTUAL_TERMINAL_PROCESSING = 4;
+
 			_stdout_handle.windows_handle = GetStdHandle(STD_OUTPUT_HANDLE);
 			_stderr_handle.windows_handle = GetStdHandle(STD_ERROR_HANDLE);
 			_stdin_handle.windows_handle = GetStdHandle(STD_INPUT_HANDLE);
+
+			DWORD mode;
+			GetConsoleMode(_stdout_handle.windows_handle, &mode);
+			mode |= MY_ENABLE_VIRTUAL_TERMINAL_PROCESSING;
+			SetConsoleMode(_stdout_handle.windows_handle, mode);
 
 			#if defined(DEBUG)
 			{
