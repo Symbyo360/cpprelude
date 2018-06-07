@@ -633,14 +633,14 @@ namespace cppr
 				format.sign == Print_Format::SIGN::POSITIVE)
 			{
 				char sign = '+';
-				result += trait->write(Slice<byte>((byte*)&sign, 1));
+				result += trait->write(make_slice(&sign));
 			}
 			else if(value >= 0 &&
 					format.type == Print_Format::TYPE::DECIMAL &&
 					format.sign == Print_Format::SIGN::SPACE)
 			{
 				char sign = ' ';
-				result += trait->write(Slice<byte>((byte*)&sign, 1));
+				result += trait->write(make_slice(&sign, 1));
 			}
 
 			//render the value and calc it's written size
@@ -665,32 +665,32 @@ namespace cppr
 				alignment == Print_Format::ALIGN::RIGHT)
 			{
 				for(usize i = 0; i < pad_size; ++i)
-					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+					result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 			}
 			else if(pad_size != 0 &&
 					alignment == Print_Format::ALIGN::CENTER)
 			{
 				usize i;
 				for(i = 0; i < pad_size / 2; ++i)
-					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+					result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 				pad_size -= i;
 			}
 
 			//write the rendered value
-			result += trait->write(Slice<byte>(buffer, written_size));
+			result += trait->write(make_slice(buffer, written_size));
 
 			//respect left and center align
 			if (pad_size != 0 &&
 				alignment == Print_Format::ALIGN::CENTER)
 			{
 				for(usize i = 0; i < pad_size; ++i)
-					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+					result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 			}
 			else if(pad_size != 0 &&
 					alignment == Print_Format::ALIGN::LEFT)
 			{
 				for(usize i = 0; i < pad_size; ++i)
-					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+					result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 			}
 
 			return result;
@@ -731,13 +731,13 @@ namespace cppr
 				format.sign == Print_Format::SIGN::POSITIVE)
 			{
 				char s = '+';
-				result += trait->write(Slice<byte>((byte*)&s, 1));
+				result += trait->write(make_slice(&s));
 			}
 			else if(value >= 0 &&
 					format.sign == Print_Format::SIGN::SPACE)
 			{
 				char s = ' ';
-				result += trait->write(Slice<byte>((byte*)&s, 1));
+				result += trait->write(make_slice(&s));
 			}
 
 			if(format.precision == static_cast<usize>(-1))
@@ -763,32 +763,32 @@ namespace cppr
 				format.alignment == Print_Format::ALIGN::RIGHT)
 			{
 				for(usize i = 0; i < pad_size; ++i)
-					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+					result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 			}
 			else if(pad_size != 0 &&
 					format.alignment == Print_Format::ALIGN::CENTER)
 			{
 				usize i;
 				for(i = 0; i < pad_size / 2; ++i)
-					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+					result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 				pad_size -= i;
 			}
 
 			//fifth write the rendered value
-			result += trait->write(Slice<byte>(buffer, written_size));
+			result += trait->write(make_slice(buffer, written_size));
 
 			//sixth respect left and center align
 			if (pad_size != 0 &&
 				format.alignment == Print_Format::ALIGN::CENTER)
 			{
 				for(usize i = 0; i < pad_size; ++i)
-					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+					result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 			}
 			else if(pad_size != 0 &&
 					format.alignment == Print_Format::ALIGN::LEFT)
 			{
 				for(usize i = 0; i < pad_size; ++i)
-					result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+					result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 			}
 
 			return result;
@@ -809,7 +809,7 @@ namespace cppr
 	inline static usize
 	print_bin(IO_Trait* trait, const T& value)
 	{
-		return trait->write(Slice<byte>((byte*)&value, sizeof(T)));
+		return trait->write(make_slice((byte*)&value, sizeof(T)));
 	}
 
 	/**
@@ -1478,14 +1478,14 @@ namespace cppr
 			alignment == Print_Format::ALIGN::RIGHT)
 		{
 			for(usize i = 0; i < pad_size; ++i)
-				result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+				result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 		}
 		else if(pad_size != 0 &&
 				alignment == Print_Format::ALIGN::CENTER)
 		{
 			usize i;
 			for(i = 0; i < pad_size / 2; ++i)
-				result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+				result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 			pad_size -= i;
 		}
 
@@ -1496,13 +1496,13 @@ namespace cppr
 			alignment == Print_Format::ALIGN::CENTER)
 		{
 			for(usize i = 0; i < pad_size; ++i)
-				result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+				result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 		}
 		else if(pad_size != 0 &&
 				alignment == Print_Format::ALIGN::LEFT)
 		{
 			for(usize i = 0; i < pad_size; ++i)
-				result += trait->write(Slice<byte>((byte*)&format.pad, pad_str_size));
+				result += trait->write(make_slice((byte*)&format.pad, pad_str_size));
 		}
 
 		return result;
@@ -1520,7 +1520,7 @@ namespace cppr
 	inline static usize
 	print_str(IO_Trait* trait, const Print_Format& format, Rune r)
 	{
-		return print_str(trait, format, String_Range((byte*)&r, internal::_utf8_sequence_length(r.data)));
+		return print_str(trait, format, make_strrng((byte*)&r, internal::_utf8_sequence_length(r.data)));
 	}
 
 	/**
@@ -1535,7 +1535,7 @@ namespace cppr
 	inline static usize
 	print_str(IO_Trait *trait, const Print_Format& format, const char* str)
 	{
-		return print_str(trait, format, String_Range(str));
+		return print_str(trait, format, make_strrng(str));
 	}
 
 	/**
@@ -1561,6 +1561,12 @@ namespace cppr
 	vprintf(IO_Trait* trait, const String_Range& str)
 	{
 		return print_str(trait, Print_Format(), str);
+	}
+
+	inline static usize
+	vprintf(IO_Trait* trait, const char* str)
+	{
+		return vprintf(trait, make_strrng(str));
 	}
 
 	/**
@@ -1605,7 +1611,7 @@ namespace cppr
 				if(rune_back_it.ptr < rune_forward_it.ptr)
 				{
 					result += trait->write(
-								Slice<byte>((byte*)rune_back_it.ptr,
+								make_slice((byte*)rune_back_it.ptr,
 											rune_forward_it.ptr - rune_back_it.ptr));
 					//after writing the chunk we set the back iterator to the forward iterator
 					rune_back_it = rune_forward_it;
@@ -1628,7 +1634,7 @@ namespace cppr
 				if(c == '{')
 				{
 					char open_brace = '{';
-					result += trait->write(Slice<byte>((byte*)&open_brace, 1));
+					result += trait->write(make_slice(&open_brace));
 
 					//go to the next rune and reset the back it
 					++rune_forward_it;
@@ -1668,11 +1674,18 @@ namespace cppr
 		if(rune_back_it.ptr < rune_forward_it.ptr)
 		{
 			result += trait->write(
-						Slice<byte>((byte*)rune_back_it.ptr,
+						make_slice((byte*)rune_back_it.ptr,
 									rune_forward_it.ptr - rune_back_it.ptr));
 		}
 
 		return result;
+	}
+
+	template<typename ... TArgs>
+	inline static usize
+	vprintf(IO_Trait* trait, const char* format, TArgs&& ... args)
+	{
+		return vprintf(trait, make_strrng(format), std::forward<TArgs>(args)...);
 	}
 
 
@@ -1790,6 +1803,13 @@ namespace cppr
 		return result;
 	}
 
+	template<typename ... TArgs>
+	inline static usize
+	printf(const char* format, TArgs&& ... args)
+	{
+		return printf(make_strrng(format), std::forward<TArgs>(args)...);
+	}
+
 	/**
 	 * @brief      Prints a formatted values to the unbuffered stderr
 	 *
@@ -1809,6 +1829,13 @@ namespace cppr
 		result = vprintf(os->unbuf_stderr, format, std::forward<TArgs>(args)...);
 		_release_print_err_lock();
 		return result;
+	}
+
+	template<typename ... TArgs>
+	inline static usize
+	printf_err(const char* format, TArgs&& ... args)
+	{
+		return printf_err(make_strrng(format), std::forward<TArgs>(args)...);
 	}
 
 
@@ -1980,7 +2007,7 @@ namespace cppr
 	inline static usize
 	read_bin(IO_Trait* trait, T& value)
 	{
-		return trait->read(Slice<byte>((byte*)&value, sizeof(T)));
+		return trait->read(make_slice((byte*)&value, sizeof(T)));
 	}
 
 	/**

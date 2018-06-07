@@ -36,7 +36,7 @@ TEST_CASE("string", "[string]")
 	SECTION("Case 04")
 	{
 		const char* name = "Mostafa";
-		String str(String_Range(name, 3));
+		String str(make_strrng(name, 3));
 		CHECK(str.size() == 4);
 		CHECK(str.count() == 3);
 		CHECK(str.empty() == false);

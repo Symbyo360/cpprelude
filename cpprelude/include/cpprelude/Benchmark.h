@@ -169,7 +169,7 @@ namespace cppr
 		if(!silent)
 		{
 			vprintf(trait,
-				"{}:\n\tsamples: {},\n\tmin: {:.2f}ms,\n\tmax: {:.2f}ms,\n\tavg: {:.2f}ms,\n\ttotal: {:.2f}ms,\n\tthroughput: {:.2f} op/sec\n"_const_str,
+				"{}:\n\tsamples: {},\n\tmin: {:.2f}ms,\n\tmax: {:.2f}ms,\n\tavg: {:.2f}ms,\n\ttotal: {:.2f}ms,\n\tthroughput: {:.2f} op/sec\n"_rng,
 				benchmark_name, samples_count, min_time, max_time, avg_time, total_time, 1000.0/avg_time);
 		}
 		data.name = benchmark_name;
@@ -238,15 +238,15 @@ namespace cppr
 		String_Range BAD_COLOR, GOOD_COLOR, CLEAR_COLOR;
 		#if defined(OS_WINDOWS)
 		{
-			BAD_COLOR = "\x1b[91m";
-			GOOD_COLOR = "\x1b[92m";
-			CLEAR_COLOR = "\x1b[37m";
+			BAD_COLOR = "\x1b[91m"_rng;
+			GOOD_COLOR = "\x1b[92m"_rng;
+			CLEAR_COLOR = "\x1b[37m"_rng;
 		}
 		#elif defined(OS_LINUX)
 		{
-			BAD_COLOR = "\e[91m";
-			GOOD_COLOR = "\e[92m";
-			CLEAR_COLOR = "\e[39m";
+			BAD_COLOR = "\e[91m"_rng;
+			GOOD_COLOR = "\e[92m"_rng;
+			CLEAR_COLOR = "\e[39m"_rng;
 		}
 		#endif
 		Benchmark_Compare_Data results[] = { args... };

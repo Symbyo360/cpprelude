@@ -166,25 +166,6 @@ namespace cppr
 		usize size;
 
 		/**
-		 * @brief      Constructs a empty slice
-		 */
-		Slice()
-			:ptr(nullptr),
-			 size(0)
-		{}
-
-		/**
-		 * @brief      Constructs a slice
-		 *
-		 * @param      value          pointer to the underlying block of memory
-		 * @param[in]  size_in_bytes  The size in bytes
-		 */
-		Slice(T* value, usize size_in_bytes)
-			:ptr(value),
-			 size(size_in_bytes)
-		{}
-
-		/**
 		 * @brief      Equal operator
 		 *
 		 * @param[in]  other  The other slice to compare to
@@ -221,7 +202,7 @@ namespace cppr
 		Slice<R>
 		convert() const
 		{
-			return Slice<R>((R*)ptr, size);
+			return Slice<R>{(R*)ptr, size};
 		}
 
 		//Container Interface
@@ -240,7 +221,7 @@ namespace cppr
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(ptr, size);
+			return Const_Range_Type{ptr, size};
 		}
 
 		/**
@@ -254,7 +235,7 @@ namespace cppr
 		Range_Type
 		range(usize start, usize end)
 		{
-			return Range_Type(ptr + start, (end - start) * sizeof(T));
+			return Range_Type{ptr + start, (end - start) * sizeof(T)};
 		}
 
 		/**
@@ -268,7 +249,7 @@ namespace cppr
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
-			return Const_Range_Type(ptr + start, (end - start) * sizeof(T));
+			return Const_Range_Type{ptr + start, (end - start) * sizeof(T)};
 		}
 
 		/**
@@ -282,7 +263,7 @@ namespace cppr
 		Range_Type
 		range(iterator start, iterator end)
 		{
-			return Range_Type(start, (end - start) * sizeof(T));
+			return Range_Type{start, (end - start) * sizeof(T)};
 		}
 
 		/**
@@ -296,7 +277,7 @@ namespace cppr
 		Const_Range_Type
 		range(const_iterator start, const_iterator end) const
 		{
-			return Const_Range_Type(start, (end - start) * sizeof(T));
+			return Const_Range_Type{start, (end - start) * sizeof(T)};
 		}
 
 		/**
@@ -311,7 +292,7 @@ namespace cppr
 			byte* byte_ptr = (byte*)ptr;
 			byte_ptr += start_in_bytes;
 			usize new_size = end_in_bytes - start_in_bytes;
-			return Range_Type((T*)byte_ptr, new_size);
+			return Range_Type{(T*)byte_ptr, new_size};
 		}
 
 		/**
@@ -326,7 +307,7 @@ namespace cppr
 			byte* byte_ptr = (byte*)ptr;
 			byte_ptr += start_in_bytes;
 			usize new_size = end_in_bytes - start_in_bytes;
-			return Const_Range_Type((T*)byte_ptr, new_size);
+			return Const_Range_Type{(T*)byte_ptr, new_size};
 		}
 
 		//Forward_Range Interface
@@ -484,6 +465,34 @@ namespace cppr
 			return ptr + count();
 		}
 	};
+
+	/**
+	 * @brief Creates an empty slice
+	 * 
+	 * @tparam T Type of the underlying values in the slice
+	 * @return Slice<T> The constructed slice
+	 */
+	template<typename T>
+	inline static Slice<T>
+	make_slice()
+	{
+		return Slice<T>{nullptr, 0};
+	}
+
+	/**
+	 * @brief Creates a slice
+	 * 
+	 * @tparam T type of the underlying values in the slice
+	 * @param ptr pointer to the memory to construct the slice from
+	 * @param count count of element of type `T` in the slice
+	 * @return Slice<T> TThe constructed slice
+	 */
+	template<typename T>
+	inline static Slice<T>
+	make_slice(T* ptr, usize count = 1)
+	{
+		return Slice<T>{ptr, count * sizeof(T)};
+	}
 
 	/**
 	 * [[markdown]]
@@ -2741,58 +2750,7 @@ namespace cppr
 		 * Underlying bytes slice
 		 */
 		Slice<const byte> bytes;
-		mutable usize _runes_count;
-
-		/**
-		 * Creates an empty string range
-		 */
-		String_Range()
-			:_runes_count(0)
-		{}
-
-		/**
-		 * @brief      Creates a string range of the provided byte slice
-		 *
-		 * @param[in]  str_range  The string bytes range
-		 */
-		String_Range(const Slice<const byte>& str_range)
-			:bytes(str_range),
-			 _runes_count(-1)
-		{}
-
-		/**
-		 * @brief      Creates a string range of the provided byte slice
-		 *
-		 * @param[in]  str_range  The string bytes range
-		 * @param[in]  runes_count  The count of runes in the UTF-8 string
-		 */
-		String_Range(const Slice<const byte>& str_range, usize runes_count)
-			:bytes(str_range),
-			 _runes_count(runes_count)
-		{}
-
-		/**
-		 * @brief      Creates a string range of the provided C string
-		 *
-		 * @param[in]  str   The C string
-		 */
-		String_Range(const char* str)
-		{
-			bytes.ptr = (byte*)str;
-			bytes.size = std::strlen(str);
-			_runes_count = -1;
-		}
-
-		/**
-		 * @brief      Creates a string range of the provided C string
-		 *
-		 * @param[in]  str   The C string
-		 * @param[in]  str_size  The size of the C string
-		 */
-		String_Range(const char* str, usize str_size)
-			:bytes(str, str_size),
-			 _runes_count(-1)
-		{}
+		// mutable usize _runes_count;
 
 		/**
 		 * @param[in]  other  The other string range to compare to
@@ -2831,9 +2789,7 @@ namespace cppr
 		usize
 		count() const
 		{
-			if(_runes_count == static_cast<usize>(-1))
-				_runes_count = internal::_utf8_count_chars(bytes);
-			return _runes_count;
+			return internal::_utf8_count_chars(bytes);
 		}
 
 		/**
@@ -2865,7 +2821,6 @@ namespace cppr
 			bytes.pop_front();
 			while(bytes.front() && ((bytes.front() & 0xC0) == 0x80))
 				bytes.pop_front();
-			--_runes_count;
 		}
 
 		/**
@@ -2909,7 +2864,7 @@ namespace cppr
 			usize start_bytes_offset = internal::_utf8_count_runes_to(bytes.all(), start);
 			usize end_bytes_offset = internal::_utf8_count_runes_to(bytes.all(), end);
 
-			return Const_Range_Type(bytes.range(start_bytes_offset, end_bytes_offset), end - start);
+			return Const_Range_Type{bytes.range(start_bytes_offset, end_bytes_offset)};
 		}
 
 		/**
@@ -2923,7 +2878,7 @@ namespace cppr
 		Const_Range_Type
 		range(const_iterator start, const_iterator end_it) const
 		{
-			return Const_Range_Type(Slice<const byte>(start.ptr, end_it.ptr - start.ptr));
+			return Const_Range_Type{make_slice(start.ptr, end_it.ptr - start.ptr)};
 		}
 
 		/**
@@ -2982,6 +2937,54 @@ namespace cppr
 	};
 
 	/**
+	 * @brief Construct an empty string range
+	 * 
+	 * @return String_Range
+	 */
+	inline static String_Range
+	make_strrng()
+	{
+		return String_Range{ make_slice<const byte>() };
+	}
+
+	/**
+	 * @brief Construct a string range
+	 * 
+	 * @param str a pointer to a C string
+	 * @param str_size the size of the C string
+	 * @return String_Range 
+	 */
+	inline static String_Range
+	make_strrng(const char* str, usize str_size)
+	{
+		return String_Range{ make_slice(str, str_size) };
+	}
+
+	/**
+	 * @brief Constructs a string range
+	 * 
+	 * @param str a pointer to C string
+	 * @return String_Range 
+	 */
+	inline static String_Range
+	make_strrng(const char* str)
+	{
+		return String_Range{ make_slice(str, std::strlen(str)) };
+	}
+
+	/**
+	 * @brief Constructs a string range
+	 * 
+	 * @param data the slice of memory to construct the range from
+	 * @return String_Range 
+	 */
+	inline static String_Range
+	make_strrng(const Slice<const byte>& data)
+	{
+		return String_Range{data};
+	}
+
+	/**
 	 * @brief      Const string string literal
 	 *
 	 * @param[in]  str        The C string
@@ -2990,9 +2993,9 @@ namespace cppr
 	 * @return     A String Range
 	 */
 	inline static String_Range
-	operator""_const_str(const char* str, usize str_count)
+	operator""_rng(const char* str, usize str_count)
 	{
-		return String_Range(str, str_count);
+		return String_Range{ make_slice(str, str_count) };
 	}
 
 	/**

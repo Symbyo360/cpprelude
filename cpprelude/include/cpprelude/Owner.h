@@ -238,7 +238,7 @@ namespace cppr
 		Range_Type
 		all()
 		{
-			return Range_Type(ptr, size);
+			return Range_Type{ptr, size};
 		}
 
 		/**
@@ -247,7 +247,7 @@ namespace cppr
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(ptr, size);
+			return Const_Range_Type{ptr, size};
 		}
 
 		/**
@@ -259,7 +259,7 @@ namespace cppr
 		Range_Type
 		range(usize start, usize end)
 		{
-			return Range_Type(ptr + start, (end - start) * sizeof(T));
+			return Range_Type{ptr + start, (end - start) * sizeof(T)};
 		}
 
 		/**
@@ -271,7 +271,7 @@ namespace cppr
 		Const_Range_Type
 		range(usize start, usize end) const
 		{
-			return Const_Range_Type(ptr + start, (end - start) * sizeof(T));
+			return Const_Range_Type{ptr + start, (end - start) * sizeof(T)};
 		}
 	};
 

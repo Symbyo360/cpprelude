@@ -14,7 +14,7 @@ namespace cppr
 	[[noreturn]] inline static void
 	panic(const String_Range& str)
 	{
-		println_err("[panic]: "_const_str, str);
+		println_err("[panic]: "_rng, str);
 		_os_panic();
 	}
 
@@ -25,9 +25,9 @@ namespace cppr
 	[[noreturn]] inline static void
 	panic(const String_Range& str, TArgs&& ... args)
 	{
-		print_err("[panic]: "_const_str);
+		print_err("[panic]: "_rng);
 		printf_err(str, std::forward<TArgs>(args)...);
-		print_err("\n"_const_str);
+		print_err("\n"_rng);
 		_os_panic();
 	}
 
@@ -47,7 +47,7 @@ namespace cppr
 		   typename std::enable_if<!std::is_copy_constructible<T>::value, _Unwrap_Tag_Type>::type = _Unwrap_Tag_Type())
 	{
 		if(result.error != ok_state)
-			panic("Result has an error"_const_str);
+			panic("Result has an error"_rng);
 		return std::move(result.value);
 	}
 
@@ -65,7 +65,7 @@ namespace cppr
 		   typename std::enable_if<std::is_copy_constructible<T>::value, _Unwrap_Tag_Type>::type = _Unwrap_Tag_Type())
 	{
 		if(result.error != ok_state)
-			panic("Result has an error"_const_str);
+			panic("Result has an error"_rng);
 		return result.value;
 	}
 

@@ -45,7 +45,7 @@ using namespace cppr;
 
 Dynamic_Array<usize> RANDOM_ARRAY;
 
-Stack_Allocator stack(MEGABYTES(250));
+Stack_Allocator stack(MEGABYTES(250), os->virtual_memory);
 Arena_Allocator arena;
 
 void
@@ -744,6 +744,11 @@ struct Screamer
 void
 debug()
 {
+	println("is Slice<byte> a POD? ", std::is_pod<Slice<byte>>());
+	println("is String_Range a POD? ", std::is_pod<String_Range>());
+	String_Range str = "Mostafa"_rng;
+	println(str);
+	return;
 	{
 		std::vector<Screamer> std_tst;
 
@@ -800,7 +805,7 @@ debug()
 void
 do_benchmark()
 {
-	//debug();
+	debug();
 	//return;
 	//_os_panic();
 	//panic("Halp");
@@ -809,12 +814,12 @@ do_benchmark()
 	cppr::usize limit = 1000;
 
 	compare_benchmarks(
-		summary("std::vector", [&](Stopwatch& watch)
+		summary("std::vector"_rng, [&](Stopwatch& watch)
 		{
 			bm_vector(watch, limit);
 		}),
 
-		summary("Dynamic_Array", [&](Stopwatch& watch)
+		summary("Dynamic_Array"_rng, [&](Stopwatch& watch)
 		{
 			bm_Dynamic_Array(watch, limit);
 		})
@@ -823,12 +828,12 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::string", [&](Stopwatch& watch)
+		summary("std::string"_rng, [&](Stopwatch& watch)
 		{
 			bm_string(watch, limit);
 		}),
 
-		summary("String", [&](Stopwatch& watch)
+		summary("String"_rng, [&](Stopwatch& watch)
 		{
 			bm_String(watch, limit);
 		})
@@ -837,22 +842,22 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::forward_list", [&](Stopwatch& watch)
+		summary("std::forward_list"_rng, [&](Stopwatch& watch)
 		{
 			bm_forward_list(watch, limit);
 		}),
 
-		summary("Single_List", [&](Stopwatch& watch)
+		summary("Single_List"_rng, [&](Stopwatch& watch)
 		{
 			bm_Single_List(watch, limit);
 		}),
 
-		summary("Single_List Stack_Allocator", [&](Stopwatch& watch)
+		summary("Single_List Stack_Allocator"_rng, [&](Stopwatch& watch)
 		{
 			bm_Stack_Allocator_Single_List(watch, limit);
 		}),
 
-		summary("Single_List Arena_Allocator", [&](Stopwatch& watch)
+		summary("Single_List Arena_Allocator"_rng, [&](Stopwatch& watch)
 		{
 			bm_Arena_Allocator_Single_List(watch, limit);
 		})
@@ -861,12 +866,12 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::list", [&](Stopwatch& watch)
+		summary("std::list"_rng, [&](Stopwatch& watch)
 		{
 			bm_list(watch, limit);
 		}),
 
-		summary("Double_List", [&](Stopwatch& watch)
+		summary("Double_List"_rng, [&](Stopwatch& watch)
 		{
 			bm_Double_List(watch, limit);
 		})
@@ -875,17 +880,17 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::stack", [&](Stopwatch& watch)
+		summary("std::stack"_rng, [&](Stopwatch& watch)
 		{
 			bm_stack(watch, limit);
 		}),
 
-		summary("Stack_Array", [&](Stopwatch& watch)
+		summary("Stack_Array"_rng, [&](Stopwatch& watch)
 		{
 			bm_Stack_Array(watch, limit);
 		}),
 
-		summary("Stack_List", [&](Stopwatch& watch)
+		summary("Stack_List"_rng, [&](Stopwatch& watch)
 		{
 			bm_Stack_List(watch, limit);
 		})
@@ -894,17 +899,17 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::queue", [&](Stopwatch& watch)
+		summary("std::queue"_rng, [&](Stopwatch& watch)
 		{
 			bm_queue(watch, limit);
 		}),
 
-		summary("Ring_Array", [&](Stopwatch& watch)
+		summary("Ring_Array"_rng, [&](Stopwatch& watch)
 		{
 			bm_Ring_Array(watch, limit);
 		}),
 
-		summary("Queue_List", [&](Stopwatch& watch)
+		summary("Queue_List"_rng, [&](Stopwatch& watch)
 		{
 			bm_Queue_List(watch, limit);
 		})
@@ -913,12 +918,12 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::priority_queue", [&](Stopwatch& watch)
+		summary("std::priority_queue"_rng, [&](Stopwatch& watch)
 		{
 			bm_priority_queue(watch, limit);
 		}),
 
-		summary("Priority_Queue", [&](Stopwatch& watch)
+		summary("Priority_Queue"_rng, [&](Stopwatch& watch)
 		{
 			bm_Priority_Queue(watch, limit);
 		})
@@ -927,12 +932,12 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::map", [&](Stopwatch& watch)
+		summary("std::map"_rng, [&](Stopwatch& watch)
 		{
 			bm_map(watch, limit);
 		}),
 
-		summary("Tree_Map", [&](Stopwatch& watch)
+		summary("Tree_Map"_rng, [&](Stopwatch& watch)
 		{
 			bm_Tree_Map(watch, limit);
 		})
@@ -941,22 +946,22 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::unordered_set", [&](Stopwatch& watch)
+		summary("std::unordered_set"_rng, [&](Stopwatch& watch)
 		{
 			bm_unordered_set(watch, limit);
 		}),
 
-		summary("Hash_Set", [&](Stopwatch& watch)
+		summary("Hash_Set"_rng, [&](Stopwatch& watch)
 		{
 			bm_Hash_Set(watch, limit);
 		}),
 
-		summary("Hash_Set Stack_Allocator", [&](Stopwatch& watch)
+		summary("Hash_Set Stack_Allocator"_rng, [&](Stopwatch& watch)
 		{
 			bm_Stack_Allocator_Hash_Set(watch, limit);
 		}),
 
-		summary("Hash_Set Arena_Allocator", [&](Stopwatch& watch)
+		summary("Hash_Set Arena_Allocator"_rng, [&](Stopwatch& watch)
 		{
 			bm_Arena_Allocator_Hash_Set(watch, limit);
 		})
@@ -965,12 +970,12 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::unordered_map", [&](Stopwatch& watch)
+		summary("std::unordered_map"_rng, [&](Stopwatch& watch)
 		{
 			bm_unordered_map(watch, limit);
 		}),
 
-		summary("Hash_Map", [&](Stopwatch& watch)
+		summary("Hash_Map"_rng, [&](Stopwatch& watch)
 		{
 			bm_Hash_Map(watch, limit);
 		})
@@ -981,12 +986,12 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::heap_sort", [&](Stopwatch& watch)
+		summary("std::heap_sort"_rng, [&](Stopwatch& watch)
 		{
 			bm_std_heap_sort(watch, limit);
 		}),
 
-		summary("heap_sort", [&](Stopwatch& watch)
+		summary("heap_sort"_rng, [&](Stopwatch& watch)
 		{
 			bm_heap_sort(watch, limit);
 		})
@@ -995,12 +1000,12 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::stable_sort", [&](Stopwatch& watch)
+		summary("std::stable_sort"_rng, [&](Stopwatch& watch)
 		{
 			bm_std_merge_sort(watch, limit);
 		}),
 
-		summary("merge_sort", [&](Stopwatch& watch)
+		summary("merge_sort"_rng, [&](Stopwatch& watch)
 		{
 			bm_merge_sort(watch, limit);
 		})
@@ -1009,12 +1014,12 @@ do_benchmark()
 	println();
 
 	compare_benchmarks(
-		summary("std::sort", [&](Stopwatch& watch)
+		summary("std::sort"_rng, [&](Stopwatch& watch)
 		{
 			bm_std_quick_sort(watch, limit);
 		}),
 
-		summary("quick_sort", [&](Stopwatch& watch)
+		summary("quick_sort"_rng, [&](Stopwatch& watch)
 		{
 			bm_quick_sort(watch, limit);
 		})

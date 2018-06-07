@@ -133,12 +133,12 @@ namespace cppr
 						abi::__cxa_demangle(name_buffer, demangled_buffer, &demangled_buffer_length, &status);
 						if(status == 0)
 						{
-							String_Range function_name(demangled_buffer, demangled_buffer_length);
+							String_Range function_name = make_strrng(demangled_buffer, demangled_buffer_length);
 							println_err("[", frames_count - i - 1, "]: ", function_name);
 						}
 						else
 						{
-							String_Range function_name(name_buffer, copy_size);
+							String_Range function_name = make_strrng(name_buffer, copy_size);
 							println_err("[", frames_count - i - 1, "]: ", function_name);
 						}
 					}
@@ -168,19 +168,13 @@ namespace cppr
 	}
 
 	bool
-	OS::virtual_free(Owner<byte>& data)
+	OS::virtual_free(const Owner<byte>& data)
 	{
 		#if defined(OS_WINDOWS)
 			return VirtualFree(data.ptr, 0, MEM_RELEASE) != NULL;
 		#elif defined(OS_LINUX)
 			return munmap(data.ptr, data.size) == 0;
 		#endif
-	}
-
-	bool
-	OS::virtual_free(Owner<byte>&& data)
-	{
-		return virtual_free(data);
 	}
 
 	//file stuff
@@ -578,6 +572,46 @@ namespace cppr
 		std::free(value.ptr);
 	}
 
+	Owner<byte>
+	_virtual_memory_alloc(void* _self, usize size)
+	{
+		if(size == 0)
+			return Owner<byte>();
+
+		OS* self = (OS*)_self;
+
+		auto result = self->virtual_alloc(nullptr, size);
+
+		if(result.empty())
+			return Owner<byte>();
+
+		#ifdef DEBUG
+		{
+			self->allocation_count += 1;
+			self->allocation_size += size;
+		}
+		#endif
+		return result;
+	}
+
+	void
+	_virtual_memory_free(void* _self, const Owner<byte>& value)
+	{
+		if(!value)
+			return;
+
+		OS* self = (OS*)_self;
+
+		#ifdef DEBUG
+		{
+			self->allocation_count -= 1;
+			self->allocation_size -= value.size;
+		}
+		#endif
+
+		self->virtual_free(value);
+	}
+
 	//IO Stuff
 	usize
 	_write_std_handle(void *self, const Slice<byte>& data)
@@ -649,7 +683,7 @@ namespace cppr
 	OS*
 	_actual_init_os()
 	{
-		static Allocator_Trait _global_memory_trait;
+		static Allocator_Trait _global_memory_trait, _virtual_memory_trait;
 		static File_Handle _stdout_handle, _stderr_handle, _stdin_handle;
 		static IO_Trait _stdout, _stderr, _stdin;
 		static OS _os;
@@ -690,6 +724,7 @@ namespace cppr
 
 		//setup the OS hooks
 		_os.global_memory = &_global_memory_trait;
+		_os.virtual_memory = &_virtual_memory_trait;
 		_os.unbuf_stdout = &_stdout;
 		_os.unbuf_stderr = &_stderr;
 		_os.unbuf_stdin = &_stdin;
@@ -698,6 +733,11 @@ namespace cppr
 		_global_memory_trait._self  = &_os;
 		_global_memory_trait._alloc = _global_memory_alloc;
 		_global_memory_trait._free  = _global_memory_free;
+
+		//setup the virtual memory allocator
+		_virtual_memory_trait._self  = &_os;
+		_virtual_memory_trait._alloc = _virtual_memory_alloc;
+		_virtual_memory_trait._free  = _virtual_memory_free;
 
 		//setup the stdout
 		_stdout._self = &_stdout_handle;

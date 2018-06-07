@@ -546,7 +546,7 @@ namespace cppr
 		Range_Type
 		all()
 		{
-			return Range_Type(_data.ptr, _count * sizeof(T));
+			return make_slice(_data.ptr, _count);
 		}
 
 		/**
@@ -555,7 +555,7 @@ namespace cppr
 		Const_Range_Type
 		all() const
 		{
-			return Const_Range_Type(_data.ptr, _count * sizeof(T));
+			return make_slice(_data.ptr, _count);
 		}
 
 		/**

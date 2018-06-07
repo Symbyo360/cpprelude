@@ -193,5 +193,11 @@ namespace cppr
 			else
 				_flags = MEMORY_CONTEXT_FLAGS::NONE;
 		}
+
+		bool
+		valid() const
+		{
+			return _allocator != nullptr;
+		}
 	};
 }

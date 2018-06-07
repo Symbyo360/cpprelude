@@ -71,7 +71,7 @@ namespace cppr
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
 			move<byte>(_bytes.all(), str_range.bytes);
 			_bytes[_bytes_size - 1] = '\0';
-			_runes_count = str_range._runes_count;
+			_runes_count = -1;
 		}
 
 		/**
@@ -83,13 +83,13 @@ namespace cppr
 		String(const char* str, const Memory_Context& context = os->global_memory)
 			:mem_context(context)
 		{
-			String_Range str_range(str);
+			String_Range str_range = make_strrng(str);
 			_bytes_size = str_range.bytes.size + 1;
 
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
 			move<byte>(_bytes.all(), str_range.bytes);
 			_bytes[_bytes_size - 1] = '\0';
-			_runes_count = str_range._runes_count;
+			_runes_count = -1;
 		}
 
 		/**
@@ -102,13 +102,13 @@ namespace cppr
 		String(const char* str, usize count, const Memory_Context& context = os->global_memory)
 			:mem_context(context)
 		{
-			String_Range str_range(str, count);
+			String_Range str_range = make_strrng(str, count);
 			_bytes_size = str_range.bytes.size + 1;
 
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
 			move<byte>(_bytes.all(), str_range.bytes);
 			_bytes[_bytes_size - 1] = '\0';
-			_runes_count = str_range._runes_count;
+			_runes_count = -1;
 		}
 
 		/**
@@ -232,7 +232,7 @@ namespace cppr
 			move<byte>(_bytes.all(), str.bytes);
 			_bytes_size = str.bytes.size + 1;
 			_bytes[_bytes_size - 1] = '\0';
-			_runes_count = str._runes_count;
+			_runes_count = -1;
 			return *this;
 		}
 
@@ -253,7 +253,7 @@ namespace cppr
 				_bytes = mem_context.template alloc<byte>(str_size + 1);
 			}
 
-			move<byte>(_bytes.all(), Slice<const byte>(str, str_size));
+			move<byte>(_bytes.all(), make_slice(str, str_size));
 			_bytes_size = str_size + 1;
 			_bytes[_bytes_size - 1] = '\0';
 			_runes_count = -1;
@@ -518,7 +518,7 @@ namespace cppr
 		bool
 		operator==(const char* str)
 		{
-			return operator==(String_Range(str));
+			return operator==(make_strrng(str));
 		}
 
 		/**
@@ -544,7 +544,7 @@ namespace cppr
 		bool
 		operator<(const char* str) const
 		{
-			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) < 0;
+			return internal::_strcmp(_bytes.all(), make_slice(str, std::strlen(str))) < 0;
 		}
 
 		/**
@@ -557,7 +557,7 @@ namespace cppr
 		bool
 		operator<=(const char* str) const
 		{
-			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) <= 0;
+			return internal::_strcmp(_bytes.all(), make_slice(str, std::strlen(str))) <= 0;
 		}
 
 		/**
@@ -570,7 +570,7 @@ namespace cppr
 		bool
 		operator>(const char* str) const
 		{
-			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) > 0;
+			return internal::_strcmp(_bytes.all(), make_slice(str, std::strlen(str))) > 0;
 		}
 
 		/**
@@ -583,7 +583,7 @@ namespace cppr
 		bool
 		operator>=(const char* str) const
 		{
-			return internal::_strcmp(_bytes.all(), String_Range(str).bytes) >= 0;
+			return internal::_strcmp(_bytes.all(), make_slice(str, std::strlen(str))) >= 0;
 		}
 
 		/**
@@ -659,7 +659,7 @@ namespace cppr
 			if(_bytes_size > 0)
 				--_bytes_size;
 
-			move<byte>(_bytes.range(_bytes_size, _bytes_size + str_size), Slice<const byte>(str, str_size));
+			move<byte>(_bytes.range(_bytes_size, _bytes_size + str_size), make_slice(str, str_size));
 			_bytes_size += str_size;
 			_bytes[_bytes_size] = '\0';
 			++_bytes_size;
@@ -681,7 +681,9 @@ namespace cppr
 			auto start_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), start);
 			auto end_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), end);
 
-			return String(Range_Type(_bytes.range(start_bytes_offset, end_bytes_offset), end - start), context);
+			String result(make_strrng(_bytes.range(start_bytes_offset, end_bytes_offset)), context);
+			result._runes_count = end - start;
+			return result;
 		}
 
 		/**
@@ -715,7 +717,8 @@ namespace cppr
 		void
 		reset()
 		{
-			mem_context.template free<byte>(_bytes);
+			if(mem_context.valid())
+				mem_context.template free<byte>(_bytes);
 			_bytes_size = 0;
 			_runes_count = -1;
 		}
@@ -728,7 +731,7 @@ namespace cppr
 		{
 			if(_bytes_size == 0)
 				return Const_Range_Type();
-			return Const_Range_Type(_bytes.range(0, _bytes_size - 1), count());
+			return make_strrng(_bytes.range(0, _bytes_size - 1));
 		}
 
 		/**
@@ -743,7 +746,7 @@ namespace cppr
 			auto start_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), start);
 			auto end_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), end);
 
-			return Const_Range_Type(_bytes.range(start_bytes_offset, end_bytes_offset), end - start);
+			return make_strrng(_bytes.range(start_bytes_offset, end_bytes_offset));
 		}
 
 		/**
@@ -755,7 +758,7 @@ namespace cppr
 		Const_Range_Type
 		range(const_iterator start, const_iterator end_it) const
 		{
-			return Const_Range_Type(Slice<const byte>(start.ptr, end_it.ptr - start.ptr));
+			return make_strrng(start.ptr, end_it.ptr - start.ptr);
 		}
 
 		/**
@@ -877,7 +880,7 @@ namespace cppr
 			return 0;
 
 		value.clear();
-		value.concat(String_Range(bytes.range(0, non_whitespace_count).template convert<const byte>()));
+		value.concat(make_strrng(bytes.range(0, non_whitespace_count).template convert<const byte>()));
 		return trait->skip(non_whitespace_count);
 	}
 
@@ -948,12 +951,12 @@ namespace cppr
 				++additional_skip;
 			}
 
-			value.concat(String_Range(bytes.range(0, newline_offset).template convert<const byte>()));
+			value.concat(make_strrng(bytes.range(0, newline_offset).template convert<const byte>()));
 			return trait->skip(newline_offset + additional_skip) - additional_skip;
 		}
 		else
 		{
-			value.concat(String_Range(bytes.template convert<const byte>()));
+			value.concat(make_strrng(bytes.template convert<const byte>()));
 			return trait->skip(bytes.size);
 		}
 	}

@@ -43,6 +43,12 @@ namespace cppr
 		Allocator_Trait* global_memory;
 
 		/**
+		 * The virtual memory context which uses the underlying OS specfic virtual alloc and free
+		 * It's recommended to use this with Big allocations only i.e. 1GB of memory
+		 */
+		Allocator_Trait* virtual_memory;
+
+		/**
 		 * The unbuffered standard output IO Trait
 		 */
 		IO_Trait* unbuf_stdout;
@@ -147,17 +153,7 @@ namespace cppr
 		 * @return     True if succeeded, false otherwise
 		 */
 		API_CPPR bool
-		virtual_free(Owner<byte>& data);
-
-		/**
-		 * @brief      Frees the underlying virtual memory of the given owner pointer
-		 *
-		 * @param      value  The owner pointer to free
-		 *
-		 * @return     True if succeeded, false otherwise
-		 */
-		API_CPPR bool
-		virtual_free(Owner<byte>&& data);
+		virtual_free(const Owner<byte>& data);
 
 		/**
 		 * @brief      Opens a file
