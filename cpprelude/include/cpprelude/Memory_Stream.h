@@ -171,5 +171,21 @@ namespace cppr
 		 */
 		API_CPPR usize
 		read(Slice<byte>&& data);
+
+		/**
+		 * @brief Returns the content of the stream as a binary slice
+		 * 
+		 * @return bin_content 
+		 */
+		API_CPPR Slice<byte>
+		bin_content() const;
+
+		/**
+		 * @brief Returns the content of the stream as a string range
+		 * 
+		 * @return API_CPPR str_content 
+		 */
+		API_CPPR String_Range
+		str_content() const;
 	};
 }

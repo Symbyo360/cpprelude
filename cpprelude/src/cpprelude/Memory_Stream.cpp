@@ -159,4 +159,16 @@ namespace cppr
 	{
 		return _io_trait.read(data);
 	}
+
+	Slice<byte>
+	Memory_Stream::bin_content() const
+	{
+		return _buffer.range(0, _cursor);
+	}
+
+	String_Range
+	Memory_Stream::str_content() const
+	{
+		return make_strrng(bin_content());
+	}
 }

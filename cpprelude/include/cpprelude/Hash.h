@@ -207,6 +207,16 @@ namespace cppr
 	};
 
 	template<>
+	struct Hash<String_Range>
+	{
+		inline usize
+		operator()(const String_Range& data) const
+		{
+			return murmur_hash(data.data(), data.size());
+		}
+	}
+
+	template<>
 	struct Hash<r32>
 	{
 		inline usize

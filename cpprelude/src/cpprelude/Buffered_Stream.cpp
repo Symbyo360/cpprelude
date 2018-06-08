@@ -111,12 +111,12 @@ namespace cppr
 		Buffered_Stream *self = (Buffered_Stream*)_self;
 
 		//check if there's data to flush
-		usize available_buffered_size = self->_buffer.size() - self->_buffer.cursor();
+		usize available_buffered_size = self->_buffer.cursor();
 		if(available_buffered_size > 0)
 		{
 			//write whatever available in the buffer
-			available_buffered_size = 
-				self->_io->write(self->_buffer._buffer.range(self->_buffer.cursor(), self->_buffer.size()));
+			available_buffered_size = self->_io->
+				self->_io->write(self->_buffer.bin_content());
 			//then clear it
 			self->_buffer.clear();
 		}

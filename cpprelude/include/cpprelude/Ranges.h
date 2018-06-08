@@ -2985,6 +2985,18 @@ namespace cppr
 	}
 
 	/**
+	 * @brief Constructs a string range
+	 * 
+	 * @param data the slice of memory to construct the range from
+	 * @return String_Range 
+	 */
+	inline static String_Range
+	make_strrng(const Slice<byte>& data)
+	{
+		return String_Range{data.convert<const byte>()};
+	}
+
+	/**
 	 * @brief      Const string string literal
 	 *
 	 * @param[in]  str        The C string
