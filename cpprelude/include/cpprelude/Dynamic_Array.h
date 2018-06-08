@@ -555,7 +555,7 @@ namespace cppr
 		Const_Range_Type
 		all() const
 		{
-			return make_slice(_data.ptr, _count);
+			return make_slice<const T>(_data.ptr, _count);
 		}
 
 		/**
@@ -591,7 +591,7 @@ namespace cppr
 		Range_Type
 		range(iterator start, iterator end)
 		{
-			return Range_Type(start, (end - start) * sizeof(T));
+			return make_slice(start, end - start);
 		}
 
 		/**
@@ -603,7 +603,7 @@ namespace cppr
 		Const_Range_Type
 		range(const_iterator start, const_iterator end) const
 		{
-			return Const_Range_Type(start, (end - start) * sizeof(T));
+			return make_slice(start, end - start);
 		}
 
 		/**

@@ -178,7 +178,7 @@ namespace cppr
 		 * @return bin_content 
 		 */
 		API_CPPR Slice<byte>
-		bin_content() const;
+		bin_content();
 
 		/**
 		 * @brief Returns the content of the stream as a string range

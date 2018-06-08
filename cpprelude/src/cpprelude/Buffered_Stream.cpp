@@ -115,8 +115,7 @@ namespace cppr
 		if(available_buffered_size > 0)
 		{
 			//write whatever available in the buffer
-			available_buffered_size = self->_io->
-				self->_io->write(self->_buffer.bin_content());
+			available_buffered_size = self->_io->write(self->_buffer.bin_content());
 			//then clear it
 			self->_buffer.clear();
 		}
