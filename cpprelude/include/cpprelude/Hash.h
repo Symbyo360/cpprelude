@@ -214,7 +214,7 @@ namespace cppr
 		{
 			return murmur_hash(data.data(), data.size());
 		}
-	}
+	};
 
 	template<>
 	struct Hash<r32>
