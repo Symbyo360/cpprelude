@@ -173,19 +173,54 @@ namespace cppr
 		read(Slice<byte>&& data);
 
 		/**
-		 * @brief Returns the content of the stream as a binary slice
+		 * @brief Returns the content (from the start to the cursor) of the stream as a binary slice
 		 * 
-		 * @return bin_content 
+		 * @return Slice<byte>
 		 */
 		API_CPPR Slice<byte>
 		bin_content();
 
 		/**
-		 * @brief Returns the content of the stream as a string range
+		 * @brief Returns the content (from the start to the cursor) of the stream as a string range
 		 * 
-		 * @return API_CPPR str_content 
+		 * @return String_Range
 		 */
 		API_CPPR String_Range
 		str_content() const;
+
+		/**
+		 * @brief Returns the content (from the cursor to the end) of the stream as a binary slice
+		 * 
+		 * @return Slice<byte>
+		 */
+		API_CPPR Slice<byte>
+		bin_ahead_cursor();
+
+		/**
+		 * @brief Returns the content (from the cursor to the end) of the stream as a string range
+		 * 
+		 * @return String_Range
+		 */
+		API_CPPR String_Range
+		str_ahead_cursor() const;
+
+		/**
+		 * @brief Expands back the stream and returns the slice of the expanded memory to write into it
+		 * 
+		 * @param size The size of the memory to expand
+		 * @return usize The size of the data that's piped into the stream (in bytes)
+		 */
+		API_CPPR usize
+		pipe_in(IO_Trait* io, usize size);
+
+		/**
+		 * @brief Pipes the content of the stream into the provided IO_Trait
+		 * 
+		 * @param io The IO_Trait to pipe(write) the content to
+		 * @param size The size of the data to be piped(written)
+		 * @return usize The size of the piped data (in bytes)
+		 */
+		API_CPPR usize
+		pipe_out(IO_Trait* io, usize size);
 	};
 }

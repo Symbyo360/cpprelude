@@ -9,7 +9,7 @@ namespace cppr
 	{
 		Memory_Stream *self = reinterpret_cast<Memory_Stream*>(_self);
 
-		self->reserve(data.size);
+		self->_buffer.reserve_raw(data.size);
 		auto offset = self->_cursor;
 		copy<byte>(self->_buffer.range(offset, offset + data.size), data);
 		self->_buffer._count += data.size;
@@ -139,7 +139,7 @@ namespace cppr
 	void
 	Memory_Stream::reserve(usize expected_size)
 	{
-		_buffer.reserve(expected_size);
+		_buffer.reserve_raw(expected_size);
 	}
 
 	usize
@@ -170,5 +170,41 @@ namespace cppr
 	Memory_Stream::str_content() const
 	{
 		return make_strrng(_buffer.range(0, _cursor));
+	}
+
+	Slice<byte>
+	Memory_Stream::bin_ahead_cursor()
+	{
+		return _buffer.range(_cursor, _buffer.count());
+	}
+
+	String_Range
+	Memory_Stream::str_ahead_cursor() const
+	{
+		return make_strrng(_buffer.range(_cursor, _buffer.count()));
+	}
+
+	usize
+	Memory_Stream::pipe_in(IO_Trait* io, usize size)
+	{
+		if(_buffer.count() - _cursor < size)
+			reserve(size);
+		usize read_size = io->read(_buffer.range(_cursor, _cursor + size));
+		_buffer._count += read_size;
+		_cursor += size;
+		return read_size;
+	}
+
+	usize
+	Memory_Stream::pipe_out(IO_Trait* io, usize size)
+	{
+		usize available_size = _buffer.count() - _cursor;
+		if(available_size == 0)
+			return 0;
+		
+		size = min(available_size, size);
+		usize written_size = io->write(_buffer.range(_cursor, _cursor + size));
+		_cursor += written_size;
+		return written_size;
 	}
 }

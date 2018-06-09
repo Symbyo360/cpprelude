@@ -54,7 +54,7 @@ TEST_CASE("Memory_Stream", "[Memory_Stream]")
 		CHECK(vprintf(stream, "{} {}\n", "Mostafa", "سعد") != 0);
 		CHECK(stream.move_to_start() == true);
 
-		Buffered_Stream buf_stream(stream);
+		Buf_Reader buf_stream(stream);
 		String first_name, last_name;
 		CHECK(vreads(buf_stream, first_name, last_name) != 0);
 		CHECK(first_name == "Mostafa");
@@ -70,7 +70,7 @@ TEST_CASE("Memory_Stream", "[Memory_Stream]")
 
 		Memory_Stream other(std::move(stream));
 
-		Buffered_Stream buf_stream(other);
+		Buf_Reader buf_stream(other);
 		String first_name, last_name;
 		CHECK(vreads(buf_stream, first_name, last_name) != 0);
 		CHECK(first_name == "Mostafa");

@@ -744,10 +744,24 @@ struct Screamer
 void
 debug()
 {
-	println("is Slice<byte> a POD? ", std::is_pod<Slice<byte>>());
-	println("is String_Range a POD? ", std::is_pod<String_Range>());
+	Buf_Writer writer(os->unbuf_stdout);
+	vprints(writer, "is Slice<byte> a POD? ", std::is_pod<Slice<byte>>(), "\n");
+	vprints(writer, "is String_Range a POD? ", std::is_pod<String_Range>(), "\n");
 	String_Range str = "Mostafa"_rng;
-	println(str);
+	vprints(writer, str, "\n");
+
+	r64 num; String name;
+	read(num, name);
+	vprints(writer, num, ", ", name, "\n");
+	
+	Stopwatch watch;
+	watch.start();
+	for(usize i = 0; i < 10000; ++i)
+		//println(i);
+		vprints(writer, i, "\n");
+	watch.stop();
+	vprintf(writer, "time: {}ms\n", watch.milliseconds());
+
 	return;
 	{
 		std::vector<Screamer> std_tst;

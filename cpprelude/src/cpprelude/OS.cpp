@@ -758,7 +758,7 @@ namespace cppr
 		_os.allocation_size = 0;
 
 		//setup the buffered stdin
-		static Buffered_Stream _buf_stdin(_os.unbuf_stdin, _os.global_memory);
+		static Buf_Reader _buf_stdin(_os.unbuf_stdin, _os.global_memory);
 		_os.buf_stdin = _buf_stdin;
 
 

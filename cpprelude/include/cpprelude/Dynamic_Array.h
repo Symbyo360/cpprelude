@@ -294,6 +294,27 @@ namespace cppr
 			_data = std::move(new_data);
 		}
 
+		void
+		reserve_raw(usize expected_count)
+		{
+			//we have enough space
+			if(capacity() - _count >= expected_count)
+				return;
+
+			//double the capacity - the current count
+			usize double_cap = (capacity() * GROW_FACTOR) - _count;
+			auto new_capacity = double_cap > expected_count ? double_cap : expected_count;
+			//account for the existing count in the array
+			new_capacity += _count;
+			Owner<Data_Type> new_data = mem_context.template alloc<Data_Type>(new_capacity);
+			move(new_data, _data);
+
+			if(_data)
+				mem_context.template free<Data_Type>(_data);
+
+			_data = std::move(new_data);
+		}
+
 		/**
 		 * @brief      Adds the specified count of element to the back of the dynamic array
 		 *
@@ -342,7 +363,7 @@ namespace cppr
 		void
 		expand_back_raw(usize additional_count)
 		{
-			reserve(additional_count);
+			reserve_raw(additional_count);
 			_count += additional_count;
 		}
 
