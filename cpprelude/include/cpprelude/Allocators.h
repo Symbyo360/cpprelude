@@ -160,6 +160,48 @@ namespace cppr
 		{
 			_allocator_trait.template free<T>(data);
 		}
+
+		/**
+		 * @brief Allocates and invokes the constructor of the allocated elements
+		 * 
+		 * @tparam T Type of the values to allocate
+		 * @tparam TArgs Types of the values to be passed to the constructor
+		 * @param count The number of values to allocate
+		 * @param args The arguments that will be passed to the constructor
+		 * @return Owner<T> The result memory
+		 */
+		template<typename T, typename ... TArgs>
+		Owner<T>
+		construct(usize count, TArgs&& ... args)
+		{
+			return _allocator_trait.construct(count, std::forward<TArgs>(args)...);
+		}
+
+		/**
+		 * @brief Invokes the destructor of the values then frees the memory
+		 * 
+		 * @tparam T Type of the values in the memory
+		 * @param value Owner of the memory to be destructed
+		 */
+		template<typename T>
+		void
+		destruct(Owner<T>& value)
+		{
+			return _allocator_trait.destruct(value);
+		}
+
+		/**
+		 * @brief Invokes the destructor of the values then frees the memory
+		 * 
+		 * @tparam T Type of the values in the memory
+		 * @param value Owner of the memory to be destructed
+		 */
+		template<typename T>
+		void
+		destruct(Owner<T>&& value)
+		{
+			return _allocator_trait.destruct(value);
+		}
 	};
 
 	namespace internal
@@ -320,6 +362,48 @@ namespace cppr
 		free(Owner<T>&& data)
 		{
 			_allocator_trait.template free<T>(data);
+		}
+
+		/**
+		 * @brief Allocates and invokes the constructor of the allocated elements
+		 * 
+		 * @tparam T Type of the values to allocate
+		 * @tparam TArgs Types of the values to be passed to the constructor
+		 * @param count The number of values to allocate
+		 * @param args The arguments that will be passed to the constructor
+		 * @return Owner<T> The result memory
+		 */
+		template<typename T, typename ... TArgs>
+		Owner<T>
+		construct(usize count, TArgs&& ... args)
+		{
+			return _allocator_trait.construct(count, std::forward<TArgs>(args)...);
+		}
+
+		/**
+		 * @brief Invokes the destructor of the values then frees the memory
+		 * 
+		 * @tparam T Type of the values in the memory
+		 * @param value Owner of the memory to be destructed
+		 */
+		template<typename T>
+		void
+		destruct(Owner<T>& value)
+		{
+			return _allocator_trait.destruct(value);
+		}
+
+		/**
+		 * @brief Invokes the destructor of the values then frees the memory
+		 * 
+		 * @tparam T Type of the values in the memory
+		 * @param value Owner of the memory to be destructed
+		 */
+		template<typename T>
+		void
+		destruct(Owner<T>&& value)
+		{
+			return _allocator_trait.destruct(value);
 		}
 	};
 }
