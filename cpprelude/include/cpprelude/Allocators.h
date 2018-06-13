@@ -174,7 +174,7 @@ namespace cppr
 		Owner<T>
 		construct(usize count, TArgs&& ... args)
 		{
-			return _allocator_trait.construct(count, std::forward<TArgs>(args)...);
+			return _allocator_trait.construct<T>(count, std::forward<TArgs>(args)...);
 		}
 
 		/**
@@ -377,7 +377,7 @@ namespace cppr
 		Owner<T>
 		construct(usize count, TArgs&& ... args)
 		{
-			return _allocator_trait.construct(count, std::forward<TArgs>(args)...);
+			return _allocator_trait.construct<T>(count, std::forward<TArgs>(args)...);
 		}
 
 		/**
