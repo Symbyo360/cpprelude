@@ -3,6 +3,8 @@
 #include "cpprelude/defines.h"
 #include "cpprelude/Owner.h"
 
+#include <utility>
+
 namespace cppr
 {
 	/**
