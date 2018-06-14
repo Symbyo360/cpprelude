@@ -35,6 +35,8 @@
 
 #include <cpprelude/IO.h>
 
+#include <cpprelude/Loom.h>
+
 #include <cpprelude/Panic.h>
 #include <cpprelude/Memory_Stream.h>
 #include <cpprelude/Buffered_Stream.h>
@@ -741,90 +743,53 @@ struct Screamer
 	}
 };
 
+#include <iostream>
+
+//all the task functions should have Executer* exe as first argument then any arguments you like
+//here i pass int just for testing but you can pass anything ... however passing references is not permitted
+//pointers are fine though
+void
+task(Executer* exe, int x)
+{
+	println("Hello, World: ", x, ": ", exe->worker_id);
+	//let's assume we have some time to spend for example 1 second to spare
+	//here i talk with the executer and tell him i can cooperate for exactly 1 second
+	//then he will assign tasks to me until around 1 seconds has passed
+	//auto actual_time = exe->coop(std::chrono::seconds(1));
+	//cppr::printf("worker {} slept for {}\n", exe->worker_id, actual_time.count());
+
+	//i can say to the scheduler that i can coop until some condition
+	exe->coop([](){
+		return rand() % 3 == 0;
+	});
+	//std::this_thread::sleep_for(std::chrono::seconds(exe->worker_id));
+}
+
+
 void
 debug()
 {
-	Buf_Writer writer(os->unbuf_stdout);
-	vprints(writer, "is Slice<byte> a POD? ", std::is_pod<Slice<byte>>(), "\n");
-	vprints(writer, "is String_Range a POD? ", std::is_pod<String_Range>(), "\n");
-	String_Range str = "Mostafa"_rng;
-	vprints(writer, str, "\n");
+	Jacquard jac;
+	//then we have to init jacquard with the number of workers we need
+	//i choose 8 workers
+	//if left empty it will default to the number of cores on your cpu
+	//since my CPU has 8 cores then it will be 8 but if your cpu has 4 then it will be 4, ... etc
+	jac.init(2);
 
-	r64 num; String name;
-	read(num, name);
-	vprints(writer, num, ", ", name, "\n");
-	
-	Stopwatch watch;
-	watch.start();
-	for(usize i = 0; i < 10000; ++i)
-		//println(i);
-		vprints(writer, i, "\n");
-	watch.stop();
-	vprintf(writer, "time: {}ms\n", watch.milliseconds());
+	//then we push some tasks into jacquard
+	for(usize i = 0; i < 5; ++i)
+		//task is a function which accepts the Executer* argument
+		jac.task_push(task, i);
 
-	return;
-	{
-		std::vector<Screamer> std_tst;
-
-		std_tst.emplace_back(Screamer());
-		std_tst.emplace_back(Screamer());
-		std_tst.emplace_back(Screamer());
-		std_tst.emplace_back(Screamer());
-		std_tst.emplace_back(Screamer());
-		std_tst.emplace_back(Screamer());
-		std_tst.emplace_back(Screamer());
-		std_tst.emplace_back(Screamer());
-		std_tst.emplace_back(Screamer());
-		std_tst.emplace_back(Screamer());
-	}
-	println("\nSeparator\n");
-	{
-		Dynamic_Array<Screamer> tst;
-
-		tst.emplace_back(Screamer());
-		tst.emplace_back(Screamer());
-		tst.emplace_back(Screamer());
-		tst.emplace_back(Screamer());
-		tst.emplace_back(Screamer());
-		tst.emplace_back(Screamer());
-		tst.emplace_back(Screamer());
-		tst.emplace_back(Screamer());
-		tst.emplace_back(Screamer());
-		tst.emplace_back(Screamer());
-	}
-	// Rune csd = u8'م';
-	// println(csd);
-	// String_Range test((byte*)&csd, 2);
-	// println(test);
-	// String csd2 = u8"م";
-	// println(csd2);
-
-	// while(true)
-	// {
-	// 	read(csd);
-	// 	println(csd);
-	// 	if(csd == 'x')
-	// 		break;
-	// }
-	// //p<u8, u8, u8>(0xE2, 0x99, 0xA0);
-	// //sprintf("%c%c%c\n", );
-	// return;
-	// File koko = unwrap(File::open("test.txt", IO_MODE::READ, OPEN_MODE::OPEN_ONLY));
-	// Buffered_Stream stream(koko);
-	// String line;
-	// while(readln(stream, line) > 0)
-	// 	println(line);
+	//here we wait for all the tasks to be done
+	jac.wait_until_finished();
 }
 
 void
 do_benchmark()
 {
 	debug();
-	//return;
-	//_os_panic();
-	//panic("Halp");
-	//debug();
-	//return;
+	return;
 	cppr::usize limit = 1000;
 
 	compare_benchmarks(
