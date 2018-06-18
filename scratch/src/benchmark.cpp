@@ -1,3 +1,4 @@
+//#include <vld.h>
 #include "benchmark.h"
 
 #include <cpprelude/Allocators.h>
@@ -35,20 +36,18 @@
 
 #include <cpprelude/IO.h>
 
-#include <cpprelude/Loom.h>
-
 #include <cpprelude/Panic.h>
 #include <cpprelude/Memory_Stream.h>
 #include <cpprelude/Buffered_Stream.h>
 #include <cpprelude/File.h>
 #include <cpprelude/Benchmark.h>
 
+#include <cpprelude/Jacquard.h>
+#include <cpprelude/Task_Executer.h>
+
 using namespace cppr;
 
 Dynamic_Array<usize> RANDOM_ARRAY;
-
-Stack_Allocator stack(MEGABYTES(250), os->virtual_memory);
-Arena_Allocator arena;
 
 void
 generate_random_data(usize limit)
@@ -60,6 +59,66 @@ generate_random_data(usize limit)
 }
 
 //new benchmark
+
+template<typename TRange,
+			typename TCompare =
+			Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>,
+			usize TElementSize = sizeof(typename std::remove_reference_t<TRange>::Data_Type)>
+inline static void
+_parallel_quick_sort(Task_Executer* exe, TRange arr_range, usize depth, Jacquard* scheduler, TCompare compare_func = TCompare())
+{
+	if(arr_range.count() < 2)
+	{
+		return;
+	}
+	else if(arr_range.count() * TElementSize < BYTES(64))
+	{
+		insertion_sort(arr_range, compare_func);
+		return;
+	}
+
+	auto it = arr_range.begin();
+	auto less_it = it++;
+	auto great_it = arr_range.end();
+	--great_it;
+
+	while(it != great_it + 1)
+	{
+		if(compare_func(*it, *less_it))
+		{
+			std::swap(*less_it, *it);
+			++it;
+			++less_it;
+		}
+		else if(compare_func(*less_it, *it))
+		{
+			std::swap(*great_it, *it);
+			--great_it;
+		}
+		else
+		{
+			++it;
+		}
+	}
+
+	scheduler->task_push(_parallel_quick_sort<TRange, TCompare>, arr_range.range(arr_range.begin(), less_it), depth - 1, scheduler, compare_func);
+	scheduler->task_push(_parallel_quick_sort<TRange, TCompare>, arr_range.range(it, arr_range.end()), depth - 1, scheduler, compare_func);
+}
+
+template<typename TRange,
+			typename TCompare =
+			Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
+inline static void
+parallel_quick_sort(TRange&& arr_range, Jacquard* scheduler, TCompare&& compare_func = TCompare())
+{
+	if(arr_range.count() <= 2)
+		return;
+	std::swap(arr_range.front(), _median_of_3(arr_range, compare_func));
+	scheduler->task_push(_parallel_quick_sort<TRange, TCompare>, arr_range, arr_range.count() / 2, scheduler, compare_func);
+	scheduler->wait_until_finished();
+}
+
+//parallel quick sort
 
 usize
 bm_Dynamic_Array(Stopwatch& watch, usize limit)
@@ -126,6 +185,7 @@ bm_Single_List(Stopwatch &watch, usize limit)
 usize
 bm_Stack_Allocator_Single_List(Stopwatch &watch, usize limit)
 {
+	Stack_Allocator stack(MEGABYTES(250), os->virtual_memory);
 	usize r = rand();
 
 	stack.free_all();
@@ -146,6 +206,7 @@ bm_Stack_Allocator_Single_List(Stopwatch &watch, usize limit)
 usize
 bm_Arena_Allocator_Single_List(Stopwatch &watch, usize limit)
 {
+	Arena_Allocator arena;
 	usize r = rand();
 
 	watch.start();
@@ -480,6 +541,7 @@ bm_Hash_Set(Stopwatch &watch, usize limit)
 usize
 bm_Stack_Allocator_Hash_Set(Stopwatch &watch, usize limit)
 {
+	Stack_Allocator stack(MEGABYTES(250), os->virtual_memory);
 	usize r = rand();
 
 	stack.free_all();
@@ -501,6 +563,7 @@ bm_Stack_Allocator_Hash_Set(Stopwatch &watch, usize limit)
 usize
 bm_Arena_Allocator_Hash_Set(Stopwatch &watch, usize limit)
 {
+	Arena_Allocator arena;
 	usize r = rand();
 
 	watch.start();
@@ -686,7 +749,24 @@ bm_quick_sort(Stopwatch &watch, usize limit)
 	watch.stop();
 
 	bool result = cppr::is_sorted(array.all());
-	assert(result);
+	//assert(result);
+
+	return result;
+}
+
+
+Jacquard jac;
+bool
+bm_parallel_quick_sort(Stopwatch &watch, usize limit)
+{
+	Dynamic_Array<cppr::usize> array = RANDOM_ARRAY;
+
+	watch.start();
+		parallel_quick_sort(array.all(), &jac);
+	watch.stop();
+
+	bool result = cppr::is_sorted(array.all());
+	//assert(result);
 
 	return result;
 }
@@ -743,46 +823,52 @@ struct Screamer
 	}
 };
 
-#include <iostream>
 
-//all the task functions should have Executer* exe as first argument then any arguments you like
-//here i pass int just for testing but you can pass anything ... however passing references is not permitted
-//pointers are fine though
 void
-task(Executer* exe, int x)
+depth_test(Task_Executer* exe, int depth)
 {
-	println("Hello, World: ", x, ": ", exe->worker_id);
-	//let's assume we have some time to spend for example 1 second to spare
-	//here i talk with the executer and tell him i can cooperate for exactly 1 second
-	//then he will assign tasks to me until around 1 seconds has passed
-	//auto actual_time = exe->coop(std::chrono::seconds(1));
-	//cppr::printf("worker {} slept for {}\n", exe->worker_id, actual_time.count());
-
-	//i can say to the scheduler that i can coop until some condition
-	exe->coop([](){
-		return rand() % 3 == 0;
-	});
-	//std::this_thread::sleep_for(std::chrono::seconds(exe->worker_id));
+	if(depth == 10000)
+		return;
+	cppr::printf("depth: {}\n", depth);
+	depth_test(exe, depth + 1);
 }
 
+void
+task(Task_Executer* exe, int num)
+{
+	auto original_worker = exe->worker_id;
+	cppr::printf("Worker #{} doing task #{} says hello\n", exe->worker_id, num);
+	bool yielded = exe->yield(exe);
+	std::this_thread::sleep_for(std::chrono::milliseconds(num * 100));
+	if(exe->worker_id != original_worker)
+		cppr::printf("Worker #{} doing task #{} says I'm back from yield with value {}\n",
+					 exe->worker_id, num, yielded);
+}
+
+int x = 0;
+void
+empty_task(Task_Executer* executer)
+{
+	++x;
+}
 
 void
 debug()
 {
-	Jacquard jac;
-	//then we have to init jacquard with the number of workers we need
-	//i choose 8 workers
-	//if left empty it will default to the number of cores on your cpu
-	//since my CPU has 8 cores then it will be 8 but if your cpu has 4 then it will be 4, ... etc
-	jac.init(2);
-
-	//then we push some tasks into jacquard
-	for(usize i = 0; i < 5; ++i)
-		//task is a function which accepts the Executer* argument
-		jac.task_push(task, i);
-
-	//here we wait for all the tasks to be done
-	jac.wait_until_finished();
+	Jacquard j;
+	j.init(1);
+	
+	Stopwatch watch;
+	usize limit = 100000;
+	watch.start();
+	{
+		for(usize i = 0; i < limit; ++i)
+			j.task_push(empty_task);
+		j.wait_until_finished();
+	}
+	watch.stop();
+	println(watch.microseconds(), " microseconds");
+	println(watch.nanoseconds() / limit, " ns per routine");
 }
 
 void
@@ -991,11 +1077,29 @@ do_benchmark()
 	);
 
 	println();
+	jac.init();
 
 	compare_benchmarks(
 		summary("std::sort"_rng, [&](Stopwatch& watch)
 		{
 			bm_std_quick_sort(watch, limit);
+		}),
+
+		summary("quick_sort"_rng, [&](Stopwatch& watch)
+		{
+			bm_quick_sort(watch, limit);
+		})
+	);
+
+	compare_benchmarks(
+		summary("std::sort"_rng, [&](Stopwatch& watch)
+		{
+			bm_std_quick_sort(watch, limit);
+		}),
+
+		summary("parallel quick_sort"_rng, [&](Stopwatch& watch)
+		{
+			bm_parallel_quick_sort(watch, limit);
 		}),
 
 		summary("quick_sort"_rng, [&](Stopwatch& watch)

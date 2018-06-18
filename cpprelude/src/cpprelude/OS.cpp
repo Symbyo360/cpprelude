@@ -1,6 +1,7 @@
 #include "cpprelude/OS.h"
 #include "cpprelude/IO.h"
 #include "cpprelude/Buffered_Stream.h"
+#include "sewing-fcontext/fcontext.h"
 #include <stdlib.h>
 
 #if defined(OS_WINDOWS)
@@ -25,6 +26,9 @@
 #include <cxxabi.h>
 #endif
 
+static_assert(sizeof(intptr_t) == sizeof(void*),
+	"boost context argument size assumption failed, jump_fcontext will crash.");
+
 
 namespace cppr
 {
@@ -33,8 +37,11 @@ namespace cppr
 		#if defined(OS_WINDOWS) && defined(DEBUG)
 		{
 			if(debug_configured)
-				if(SymCleanup(GetCurrentProcess()))
+			{
+				auto c = GetCurrentProcess();
+				if(SymCleanup(c))
 					debug_configured = false;
+			}
 		}
 		#endif
 		_print_memory_report();
@@ -526,6 +533,21 @@ namespace cppr
 			return lseek64(handle.linux_handle, offset, SEEK_END) != -1;
 		}
 		#endif
+	}
+
+	fcontext_t
+	OS::fcontext_make(const Slice<byte>& stack_memory, void(*proc)(intptr_t))
+	{
+		return make_fcontext(stack_memory.ptr + stack_memory.size, stack_memory.size, proc);
+	}
+
+	intptr_t
+	OS::fcontext_jump(fcontext_t* out_fcontext,
+					  fcontext_t in_fcontext,
+					  intptr_t vp,
+					  int preserve_fpu)
+	{
+		return jump_fcontext(out_fcontext, in_fcontext, vp, preserve_fpu);
 	}
 
 

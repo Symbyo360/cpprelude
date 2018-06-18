@@ -6,6 +6,7 @@
 #include "cpprelude/Ranges.h"
 #include "cpprelude/File_Handle.h"
 #include "cpprelude/IO_Trait.h"
+#include "sewing-fcontext/fcontext.h"
 #include <utility>
 
 namespace cppr
@@ -282,6 +283,12 @@ namespace cppr
 		 */
 		API_CPPR bool
 		file_cursor_move_to_end(const File_Handle& handle);
+
+		API_CPPR fcontext_t
+		fcontext_make(const Slice<byte>& stack_memory, void(*proc)(intptr_t));
+
+		API_CPPR intptr_t
+		fcontext_jump(fcontext_t* out_fcontext, fcontext_t in_fcontext, intptr_t vp, int preserve_fpu = 1);
 	};
 
 	/**

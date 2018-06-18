@@ -136,7 +136,19 @@ namespace cppr
 	Arena_Allocator::Arena_Allocator(const Memory_Context& context)
 		:mem_context(context),
 		 _head(nullptr),
-		 block_size(MEGABYTES(1)),
+		 block_size(KILOBYTES(4)),
+		 arena_size(0),
+		 used_size(0)
+	{
+		_allocator_trait._self = this;
+		_allocator_trait._alloc = _arena_allocator_alloc;
+		_allocator_trait._free = _arena_allocator_free;
+	}
+
+	Arena_Allocator::Arena_Allocator(usize mem_block_size, const Memory_Context& context)
+		:mem_context(context),
+		 _head(nullptr),
+		 block_size(mem_block_size),
 		 arena_size(0),
 		 used_size(0)
 	{

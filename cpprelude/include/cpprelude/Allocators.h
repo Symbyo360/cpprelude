@@ -246,6 +246,14 @@ namespace cppr
 		API_CPPR Arena_Allocator(const Memory_Context& context = os->global_memory);
 
 		/**
+		 * @brief      Creates an arena allocator
+		 *
+		 * @param[in]  block_size  The memory block size unit of the arena in bytes
+		 * @param[in]  context  The memory context used by the arena allocator
+		 */
+		API_CPPR Arena_Allocator(usize block_size, const Memory_Context& context = os->global_memory);
+
+		/**
 		 * @brief      Copy Constructor is deleted
 		 */
 		Arena_Allocator(const Arena_Allocator& other) = delete;
