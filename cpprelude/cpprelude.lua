@@ -12,40 +12,66 @@ project "cpprelude"
 
 	includedirs {"include/"}
 
+	--language configuration
 	exceptionhandling "OFF"
 	rtti "OFF"
 	warnings "Extra"
 	cppdialect "c++14"
 
-	local sewing_os = ""
-	local sewing_abi = ""
-	local sewing_asm = ""
 
+	--linux configuration
 	filter "system:linux"
-		sewing_os = "sysv"
-		sewing_abi = "elf"
-		sewing_asm = "gas.S"
-
 		linkoptions {"-pthread"}
 
-		filter "configurations:debug"
-			linkoptions {"-rdynamic"}
+	filter { "system:linux", "configurations:debug" }
+		linkoptions {"-rdynamic"}
 
+	filter { "system:linux", "platforms:x86"}
+		files
+		{
+			"src/sewing-fcontext/asm/make_i386_sysv_elf_gas.S",
+			"src/sewing-fcontext/asm/jump_i386_sysv_elf_gas.S"
+		}
+
+	filter { "system:linux", "platforms:x64" }
+		files
+		{
+			"src/sewing-fcontext/asm/make_x86_64_sysv_elf_gas.S",
+			"src/sewing-fcontext/asm/jump_x86_64_sysv_elf_gas.S"
+		}
+
+
+	--windows configuration
 	filter "system:windows"
-		sewing_os = "ms"
-		sewing_abi = "pe"
-		sewing_asm = "masm.asm"
-
 		if os.getversion().majorversion == 10.0 then
 			systemversion(win10_sdk_version())
 		end
 
-		filter "action:vs*"
-			files {"tools/vs/cpprelude.natvis"}
+	filter { "system:windows", "action:vs*"}
+		files {"tools/vs/cpprelude.natvis"}
 		
-		filter "configurations:debug"
-			links {"dbghelp"}
+	filter { "system:windows", "configurations:debug" }
+		links {"dbghelp"}
 
+	filter { "system:windows", "platforms:x86" }
+		files
+		{
+			"src/sewing-fcontext/asm/make_i386_ms_pe_masm.asm",
+			"src/sewing-fcontext/asm/jump_i386_ms_pe_masm.asm"
+		}
+
+	filter { "system:windows", "platforms:x64" }
+		files
+		{	
+			"src/sewing-fcontext/asm/make_x86_64_ms_pe_masm.asm",
+			"src/sewing-fcontext/asm/jump_x86_64_ms_pe_masm.asm"
+		}
+
+	filter { "files:**.asm", "system:windows", "platforms:x86" }
+		exceptionhandling "SEH"
+
+
+	--os agnostic configuration
 	filter "configurations:debug"
 		targetsuffix "d"
 		defines {"DEBUG", "CPPR_DLL"}
@@ -56,20 +82,7 @@ project "cpprelude"
 		optimize "On"
 
 	filter "platforms:x86"
-		files
-		{
-			"src/sewing-fcontext/asm/make_i386_" .. sewing_os .. "_" .. sewing_abi .. "_" .. sewing_asm,
-			"src/sewing-fcontext/asm/jump_i386_" .. sewing_os .. "_" .. sewing_abi .. "_" .. sewing_asm
-		}
 		architecture "x32"
 
 	filter "platforms:x64"
-		files
-		{
-			"src/sewing-fcontext/asm/make_x86_64_" .. sewing_os .. "_" .. sewing_abi .. "_" .. sewing_asm,
-			"src/sewing-fcontext/asm/jump_x86_64_" .. sewing_os .. "_" .. sewing_abi .. "_" .. sewing_asm
-		}
 		architecture "x64"
-
-	filter {"files:**.asm", "system:windows", "platforms:x86"}
-		exceptionhandling "SEH"

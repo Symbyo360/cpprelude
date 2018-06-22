@@ -42,8 +42,7 @@
 #include <cpprelude/File.h>
 #include <cpprelude/Benchmark.h>
 
-#include <cpprelude/Jacquard.h>
-#include <cpprelude/Task_Executer.h>
+#include <cpprelude/Loom.h>
 
 using namespace cppr;
 
@@ -60,6 +59,7 @@ generate_random_data(usize limit)
 
 //new benchmark
 
+/*
 template<typename TRange,
 			typename TCompare =
 			Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>,
@@ -117,6 +117,7 @@ parallel_quick_sort(TRange&& arr_range, Jacquard* scheduler, TCompare&& compare_
 	scheduler->task_push(_parallel_quick_sort<TRange, TCompare>, arr_range, arr_range.count() / 2, scheduler, compare_func);
 	scheduler->wait_until_finished();
 }
+*/
 
 //parallel quick sort
 
@@ -754,15 +755,13 @@ bm_quick_sort(Stopwatch &watch, usize limit)
 	return result;
 }
 
-
-Jacquard jac;
 bool
 bm_parallel_quick_sort(Stopwatch &watch, usize limit)
 {
 	Dynamic_Array<cppr::usize> array = RANDOM_ARRAY;
 
 	watch.start();
-		parallel_quick_sort(array.all(), &jac);
+		//parallel_quick_sort(array.all(), &jac);
 	watch.stop();
 
 	bool result = cppr::is_sorted(array.all());
@@ -823,58 +822,51 @@ struct Screamer
 	}
 };
 
+std::atomic<int> x;
 
 void
-depth_test(Task_Executer* exe, int depth)
-{
-	if(depth == 10000)
-		return;
-	cppr::printf("depth: {}\n", depth);
-	depth_test(exe, depth + 1);
-}
-
-void
-task(Task_Executer* exe, int num)
-{
-	auto original_worker = exe->worker_id;
-	cppr::printf("Worker #{} doing task #{} says hello\n", exe->worker_id, num);
-	bool yielded = exe->yield(exe);
-	std::this_thread::sleep_for(std::chrono::milliseconds(num * 100));
-	if(exe->worker_id != original_worker)
-		cppr::printf("Worker #{} doing task #{} says I'm back from yield with value {}\n",
-					 exe->worker_id, num, yielded);
-}
-
-int x = 0;
-void
-empty_task(Task_Executer* executer)
+task(Executer* exe, Task::Arg arg)
 {
 	++x;
+	// cppr::printf("Task #{}, From Worker #{}\n", exe->task.id, exe->worker.id);
 }
 
 void
 debug()
 {
-	Jacquard j;
-	j.init(1);
-	
+	x = 0;
+	Loom l{};
+
+	Owner<byte> mem;
+	usize max_tasks = 100000;
+	usize workers_count = 8;
+	usize required_size = l.init(std::move(mem), workers_count, max_tasks);
+	mem = os->template alloc<byte>(required_size);
+	l.init(std::move(mem), workers_count, max_tasks);
+
 	Stopwatch watch;
-	usize limit = 100000;
+
 	watch.start();
-	{
-		for(usize i = 0; i < limit; ++i)
-			j.task_push(empty_task);
-		j.wait_until_finished();
-	}
+	for(usize i = 0; i < max_tasks; ++i)
+		l.task_push(task, nullptr);
+
+	for(usize i = 0; i < max_tasks; ++i)
+		l.task_push(task, nullptr);
+
+	l.wait_until_finished();
 	watch.stop();
-	println(watch.microseconds(), " microseconds");
-	println(watch.nanoseconds() / limit, " ns per routine");
+
+	cppr::printf("total: {}ms\n{}ns per routine\n", watch.milliseconds(), watch.nanoseconds() / x);
+	println(x);
+	l.dispose();
+	os->free(l.memory);
 }
 
 void
 do_benchmark()
 {
 	debug();
+	println("End");
 	return;
 	cppr::usize limit = 1000;
 
@@ -1077,29 +1069,11 @@ do_benchmark()
 	);
 
 	println();
-	jac.init();
 
 	compare_benchmarks(
 		summary("std::sort"_rng, [&](Stopwatch& watch)
 		{
 			bm_std_quick_sort(watch, limit);
-		}),
-
-		summary("quick_sort"_rng, [&](Stopwatch& watch)
-		{
-			bm_quick_sort(watch, limit);
-		})
-	);
-
-	compare_benchmarks(
-		summary("std::sort"_rng, [&](Stopwatch& watch)
-		{
-			bm_std_quick_sort(watch, limit);
-		}),
-
-		summary("parallel quick_sort"_rng, [&](Stopwatch& watch)
-		{
-			bm_parallel_quick_sort(watch, limit);
 		}),
 
 		summary("quick_sort"_rng, [&](Stopwatch& watch)

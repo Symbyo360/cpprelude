@@ -1,264 +1,280 @@
-// #pragma once
+#pragma once
 
-// #include "cpprelude/api.h"
-// #include "cpprelude/Queue_List.h"
-// #include "cpprelude/Dynamic_Array.h"
-// #include "cpprelude/Allocators.h"
-// #include "sewing-fcontext/fcontext.h"
-// #include <atomic>
-// #include <thread>
-// #include <mutex>
-// #include <tuple>
+#include "cpprelude/api.h"
+#include "cpprelude/Ranges.h"
+#include "cpprelude/Owner.h"
+#include <atomic>
+#include <thread>
+#include <cassert>
 
-// namespace cppr
-// {
-// 	struct Jacquard;
-// 	struct Worker;
+namespace cppr
+{
+	constexpr static const u32 INVALID_LOOM_ID = static_cast<u32>(-1);
 
-// 	struct Executer
-// 	{
-// 		Jacquard* scheduler;
-// 		usize worker_id;
-// 		std::thread::id thread_id;
+	//Handles
+	struct Task_Handle { using ID_Type = u32; ID_Type id; };
+	struct Worker_Handle { using ID_Type = u32; ID_Type id; };
 
-// 		API_CPPR void
-// 		yield();
+	template<typename T>
+	constexpr static const T INVALID_HANDLE { INVALID_LOOM_ID };
 
-// 		template<typename TType, typename TRatio>
-// 		std::chrono::duration<TType, TRatio>
-// 		coop(std::chrono::duration<TType, TRatio> duration);
+	template<typename THandle>
+	inline static bool
+	handle_valid(THandle handle)
+	{
+		return handle.id != INVALID_LOOM_ID;
+	}
 
-// 		template<typename TPred>
-// 		void
-// 		coop(TPred&& pred);
-// 	};
+	//lock free free list implementation
+	template<typename TItem, typename THandle>
+	struct Loom_Free_List
+	{
+		using Item_Type = TItem;
+		using Handle_Type = THandle;
+		using ID_Type = typename THandle::ID_Type;
 
-// 	struct Task_Trait
-// 	{
-// 		Worker* owner_worker = nullptr, *runner_worker = nullptr;
-// 		Executer* executer = nullptr;
-// 		fcontext_t task_fcontext = nullptr;
-// 		Owner<byte> stack;
-// 		bool complete = false;
+		Slice<Item_Type> _pool;
+		std::atomic<ID_Type> _head;
 
-// 		API_CPPR void
-// 		init(Worker* owner);
+		void
+		init(const Slice<TItem>& pool)
+		{
+			_pool = pool;
+			_head = 0;
+			for(ID_Type i = 0; i < _pool.count(); ++i)
+			{
+				ID_Type next_item = i + 1;
+				if(next_item == _pool.count())
+					next_item = INVALID_LOOM_ID;
+				_pool[i].next_free = next_item;
+			}
+		}
 
-// 		virtual void
-// 		run(Executer* exe) = 0;
+		Handle_Type
+		make()
+		{
+			//load the atomic here
+			ID_Type loaded_id = _head.load();
+			//try exchange the head with the next id
+			while(loaded_id != INVALID_LOOM_ID &&
+				  !_head.compare_exchange_strong(loaded_id, _pool[loaded_id].next_free))
+			{
+				//in case of failure it will reset to the latest head and try again
+				//as long as the loaded_id is not INVALID_ID
+				loaded_id = _head.load();
+			}
 
-// 		API_CPPR void
-// 		dispose();
-// 	};
+			return Handle_Type { loaded_id };
+		}
 
-// 	template<typename TCallable, typename ... TArgs>
-// 	struct Task final: Task_Trait
-// 	{
-// 		template <typename... T>
-// 		using tuple_no_refs = std::tuple<typename std::remove_reference<T>::type...>;
+		void
+		dispose(Handle_Type handle)
+		{
+			//assert that this is a valid handle
+			assert(handle.id != INVALID_LOOM_ID);
 
-// 		TCallable proc;
-// 		tuple_no_refs<TArgs...> args;
+			//load the current head into the next free of the node
+			_pool[handle.id].next_free = _head.load();
+			//expect the head to be as loaded above ans swap it with the handle id
+			while(!_head.compare_exchange_strong(_pool[handle.id].next_free, handle.id))
+				_pool[handle.id].next_free = _head.load();
+		}
 
-// 		Task(Worker* owner_worker, TCallable&& callable, TArgs&&... proc_args)
-// 			:proc(std::forward<TCallable>(callable)),
-// 			 args(std::forward<TArgs>(proc_args)...)
-// 		{
-// 			init(owner_worker);
-// 		}
+		Item_Type*
+		resolve(Handle_Type handle)
+		{
+			assert(handle.id < _pool.count());
+			return _pool.ptr + handle.id;
+		}
 
-// 		template<usize ... I>
-// 		void execute(Executer* exe, std::index_sequence<I...>)
-// 		{
-// 			proc(exe, std::get<I>(args)...);
-// 		}
+		const Item_Type*
+		resolve(Handle_Type handle) const
+		{
+			assert(handle.id < _pool.count());
+			return _pool.ptr + handle.id;
+		}
+	};
 
-// 		void
-// 		run(Executer* exe) override
-// 		{
-// 			execute(exe, std::index_sequence_for<TArgs...>{});
-// 			dispose();
-// 		}
-// 	};
 
-// 	struct Worker
-// 	{
-// 		Arena_Allocator arena;
-// 		Double_List<Task_Trait*> tasks;
-// 		std::mutex mutex;
-// 		usize id;
-// 		std::atomic<usize> in_flight;
-// 		fcontext_t worker_fcontext;
-// 		Task_Trait* current_task;
+	//lock free queue implmentation
+	template<typename TItem>
+	struct Loom_Bounded_Queue
+	{
+		using Item_Type = TItem;
+		
+		Slice<Item_Type> _buffer;
+		std::atomic<usize> _head_true, _head_ticket,
+						   _tail_true, _tail_ticket,
+						   _tail_ticket_holders, _head_ticket_holders;
 
-// 		API_CPPR Worker(const Memory_Context& context = os->global_memory);
+		void
+		init(const Slice<Item_Type>& buffer)
+		{
+			_buffer = buffer;
+			_head_true = 0;
+			_head_ticket = 0;
+			_tail_true = 0;
+			_tail_ticket = 0;
+			_tail_ticket_holders = 0;
+			_head_ticket_holders = 0;
+		}
 
-// 		API_CPPR Worker(usize worker_id, const Memory_Context& context = os->global_memory);
+		bool
+		empty() const
+		{
+			return _tail_true == _head_true;
+		}
 
-// 		Worker(const Worker& other) = delete;
+		bool
+		enqueue(const Item_Type& item)
+		{
+			usize loaded_tail_ticket = _tail_ticket.load();
+			usize new_tail = (loaded_tail_ticket + 1) % _buffer.count();
+			bool stop = new_tail == _head_true.load();
+			while(!stop &&
+				  !_tail_ticket.compare_exchange_strong(loaded_tail_ticket, new_tail))
+			{
+				loaded_tail_ticket = _tail_ticket.load();
+				new_tail = (loaded_tail_ticket + 1) % _buffer.count();
+				stop = new_tail == _head_true.load();
+			}
 
-// 		API_CPPR Worker(Worker&& other);
+			if(stop)
+				return false;
 
-// 		Worker&
-// 		operator=(const Worker& other) = delete;
+			_tail_ticket_holders.fetch_add(1);
 
-// 		API_CPPR Worker&
-// 		operator=(Worker&& other);
+			_buffer[new_tail] = item;
 
-// 		template<typename TCallable, typename ... TArgs>
-// 		void
-// 		task_push(TCallable&& callable, TArgs&& ... args)
-// 		{
-// 			std::lock_guard<std::mutex> l(mutex);
-// 			Task_Trait* new_task = arena.template construct<Task<TCallable, TArgs...>>
-// 				(1, this, std::forward<TCallable>(callable), std::forward<TArgs>(args)...).ptr;
-// 			tasks.insert_back(new_task);
-// 		}
+			usize loaded_new_tail = _tail_ticket.load();
+			usize expected_old_tail = _tail_true.load();
+			while(_tail_ticket_holders.load() == 1 &&
+				  !_tail_true.compare_exchange_strong(expected_old_tail, loaded_new_tail))
+			{
+				loaded_new_tail = _tail_ticket.load();
+				expected_old_tail = _tail_true.load();
+			}
 
-// 		API_CPPR void
-// 		task_reschedule(Task_Trait* task);
+			_tail_ticket_holders.fetch_sub(1);
+			return true;
+		}
 
-// 		API_CPPR Task_Trait*
-// 		task_pop();
+		bool
+		dequeue(Item_Type& item)
+		{
+			usize loaded_head_ticket = _head_ticket.load();
+			usize new_head = (loaded_head_ticket + 1) % _buffer.count();
+			bool stop = loaded_head_ticket == _tail_true.load();
+			while(!stop &&
+				  !_head_ticket.compare_exchange_strong(loaded_head_ticket, new_head))
+			{
+				loaded_head_ticket = _head_ticket.load();
+				new_head = (loaded_head_ticket + 1) % _buffer.count();
+				stop = loaded_head_ticket == _tail_true.load();
+			}
 
-// 		API_CPPR void
-// 		task_finished();
+			if(stop)
+				return false;
 
-// 		API_CPPR Owner<byte>
-// 		task_make_stack();
+			_head_ticket_holders.fetch_add(1);
 
-// 		API_CPPR void
-// 		task_dispose_stack(Owner<byte>& stack);
-// 	};
+			item = _buffer[new_head];
 
-// 	struct Jacquard
-// 	{
-// 		Memory_Context mem_context;
-// 		Dynamic_Array<Worker> workers;
-// 		Dynamic_Array<std::thread> threads;
-// 		std::atomic<bool> running;
-// 		std::atomic<usize> next_worker, last_steal;
+			usize loaded_new_head = _head_ticket.load();
+			usize expected_old_head = _head_true.load();
+			while(_head_ticket_holders.load() == 1 &&
+				  !_head_true.compare_exchange_strong(expected_old_head, loaded_new_head))
+			{
+				loaded_new_head = _head_ticket.load();
+				expected_old_head = _head_true.load();
+			}
 
-// 		API_CPPR Jacquard(const Memory_Context& context = os->global_memory);
+			_head_ticket_holders.fetch_sub(1);
+			return true;
+		}
+	};
 
-// 		Jacquard(const Jacquard& other) = delete;
+	struct Executer;
 
-// 		API_CPPR Jacquard(Jacquard&& other);
 
-// 		Jacquard&
-// 		operator=(const Jacquard& other) = delete;
+	//Task
+	struct Task
+	{
+		using Proc = void(*)(Executer*, void*);
+		using Arg = void*;
 
-// 		API_CPPR Jacquard&
-// 		operator=(Jacquard&& other);
+		Proc _proc;
+		Arg _arg;
+		u32 next_free;
 
-// 		API_CPPR ~Jacquard();
+		void
+		run(Executer* executer)
+		{
+			assert(_proc != nullptr);
+			_proc(executer, _arg);
+		}
+	};
 
-// 		API_CPPR void
-// 		init(usize worker_count = std::thread::hardware_concurrency());
+	//Worker
+	struct Worker
+	{
+		Loom_Bounded_Queue<Task_Handle> tasks;
 
-// 		template<typename TCallable, typename ... TArgs>
-// 		void
-// 		task_push(TCallable&& callable, TArgs&& ... args)
-// 		{
-// 			workers[next_worker.fetch_add(1) % workers.count()].task_push(
-// 				std::forward<TCallable>(callable),
-// 				std::forward<TArgs>(args)...);
-// 		}
+		API_CPPR void
+		task_push(Task_Handle task);
 
-// 		API_CPPR Task_Trait*
-// 		task_steal(usize worker_id);
+		API_CPPR Task_Handle
+		task_pop();
+	};
 
-// 		template<typename TType, typename TRatio>
-// 		std::chrono::duration<TType, TRatio>
-// 		task_coop(usize worker_id, std::chrono::duration<TType, TRatio> duration)
-// 		{
-// 			Worker* worker = &workers[worker_id];
-// 			Executer _executer { this, worker->id, std::this_thread::get_id() };
-// 			auto start = std::chrono::high_resolution_clock::now();
-// 			auto end = start;
-// 			auto result = std::chrono::duration_cast<std::chrono::duration<TType, TRatio>>(end - start);
-// 			while(result <= duration)
-// 			{
-// 				//try get task from our queue
-// 				Task_Trait* current_task = worker->task_pop();
+	//Loom
+	struct Loom
+	{
+		Owner<byte> memory;
+		Loom_Free_List<Task, Task_Handle> tasks;
+		Slice<Worker> workers;
+		Slice<std::thread> threads;
+		std::atomic<bool> running;
+		std::atomic<usize> load_balancer;
+		std::atomic<usize> tasks_count;
+		std::atomic<usize> last_steal;
 
-// 				//if we failed to get task from our queue then try steal other tasks
-// 				if(current_task == nullptr)
-// 					current_task = task_steal(worker->id);
 
-// 				if(current_task != nullptr)
-// 				{
-// 					current_task->run(&_executer);
-// 				}
-// 				//if couldnot steal tasks then we can sleep for a while
-// 				else
-// 				{
-// 					worker->sleeping = true;
-// 					std::this_thread::sleep_for(std::chrono::milliseconds(1));
-// 					worker->sleeping = false;
-// 				}
-// 				end = std::chrono::high_resolution_clock::now();
-// 				result = std::chrono::duration_cast<std::chrono::duration<TType, TRatio>>(end - start);
-// 			}
-// 			return result;
-// 		}
+		API_CPPR usize
+		init(Owner<byte>&& mem,
+			 u32 worker_count,
+			 u32 max_tasks);
 
-// 		template<typename TPred>
-// 		void
-// 		task_coop(usize worker_id, TPred&& pred)
-// 		{
-// 			Worker* worker = &workers[worker_id];
-// 			Executer _executer { this, worker->id, std::this_thread::get_id() };
-// 			while(pred())
-// 			{
-// 				//try get task from our queue
-// 				Task_Trait* current_task = worker->task_pop();
+		API_CPPR void
+		dispose();
 
-// 				//if we failed to get task from our queue then try steal other tasks
-// 				if(current_task == nullptr)
-// 					current_task = task_steal(worker->id);
+		API_CPPR void
+		task_push(Task::Proc fn, Task::Arg arg);
 
-// 				if(current_task != nullptr)
-// 				{
-// 					current_task->run(&_executer);
-// 				}
-// 				//if couldnot steal tasks then we can sleep for a while
-// 				else
-// 				{
-// 					worker->sleeping = true;
-// 					std::this_thread::sleep_for(std::chrono::milliseconds(1));
-// 					worker->sleeping = false;
-// 				}
-// 			}
-// 		}
+		API_CPPR Task_Handle
+		task_steal();	
 
-// 		API_CPPR void
-// 		reset();
+		API_CPPR void
+		wait_until_finished();
 
-// 		API_CPPR usize
-// 		workers_count() const;
+		API_CPPR Worker*
+		resolve(Worker_Handle handle);
 
-// 		API_CPPR usize
-// 		queued_task_count() const;
+		API_CPPR const Worker*
+		resolve(Worker_Handle handle) const;
 
-// 		API_CPPR usize
-// 		scheduled_task_count() const;
+		API_CPPR Task*
+		resolve(Task_Handle handle);
 
-// 		API_CPPR void
-// 		wait_until_finished();
-// 	};
+		API_CPPR const Task*
+		resolve(Task_Handle handle) const;
+	};
 
-// 	template<typename TType, typename TRatio>
-// 	std::chrono::duration<TType, TRatio>
-// 	Executer::coop(std::chrono::duration<TType, TRatio> duration)
-// 	{
-// 		return scheduler->task_coop(worker_id, duration);
-// 	}
-
-// 	template<typename TPred>
-// 	void
-// 	Executer::coop(TPred&& pred)
-// 	{
-// 		scheduler->task_coop(worker_id, pred);
-// 	}
-// }
+	//Executer
+	struct Executer
+	{
+		Loom* loom;
+		Worker_Handle worker;
+		Task_Handle task;
+	};
+}

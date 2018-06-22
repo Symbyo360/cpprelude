@@ -1,297 +1,190 @@
-// #include "cpprelude/Loom.h"
+#include "cpprelude/Loom.h"
+#include <cassert>
 
-// #include "cpprelude/Panic.h"
+namespace cppr
+{
+	//private functions
+	void
+	_worker_start(Worker_Handle worker_handle, Loom* loom)
+	{
+		Executer executer { loom, worker_handle, INVALID_HANDLE<Task_Handle> };
+		while(loom->running)
+		{
+			Worker* worker = loom->resolve(worker_handle);
+			Task_Handle task_handle = worker->task_pop();
 
-// namespace cppr
-// {
-// 	//executer
-// 	void
-// 	Executer::yield()
-// 	{
-// 		os->fcontext_jump(&scheduler->workers[worker_id].current_task->task_fcontext,
-// 						  scheduler->workers[worker_id].worker_fcontext,
-// 						  0);
-// 	}
+			if(!handle_valid(task_handle))
+				task_handle = loom->task_steal();
 
-// 	//workers
-// 	Worker::Worker(const Memory_Context& context)
-// 		:arena(MEGABYTES(1), context),
-// 		 tasks(context),
-// 		 id(-1),
-// 		 in_flight(0),
-// 		 worker_fcontext(nullptr),
-// 		 current_task(nullptr)
-// 	{}
+			if(handle_valid(task_handle))
+			{
+				Task* task = loom->resolve(task_handle);
+				executer.task = task_handle;
+				task->run(&executer);
+				--loom->tasks_count;
+				loom->tasks.dispose(task_handle);
+			}
+			else
+			{
+				std::this_thread::sleep_for(std::chrono::milliseconds(1));
+			}
+		}
+	}
 
-// 	Worker::Worker(usize worker_id, const Memory_Context& context)
-// 		:arena(MEGABYTES(1), context),
-// 		 tasks(context),
-// 		 id(worker_id),
-// 		 in_flight(0),
-// 		 worker_fcontext(nullptr),
-// 		 current_task(nullptr)
-// 	{}
+	//Worker
+	void
+	Worker::task_push(Task_Handle task)
+	{
+		while(!tasks.enqueue(task)){}
+	}
 
-// 	Worker::Worker(Worker&& other)
-// 		:arena(std::move(other.arena)),
-// 		 tasks(std::move(other.tasks)),
-// 		 worker_fcontext(other.worker_fcontext),
-// 		 current_task(other.current_task)
-// 	{
-// 		id = other.id;
-// 		in_flight = other.in_flight.load();
+	Task_Handle
+	Worker::task_pop()
+	{
+		auto result = INVALID_HANDLE<Task_Handle>;
+		tasks.dequeue(result);
+		return result;
+	}
+	
+	#define A16(x) (((x) + 15) & ~15)
+	
+	//Loom
+	usize
+	Loom::init(Owner<byte>&& mem, u32 worker_count, u32 max_tasks)
+	{
+		//the pools and queues work with n-1 so hide this from the user
+		++max_tasks;
 
-// 		other.id = -1;
-// 		other.in_flight = 0;
-// 		other.worker_fcontext = nullptr;
-// 		other.current_task = nullptr;
-// 	}
+		usize required_mem_size = 0;
+		//the size of the workers slice
+		required_mem_size += worker_count * sizeof(Worker);
+		//the size of the thread slice
+		required_mem_size += worker_count * sizeof(std::thread);
+		//the size of the tasks free list
+		required_mem_size += max_tasks * sizeof(Task);
+		//the size of the tasks bounded queue per worker
+		required_mem_size += worker_count * max_tasks * sizeof(Task_Handle);
 
-// 	Worker&
-// 	Worker::operator=(Worker&& other)
-// 	{
-// 		arena = std::move(other.arena);
-// 		tasks = std::move(other.tasks);
-// 		id = other.id;
-// 		in_flight = other.in_flight.load();
-// 		worker_fcontext = other.worker_fcontext;
-// 		current_task = other.current_task;
+		if(mem.empty())
+			return required_mem_size;
 
-// 		other.id = -1;
-// 		other.in_flight = 0;
-// 		other.worker_fcontext = nullptr;
-// 		other.current_task = nullptr;
-// 		return *this;
-// 	}
+		assert(mem.size >= required_mem_size);
 
-// 	void
-// 	Worker::task_reschedule(Task_Trait* task)
-// 	{
-// 		std::lock_guard<std::mutex> l(mutex);
-// 		tasks.insert_front(task);
-// 	}
+		//set the running flag
+		running = true;
+		load_balancer = 0;
+		tasks_count = 0;
+		last_steal = 0;
 
-// 	Task_Trait*
-// 	Worker::task_pop()
-// 	{
-// 		std::lock_guard<std::mutex> l(mutex);
+		usize size_it = 0, current_size = 0;
 
-// 		if(tasks.empty())
-// 		{
-// 			if(in_flight == 0 && arena.used_memory_size() > 0)
-// 				arena.reset();
-// 			return nullptr;
-// 		}
+		//move the memory to the system
+		memory = std::move(mem);
+		//reset the memory to zero
+		memset(memory.ptr, 0, memory.size);
 
-// 		++in_flight;
-// 		auto result = tasks.front();
-// 		tasks.remove_front();
-// 		return result;
-// 	}
+		//the size of the workers slice
+		current_size = worker_count * sizeof(Worker);
+		workers = memory.range(size_it, size_it + current_size).template convert<Worker>();
+		size_it += current_size;
 
-// 	void
-// 	Worker::task_finished()
-// 	{
-// 		if(in_flight.fetch_add(-1) == 0)
-// 		{
-// 			//error happened
-// 		}
-// 	}
+		//the size of the thread slice
+		current_size = worker_count * sizeof(std::thread);
+		threads = memory.range(size_it, size_it + current_size).template convert<std::thread>();
+		size_it += current_size;
 
-// 	Owner<byte>
-// 	Worker::task_make_stack()
-// 	{
-// 		auto result = arena.template alloc<byte>(KILOBYTES(64));
-// 		memset(result.ptr, 0, result.size);
-// 		return result;
-// 	}
+		//the size of the tasks free list
+		current_size = max_tasks * sizeof(Task);
+		tasks.init(memory.range(size_it, size_it + current_size).template convert<Task>());
+		size_it += current_size;
 
-// 	void
-// 	Worker::task_dispose_stack(Owner<byte>& stack)
-// 	{
-// 		arena.free(stack);
-// 	}
+		//init the workers
+		for(u32 i = 0; i < worker_count; ++i)
+		{
+			//the size of the tasks bounded queue per worker
+			current_size = max_tasks * sizeof(Task_Handle);
+			workers[i].tasks.init(memory.range(size_it, size_it + current_size).template convert<Task_Handle>());
+			size_it += current_size;
+		}
 
-// 	void
-// 	_worker_run(Worker* worker, Jacquard* jac)
-// 	{
-// 		Executer _executer { jac, worker->id, std::this_thread::get_id() };
+		for(u32 i = 0; i < worker_count; ++i)
+			::new (threads.ptr + i) std::thread(_worker_start, Worker_Handle{ i }, this);
+		return required_mem_size;
+	}
 
-// 		while(jac->running)
-// 		{
-// 			//try get task from our queue
-// 			worker->current_task = worker->task_pop();
+	void
+	Loom::dispose()
+	{
+		bool expected_value = true;
+		if(running.compare_exchange_strong(expected_value, false))
+		{
+			for(auto& thread: threads)
+				if(thread.joinable())
+					thread.join();
+		}
+	}
 
-// 			//if we failed to get task from our queue then try steal other tasks
-// 			if(worker->current_task == nullptr)
-// 				worker->current_task = jac->task_steal(worker->id);
+	void
+	Loom::task_push(Task::Proc fn, Task::Arg arg)
+	{
+		Task_Handle handle = tasks.make();
+		while(!handle_valid(handle))
+			handle = tasks.make();
 
-// 			if(worker->current_task != nullptr)
-// 			{
-// 				worker->current_task->runner_worker = worker;
-// 				worker->current_task->executer = &_executer;
-// 				//jump into the task
-// 				os->fcontext_jump(&worker->worker_fcontext,
-// 								  worker->current_task->task_fcontext,
-// 								  (intptr_t)worker->current_task,
-// 								  1);
-// 				//yield
-// 			}
-// 			//if couldnot steal tasks then we can sleep for a while
-// 			else
-// 			{
-// 				std::this_thread::sleep_for(std::chrono::milliseconds(1));
-// 			}
-// 		}
-// 	}
+		Task* task = tasks.resolve(handle);
+		task->_proc = fn;
+		task->_arg = arg;
+		workers[load_balancer.fetch_add(1) % workers.count()].task_push(handle);
+		++tasks_count;
+	}
 
-// 	//Task_Trait
-// 	void
-// 	_cppr_task_exec(intptr_t raw_task)
-// 	{
-// 		Task_Trait* task = (Task_Trait*)(raw_task);
-// 		task->run(task->executer);
-// 		os->fcontext_jump(&task->task_fcontext, task->runner_worker->worker_fcontext, (intptr_t)task, 1);
-// 	}
+	Task_Handle
+	Loom::task_steal()
+	{
+		Task_Handle result = INVALID_HANDLE<Task_Handle>;
+		usize start = last_steal.load();
+		for(usize i = 0; i < workers.count(); ++i)
+		{
+			result = workers[(start + i) % workers.count()].task_pop();
+			if(handle_valid(result))
+			{
+				last_steal.store((start + i) % workers.count());
+				break;
+			}
+		}
+		return result;
+	}
 
-// 	void
-// 	Task_Trait::init(Worker* worker)
-// 	{
-// 		complete = false;
-// 		owner_worker = worker;
-// 		stack = owner_worker->task_make_stack();
-// 		task_fcontext = os->fcontext_make(stack.all(), _cppr_task_exec);
-// 	}
+	void
+	Loom::wait_until_finished()
+	{
+		while(tasks_count != 0)
+			std::this_thread::sleep_for(std::chrono::milliseconds(1));
+	}
 
-// 	void
-// 	Task_Trait::dispose()
-// 	{
-// 		owner_worker->task_dispose_stack(stack);
-// 		owner_worker->task_finished();
-// 		complete = true;
-// 	}
+	Worker*
+	Loom::resolve(Worker_Handle handle)
+	{
+		assert(handle.id < workers.count());
+		return workers.ptr + handle.id;
+	}
 
+	const Worker*
+	Loom::resolve(Worker_Handle handle) const
+	{
+		assert(handle.id < workers.count());
+		return workers.ptr + handle.id;
+	}
 
-// 	//scheduler
-// 	Jacquard::Jacquard(const Memory_Context& context)
-// 		:mem_context(context),
-// 		 workers(mem_context),
-// 		 running(false),
-// 		 next_worker(0),
-// 		 last_steal(0)
-// 	{}
+	Task*
+	Loom::resolve(Task_Handle handle)
+	{
+		return tasks.resolve(handle);
+	}
 
-// 	Jacquard::Jacquard(Jacquard&& other)
-// 		:mem_context(std::move(other.mem_context)),
-// 		 workers(std::move(other.workers)),
-// 		 threads(std::move(other.threads))
-// 	{
-// 		running = other.running.load();
-// 		next_worker = other.next_worker.load();
-// 		last_steal = other.last_steal.load();
-
-// 		other.running = false;
-// 	}
-
-// 	Jacquard&
-// 	Jacquard::operator=(Jacquard&& other)
-// 	{
-// 		reset();
-
-// 		mem_context = std::move(other.mem_context);
-// 		workers = std::move(other.workers);
-// 		threads = std::move(other.threads);
-// 		running = other.running.load();
-// 		last_steal = other.last_steal.load();
-
-// 		other.running = false;
-// 		return *this;
-// 	}
-
-// 	Jacquard::~Jacquard()
-// 	{
-// 		reset();
-// 	}
-
-// 	void
-// 	Jacquard::init(usize worker_count)
-// 	{
-// 		bool expected_value = false;
-// 		if(running.compare_exchange_strong(expected_value, true))
-// 		{
-// 			workers.reserve(worker_count);
-// 			threads.reserve(worker_count);
-// 			for(usize i = 0; i < worker_count; ++i)
-// 			{
-// 				workers.emplace_back(i, mem_context);
-// 				threads.emplace_back(_worker_run, &workers[i], this);
-// 			}
-// 		}
-// 	}
-
-// 	Task_Trait*
-// 	Jacquard::task_steal(usize worker_id)
-// 	{
-// 		Task_Trait* result = nullptr;
-// 		usize start_index = last_steal.load();
-// 		usize i = 0;
-// 		for(i = 0; i < workers.count(); ++i)
-// 		{
-// 			usize worker_index = (start_index + i) % workers.count();
-// 			if(worker_index == worker_id)
-// 				continue;
-// 			result = workers[worker_index].task_pop();
-// 			if(result)
-// 			{
-// 				last_steal.compare_exchange_strong(start_index, worker_index);
-// 				break;
-// 			}
-// 		}
-// 		return result;
-// 	}
-
-// 	void
-// 	Jacquard::reset()
-// 	{
-// 		bool expected_value = true;
-// 		if(running.compare_exchange_strong(expected_value, false))
-// 		{
-// 			for(auto& thread: threads)
-// 				if(thread.joinable())
-// 					thread.join();
-// 		}
-// 	}
-
-// 	usize
-// 	Jacquard::workers_count() const
-// 	{
-// 		return workers.count();
-// 	}
-
-// 	usize
-// 	Jacquard::queued_task_count() const
-// 	{
-// 		usize result = 0;
-// 		for(auto& w: workers)
-// 			result += w.tasks.count();
-// 		return result;
-// 	}
-
-// 	usize
-// 	Jacquard::scheduled_task_count() const
-// 	{
-// 		usize result = 0;
-// 		for(auto& w: workers)
-// 			result += w.in_flight;
-// 		return result;
-// 	}
-
-// 	void
-// 	Jacquard::wait_until_finished()
-// 	{
-// 		while(queued_task_count() + scheduled_task_count() > 0)
-// 		{
-// 			std::this_thread::sleep_for(std::chrono::milliseconds(1));
-// 		}
-// 	}
-// }
+	const Task*
+	Loom::resolve(Task_Handle handle) const
+	{
+		return tasks.resolve(handle);
+	}
+}
