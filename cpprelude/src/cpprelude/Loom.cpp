@@ -76,10 +76,6 @@ namespace cppr
 
 			//check affinity tasks
 			exe->task = worker->task_pop_internal(loom);
-			
-			//check normal tasks
-			if(!handle_valid(exe->task))
-				exe->task = worker->task_pop_external(loom);
 		}
 
 		//if worker has no tasks then steal some tasks
@@ -151,52 +147,56 @@ namespace cppr
 	Task_Handle
 	Worker::task_pop_internal(Loom* loom)
 	{
-		Fiber_Handle fiber_h = loom->fibers.make();
-
-		if(!handle_valid(fiber_h))
-			return INVALID_HANDLE<Task_Handle>;
-
 		auto task_h = INVALID_HANDLE<Task_Handle>;
 		if(affinity_tasks.dequeue(task_h))
 		{
-			Task* task = loom->resolve(task_h);
-			if(!handle_valid(task->fiber))
+			Fiber_Handle fiber_h = loom->fibers.make();
+			if(!handle_valid(fiber_h))
 			{
-				task->fiber = fiber_h;
-				Fiber* fiber = loom->resolve(fiber_h);
-				fiber->context = os->fcontext_make(fiber->stack, _fiber_start);
-				return task_h;
+				task_push_affinity(task_h, loom);
+				return INVALID_HANDLE<Task_Handle>;
 			}
+
+			Task* task = loom->resolve(task_h);
+			task->fiber = fiber_h;
+			Fiber* fiber = loom->resolve(fiber_h);
+			fiber->context = os->fcontext_make(fiber->stack, _fiber_start);
 		}
+		else if(tasks.dequeue(task_h))
+		{
+			Fiber_Handle fiber_h = loom->fibers.make();
+			if(!handle_valid(fiber_h))
+			{
+				task_push(task_h, loom);
+				return INVALID_HANDLE<Task_Handle>;
+			}
 
-		loom->fibers.dispose(fiber_h);
-
+			Task* task = loom->resolve(task_h);
+			task->fiber = fiber_h;
+			Fiber* fiber = loom->resolve(fiber_h);
+			fiber->context = os->fcontext_make(fiber->stack, _fiber_start);
+		}
 		return task_h;
 	}
 
 	Task_Handle
 	Worker::task_pop_external(Loom* loom)
 	{
-		Fiber_Handle fiber_h = loom->fibers.make();
-
-		if(!handle_valid(fiber_h))
-			return INVALID_HANDLE<Task_Handle>;
-
 		auto task_h = INVALID_HANDLE<Task_Handle>;
 		if(tasks.dequeue(task_h))
 		{
-			Task* task = loom->resolve(task_h);
-			if(!handle_valid(task->fiber))
+			Fiber_Handle fiber_h = loom->fibers.make();
+			if(!handle_valid(fiber_h))
 			{
-				task->fiber = fiber_h;
-				Fiber* fiber = loom->resolve(fiber_h);
-				fiber->context = os->fcontext_make(fiber->stack, _fiber_start);
-				return task_h;
+				task_push(task_h, loom);
+				return INVALID_HANDLE<Task_Handle>;
 			}
+
+			Task* task = loom->resolve(task_h);
+			task->fiber = fiber_h;
+			Fiber* fiber = loom->resolve(fiber_h);
+			fiber->context = os->fcontext_make(fiber->stack, _fiber_start);
 		}
-
-		loom->fibers.dispose(fiber_h);
-
 		return task_h;
 	}
 

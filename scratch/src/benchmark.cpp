@@ -58,64 +58,6 @@ generate_random_data(usize limit)
 }
 
 
-Loom l;
-
-struct Parallel_Sum_Arg
-{
-	Slice<usize> arr;
-	usize local_sum;
-};
-
-usize
-bm_sum(Stopwatch& watch, usize limit)
-{
-	usize r = 0;
-	watch.start();
-		for(const auto& n: RANDOM_ARRAY)
-			r += n;
-	watch.stop();
-	return r;
-}
-
-Executer*
-mt_sum(Executer* exe, Task::Arg arg)
-{
-	Parallel_Sum_Arg* sumarg = (Parallel_Sum_Arg*)arg;
-	for(const auto& n: sumarg->arr)
-		sumarg->local_sum += n;
-	return exe;
-}
-
-usize
-bm_parallel_sum(Stopwatch& watch, usize limit)
-{
-	usize r = 0;
-
-	usize gran = 1000000;
-	usize total = RANDOM_ARRAY.count();
-	Dynamic_Array<Parallel_Sum_Arg> results;
-	results.reserve(total/gran);
-	usize it = 0;
-	for(usize i = 0; i < total / gran; ++i)
-	{
-		results.emplace_back(Parallel_Sum_Arg{ RANDOM_ARRAY.range(it, it + gran), 0 });
-		it += gran;
-	}
-
-	results.emplace_back(Parallel_Sum_Arg{ RANDOM_ARRAY.range(it, total), 0 });
-
-	watch.start();
-		for(auto& arg: results)
-			l.task_push(mt_sum, Task::Arg(&arg));
-
-		l.wait_until_finished();
-		for(auto& res: results)
-			r += res.local_sum;
-	watch.stop();
-	return r;
-}
-
-
 usize
 bm_Dynamic_Array(Stopwatch& watch, usize limit)
 {
@@ -802,7 +744,7 @@ struct Screamer
 	}
 };
 
-std::atomic<int> x;
+int x;
 
 Executer*
 task_wait(Executer* exe, Task::Arg arg)
@@ -825,14 +767,14 @@ task_wait(Executer* exe, Task::Arg arg)
 Executer*
 task(Executer* exe, Task::Arg arg)
 {
-	usize msleep = usize(arg);
 	++x;
+	//usize msleep = usize(arg);
 	// cppr::printf("Task #{}, From Worker #{}\n", exe->task.id, exe->worker.id);
 	// auto id = exe->worker.id;
-	exe = exe->yield(std::chrono::milliseconds(msleep));
+	//exe = exe->yield(std::chrono::milliseconds(msleep));
 	// if(id != exe->worker.id)
 	// 	cppr::printf("Back Task #{}, From Worker #{}\n", exe->task.id, exe->worker.id);
-	++x;
+	//++x;
 	return exe;
 }
 
@@ -840,11 +782,12 @@ void
 loom_debug()
 {
 	x = 0;
+	Loom l;
 	Owner<byte> mem;
 	u32 max_tasks = 10000;
 	u32 workers_count = 8;
 	u32 max_fibers = 256;
-	u32 stack_size = KILOBYTES(64);
+	u32 stack_size = KILOBYTES(32);
 	usize required_size = l.init(std::move(mem), workers_count, max_tasks,
 								 max_fibers, stack_size);
 	mem = os->template alloc<byte>(required_size);
@@ -865,7 +808,7 @@ loom_debug()
 
 
 	 {
-	 	l.task_push("long", task_wait, nullptr);
+	 	//l.task_push("long", task_wait, nullptr);
 
 	 	for(usize i = 0; i < max_tasks; ++i)
 	 		l.task_push(task, nullptr);
@@ -879,8 +822,8 @@ loom_debug()
 
 	cppr::printf("total: {}ms\n{}ns per routine\n", watch.milliseconds(), watch.nanoseconds() / (x/2.0f));
 	println(x);
-	//l.dispose();
-	//os->free(l.memory);
+	l.dispose();
+	os->free(l.memory);
 }
 
 void
@@ -892,7 +835,10 @@ debug()
 void
 do_benchmark()
 {
-	loom_debug();
+	while(true)
+	{
+		loom_debug();
+	}
 	cppr::usize limit = 1000;
 
 	compare_benchmarks(
@@ -1106,26 +1052,4 @@ do_benchmark()
 			bm_quick_sort(watch, limit);
 		})
 	);
-
-	println();
-
-	generate_random_data(50000000);
-	usize Asum = 0, Bsum = 0;
-
-	compare_benchmarks(
-		summary("sum"_rng, [&](Stopwatch& watch)
-		{
-			Asum = bm_sum(watch, limit);
-		}),
-
-		summary("parallel sum"_rng, [&](Stopwatch& watch)
-		{
-			Bsum = bm_parallel_sum(watch, limit);
-		})
-	);
-
-	assert(Asum == Bsum);
-
-	l.dispose();
-	os->free(l.memory);
 }
