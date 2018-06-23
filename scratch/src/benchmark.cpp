@@ -57,69 +57,64 @@ generate_random_data(usize limit)
 		RANDOM_ARRAY.insert_back(rand());
 }
 
-//new benchmark
 
-/*
-template<typename TRange,
-			typename TCompare =
-			Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>,
-			usize TElementSize = sizeof(typename std::remove_reference_t<TRange>::Data_Type)>
-inline static void
-_parallel_quick_sort(Task_Executer* exe, TRange arr_range, usize depth, Jacquard* scheduler, TCompare compare_func = TCompare())
+Loom l;
+
+struct Parallel_Sum_Arg
 {
-	if(arr_range.count() < 2)
-	{
-		return;
-	}
-	else if(arr_range.count() * TElementSize < BYTES(64))
-	{
-		insertion_sort(arr_range, compare_func);
-		return;
-	}
+	Slice<usize> arr;
+	usize local_sum;
+};
 
-	auto it = arr_range.begin();
-	auto less_it = it++;
-	auto great_it = arr_range.end();
-	--great_it;
-
-	while(it != great_it + 1)
-	{
-		if(compare_func(*it, *less_it))
-		{
-			std::swap(*less_it, *it);
-			++it;
-			++less_it;
-		}
-		else if(compare_func(*less_it, *it))
-		{
-			std::swap(*great_it, *it);
-			--great_it;
-		}
-		else
-		{
-			++it;
-		}
-	}
-
-	scheduler->task_push(_parallel_quick_sort<TRange, TCompare>, arr_range.range(arr_range.begin(), less_it), depth - 1, scheduler, compare_func);
-	scheduler->task_push(_parallel_quick_sort<TRange, TCompare>, arr_range.range(it, arr_range.end()), depth - 1, scheduler, compare_func);
+usize
+bm_sum(Stopwatch& watch, usize limit)
+{
+	usize r = 0;
+	watch.start();
+		for(const auto& n: RANDOM_ARRAY)
+			r += n;
+	watch.stop();
+	return r;
 }
 
-template<typename TRange,
-			typename TCompare =
-			Default_Less_Than<typename std::remove_reference_t<TRange>::Data_Type>>
-inline static void
-parallel_quick_sort(TRange&& arr_range, Jacquard* scheduler, TCompare&& compare_func = TCompare())
+Executer*
+mt_sum(Executer* exe, Task::Arg arg)
 {
-	if(arr_range.count() <= 2)
-		return;
-	std::swap(arr_range.front(), _median_of_3(arr_range, compare_func));
-	scheduler->task_push(_parallel_quick_sort<TRange, TCompare>, arr_range, arr_range.count() / 2, scheduler, compare_func);
-	scheduler->wait_until_finished();
+	Parallel_Sum_Arg* sumarg = (Parallel_Sum_Arg*)arg;
+	for(const auto& n: sumarg->arr)
+		sumarg->local_sum += n;
+	return exe;
 }
-*/
 
-//parallel quick sort
+usize
+bm_parallel_sum(Stopwatch& watch, usize limit)
+{
+	usize r = 0;
+
+	usize gran = 1000000;
+	usize total = RANDOM_ARRAY.count();
+	Dynamic_Array<Parallel_Sum_Arg> results;
+	results.reserve(total/gran);
+	usize it = 0;
+	for(usize i = 0; i < total / gran; ++i)
+	{
+		results.emplace_back(Parallel_Sum_Arg{ RANDOM_ARRAY.range(it, it + gran), 0 });
+		it += gran;
+	}
+
+	results.emplace_back(Parallel_Sum_Arg{ RANDOM_ARRAY.range(it, total), 0 });
+
+	watch.start();
+		for(auto& arg: results)
+			l.task_push(mt_sum, Task::Arg(&arg));
+
+		l.wait_until_finished();
+		for(auto& res: results)
+			r += res.local_sum;
+	watch.stop();
+	return r;
+}
+
 
 usize
 bm_Dynamic_Array(Stopwatch& watch, usize limit)
@@ -750,22 +745,7 @@ bm_quick_sort(Stopwatch &watch, usize limit)
 	watch.stop();
 
 	bool result = cppr::is_sorted(array.all());
-	//assert(result);
-
-	return result;
-}
-
-bool
-bm_parallel_quick_sort(Stopwatch &watch, usize limit)
-{
-	Dynamic_Array<cppr::usize> array = RANDOM_ARRAY;
-
-	watch.start();
-		//parallel_quick_sort(array.all(), &jac);
-	watch.stop();
-
-	bool result = cppr::is_sorted(array.all());
-	//assert(result);
+	assert(result);
 
 	return result;
 }
@@ -824,50 +804,95 @@ struct Screamer
 
 std::atomic<int> x;
 
-void
-task(Executer* exe, Task::Arg arg)
+Executer*
+task_wait(Executer* exe, Task::Arg arg)
 {
 	++x;
+	//cppr::printf("Task #{}, From Worker #{}\n", exe->task.id, exe->worker.id);
+	Stopwatch w;
+	w.start();
+
+	exe = exe->yield([](Task::Arg){
+		return true;
+	}, nullptr);
+
+	w.stop();
+	cppr::printf("task {} took {} microseconds\n", exe->task_desc(), w.microseconds());
+	++x;
+	return exe;
+}
+
+Executer*
+task(Executer* exe, Task::Arg arg)
+{
+	usize msleep = usize(arg);
+	++x;
 	// cppr::printf("Task #{}, From Worker #{}\n", exe->task.id, exe->worker.id);
+	// auto id = exe->worker.id;
+	exe = exe->yield(std::chrono::milliseconds(msleep));
+	// if(id != exe->worker.id)
+	// 	cppr::printf("Back Task #{}, From Worker #{}\n", exe->task.id, exe->worker.id);
+	++x;
+	return exe;
+}
+
+void
+loom_debug()
+{
+	x = 0;
+	Owner<byte> mem;
+	u32 max_tasks = 10000;
+	u32 workers_count = 8;
+	u32 max_fibers = 256;
+	u32 stack_size = KILOBYTES(64);
+	usize required_size = l.init(std::move(mem), workers_count, max_tasks,
+								 max_fibers, stack_size);
+	mem = os->template alloc<byte>(required_size);
+	println(required_size/(1024.0f*1024.0f), "Mb");
+	l.init(std::move(mem), workers_count, max_tasks, max_fibers, stack_size);
+
+	Stopwatch watch;
+
+	watch.start();
+
+	/*for(usize i = 0; i < 20; ++i)
+	{
+		if(i < workers_count)
+			l.task_push_to(Worker_Handle { u32(i) }, task, Task::Arg(i));
+		else
+			l.task_push(task, Task::Arg(i));
+	}*/
+
+
+	 {
+	 	l.task_push("long", task_wait, nullptr);
+
+	 	for(usize i = 0; i < max_tasks; ++i)
+	 		l.task_push(task, nullptr);
+
+	 	for(usize i = 0; i < max_tasks; ++i)
+	 		l.task_push(task, nullptr);
+	 }
+
+	l.wait_until_finished();
+	watch.stop();
+
+	cppr::printf("total: {}ms\n{}ns per routine\n", watch.milliseconds(), watch.nanoseconds() / (x/2.0f));
+	println(x);
+	//l.dispose();
+	//os->free(l.memory);
 }
 
 void
 debug()
 {
-	x = 0;
-	Loom l{};
 
-	Owner<byte> mem;
-	usize max_tasks = 100000;
-	usize workers_count = 8;
-	usize required_size = l.init(std::move(mem), workers_count, max_tasks);
-	mem = os->template alloc<byte>(required_size);
-	l.init(std::move(mem), workers_count, max_tasks);
-
-	Stopwatch watch;
-
-	watch.start();
-	for(usize i = 0; i < max_tasks; ++i)
-		l.task_push(task, nullptr);
-
-	for(usize i = 0; i < max_tasks; ++i)
-		l.task_push(task, nullptr);
-
-	l.wait_until_finished();
-	watch.stop();
-
-	cppr::printf("total: {}ms\n{}ns per routine\n", watch.milliseconds(), watch.nanoseconds() / x);
-	println(x);
-	l.dispose();
-	os->free(l.memory);
 }
 
 void
 do_benchmark()
 {
-	debug();
-	println("End");
-	return;
+	loom_debug();
 	cppr::usize limit = 1000;
 
 	compare_benchmarks(
@@ -1081,4 +1106,26 @@ do_benchmark()
 			bm_quick_sort(watch, limit);
 		})
 	);
+
+	println();
+
+	generate_random_data(50000000);
+	usize Asum = 0, Bsum = 0;
+
+	compare_benchmarks(
+		summary("sum"_rng, [&](Stopwatch& watch)
+		{
+			Asum = bm_sum(watch, limit);
+		}),
+
+		summary("parallel sum"_rng, [&](Stopwatch& watch)
+		{
+			Bsum = bm_parallel_sum(watch, limit);
+		})
+	);
+
+	assert(Asum == Bsum);
+
+	l.dispose();
+	os->free(l.memory);
 }

@@ -3,8 +3,10 @@
 #include "cpprelude/api.h"
 #include "cpprelude/Ranges.h"
 #include "cpprelude/Owner.h"
+#include "sewing-fcontext/fcontext.h"
 #include <atomic>
 #include <thread>
+#include <mutex>
 #include <cassert>
 
 namespace cppr
@@ -12,8 +14,9 @@ namespace cppr
 	constexpr static const u32 INVALID_LOOM_ID = static_cast<u32>(-1);
 
 	//Handles
-	struct Task_Handle { using ID_Type = u32; ID_Type id; };
-	struct Worker_Handle { using ID_Type = u32; ID_Type id; };
+	struct Task_Handle			{ using ID_Type = u32; ID_Type id; };
+	struct Worker_Handle		{ using ID_Type = u32; ID_Type id; };
+	struct Fiber_Handle			{ using ID_Type = u32; ID_Type id; };
 
 	template<typename T>
 	constexpr static const T INVALID_HANDLE { INVALID_LOOM_ID };
@@ -24,6 +27,10 @@ namespace cppr
 	{
 		return handle.id != INVALID_LOOM_ID;
 	}
+
+	#define LOOM_LOCK_FREE 0
+
+	#if LOOM_LOCK_FREE
 
 	//lock free free list implementation
 	template<typename TItem, typename THandle>
@@ -53,18 +60,13 @@ namespace cppr
 		Handle_Type
 		make()
 		{
-			//load the atomic here
-			ID_Type loaded_id = _head.load();
-			//try exchange the head with the next id
-			while(loaded_id != INVALID_LOOM_ID &&
-				  !_head.compare_exchange_strong(loaded_id, _pool[loaded_id].next_free))
+			auto loaded_id = _head.load();
+			if(_head.compare_exchange_strong(loaded_id, _pool[loaded_id].next_free))
 			{
-				//in case of failure it will reset to the latest head and try again
-				//as long as the loaded_id is not INVALID_ID
-				loaded_id = _head.load();
+				_pool[loaded_id].next_free = INVALID_LOOM_ID;
+				return Handle_Type{ loaded_id };
 			}
-
-			return Handle_Type { loaded_id };
+			return INVALID_HANDLE<Handle_Type>;
 		}
 
 		void
@@ -72,12 +74,15 @@ namespace cppr
 		{
 			//assert that this is a valid handle
 			assert(handle.id != INVALID_LOOM_ID);
-
 			//load the current head into the next free of the node
-			_pool[handle.id].next_free = _head.load();
+			ID_Type loaded_head = _head.load();
+			_pool[handle.id].next_free = loaded_head;
 			//expect the head to be as loaded above ans swap it with the handle id
-			while(!_head.compare_exchange_strong(_pool[handle.id].next_free, handle.id))
-				_pool[handle.id].next_free = _head.load();
+			while(!_head.compare_exchange_strong(loaded_head, handle.id))
+			{
+				loaded_head = _head.load();
+				_pool[handle.id].next_free = loaded_head;
+			}
 		}
 
 		Item_Type*
@@ -194,37 +199,230 @@ namespace cppr
 		}
 	};
 
-	struct Executer;
+	#else
+	template<typename TItem, typename THandle>
+	struct Loom_Free_List
+	{
+		using Item_Type = TItem;
+		using Handle_Type = THandle;
+		using ID_Type = typename THandle::ID_Type;
 
+		Slice<Item_Type> _pool;
+		ID_Type _head;
+		usize _free_count;
+		std::mutex mtx;
+
+		void
+		init(const Slice<TItem>& pool)
+		{
+			_pool = pool;
+			_head = 0;
+			_free_count = _pool.count();
+			for(ID_Type i = 0; i < _pool.count(); ++i)
+			{
+				ID_Type next_item = i + 1;
+				if(next_item == _pool.count())
+					next_item = INVALID_LOOM_ID;
+				_pool[i].next_free = next_item;
+			}
+			::new (&mtx) std::mutex();
+		}
+
+		Handle_Type
+		make()
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			Handle_Type result { _head };
+			if(_head != INVALID_LOOM_ID)
+			{
+				--_free_count;
+				_head = _pool[result.id].next_free;
+			}
+			return result;
+		}
+
+		void
+		dispose(Handle_Type handle)
+		{
+			//assert that this is a valid handle
+			assert(handle.id != INVALID_LOOM_ID);
+
+			std::lock_guard<std::mutex> lock(mtx);
+			++_free_count;
+			_pool[handle.id].next_free = _head;
+			_head = handle.id;
+		}
+
+		Item_Type*
+		resolve(Handle_Type handle)
+		{
+			assert(handle.id < _pool.count());
+			return _pool.ptr + handle.id;
+		}
+
+		const Item_Type*
+		resolve(Handle_Type handle) const
+		{
+			assert(handle.id < _pool.count());
+			return _pool.ptr + handle.id;
+		}
+	};
+	
+	template<typename TItem>
+	struct Loom_Bounded_Queue
+	{
+		using Item_Type = TItem;
+		
+		Slice<Item_Type> _buffer;
+		usize _head, _tail, _count;
+		std::mutex mtx;
+
+		void
+		init(const Slice<Item_Type>& buffer)
+		{
+			_buffer = buffer;
+			_head = 0;
+			_tail = 0;
+			_count = 0;
+			::new (&mtx) std::mutex();
+		}
+
+		bool
+		empty() const
+		{
+			return _head == _tail;
+		}
+
+		usize
+		count() const
+		{
+			return _count;
+		}
+
+		usize
+		capacity() const
+		{
+			return _buffer.count() - 1;
+		}
+
+		bool
+		enqueue(const Item_Type& item)
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			usize new_tail = (_tail + 1) % _buffer.count();
+			if(new_tail == _head)
+				return false;
+			_buffer[new_tail] = item;
+			++_count;
+			_tail = new_tail;
+			return true;
+		}
+
+		bool
+		dequeue(Item_Type& item)
+		{
+			std::lock_guard<std::mutex> lock(mtx);
+			if(_head == _tail)
+				return false;
+			_head = (_head + 1) % _buffer.count();
+			item = _buffer[_head];
+			--_count;
+			return true;
+		}
+	};
+	#endif
+
+	struct Executer;
+	struct Loom;
+
+	struct Yield_Condition
+	{
+		using Predicate = bool(*)(void*);
+
+		enum TYPE { NONE, TIMED, PREDICATE };
+
+		TYPE type;
+		union
+		{
+			struct
+			{
+				std::chrono::high_resolution_clock::time_point start_time;
+				std::chrono::microseconds duration;
+			} timed;
+
+			struct
+			{
+				Predicate _proc;
+				void* _arg;
+
+				bool
+				run()
+				{
+					assert(_proc != nullptr);
+					return _proc(_arg);
+				}
+			} pred;
+		};
+	};
 
 	//Task
 	struct Task
 	{
-		using Proc = void(*)(Executer*, void*);
+		using Proc = Executer*(*)(Executer*, void*);
 		using Arg = void*;
 
 		Proc _proc;
 		Arg _arg;
+		Fiber_Handle fiber;
 		u32 next_free;
+		String_Range description;
+		Yield_Condition yield_cond;
+		Worker_Handle worker_affinity;
+		bool started;
+		bool completed;
 
-		void
+		Executer*
 		run(Executer* executer)
 		{
 			assert(_proc != nullptr);
-			_proc(executer, _arg);
+			return _proc(executer, _arg);
 		}
 	};
 
 	//Worker
 	struct Worker
 	{
-		Loom_Bounded_Queue<Task_Handle> tasks;
+		Loom_Bounded_Queue<Task_Handle> tasks, affinity_tasks;
+		Worker_Handle id;
 
 		API_CPPR void
-		task_push(Task_Handle task);
+		init(Worker_Handle handle, const Slice<Task_Handle>& tasks_buffer,
+			 const Slice<Task_Handle>& affinity_tasks_buffer);
+
+		API_CPPR void
+		task_push(Task_Handle task, Loom* loom);
+
+		API_CPPR void
+		task_push_affinity(Task_Handle task, Loom* loom);
 
 		API_CPPR Task_Handle
-		task_pop();
+		task_pop_internal(Loom* loom);
+
+		API_CPPR Task_Handle
+		task_pop_external(Loom* loom);
+	};
+
+	//Fiber
+	struct Fiber
+	{
+		using Arg = intptr_t;
+
+		Slice<byte> stack;
+		fcontext_t context;
+		u32 next_free;
+
+		API_CPPR void
+		init(const Slice<byte>& buffer);
 	};
 
 	//Loom
@@ -232,18 +430,21 @@ namespace cppr
 	{
 		Owner<byte> memory;
 		Loom_Free_List<Task, Task_Handle> tasks;
+		Loom_Free_List<Fiber, Fiber_Handle> fibers;
 		Slice<Worker> workers;
 		Slice<std::thread> threads;
+		Loom_Bounded_Queue<Task_Handle> sleep_tasks;
 		std::atomic<bool> running;
 		std::atomic<usize> load_balancer;
 		std::atomic<usize> tasks_count;
 		std::atomic<usize> last_steal;
 
-
 		API_CPPR usize
 		init(Owner<byte>&& mem,
 			 u32 worker_count,
-			 u32 max_tasks);
+			 u32 max_tasks,
+			 u32 max_fibers,
+			 u32 stack_size);
 
 		API_CPPR void
 		dispose();
@@ -251,8 +452,35 @@ namespace cppr
 		API_CPPR void
 		task_push(Task::Proc fn, Task::Arg arg);
 
+		API_CPPR void
+		task_push(const char* desc, Task::Proc fn, Task::Arg arg);
+
+		API_CPPR void
+		task_push(const String_Range& desc, Task::Proc fn, Task::Arg arg);
+
+		API_CPPR void
+		task_push_to(Worker_Handle handle, Task::Proc fn, Task::Arg arg);
+
+		API_CPPR void
+		task_push_to(Worker_Handle handle, const char* desc, Task::Proc fn, Task::Arg arg);
+
+		API_CPPR void
+		task_push_to(Worker_Handle handle, const String_Range& desc, Task::Proc fn, Task::Arg arg);
+
+		API_CPPR void
+		task_sleep(Task_Handle task);
+
 		API_CPPR Task_Handle
-		task_steal();	
+		task_awake(Worker_Handle worker);
+
+		API_CPPR bool
+		task_should_awake(Task_Handle handle);
+
+		API_CPPR bool
+		task_should_yield();
+
+		API_CPPR Task_Handle
+		task_steal();
 
 		API_CPPR void
 		wait_until_finished();
@@ -268,6 +496,12 @@ namespace cppr
 
 		API_CPPR const Task*
 		resolve(Task_Handle handle) const;
+
+		API_CPPR Fiber*
+		resolve(Fiber_Handle handle);
+
+		API_CPPR const Fiber*
+		resolve(Fiber_Handle handle) const;
 	};
 
 	//Executer
@@ -276,5 +510,27 @@ namespace cppr
 		Loom* loom;
 		Worker_Handle worker;
 		Task_Handle task;
+		fcontext_t context;
+
+		API_CPPR String_Range
+		task_desc() const;
+
+		API_CPPR Executer*
+		yield();
+
+		API_CPPR Executer*
+		yield(std::chrono::microseconds wait_time);
+
+		API_CPPR Executer*
+		yield(Yield_Condition::Predicate pred, Task::Arg arg);
+
+		API_CPPR Executer*
+		force_yield();
+
+		API_CPPR Executer*
+		force_yield(std::chrono::microseconds wait_time);
+
+		API_CPPR Executer*
+		force_yield(Yield_Condition::Predicate pred, Task::Arg arg);
 	};
 }
