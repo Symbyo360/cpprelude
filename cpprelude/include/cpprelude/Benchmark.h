@@ -198,6 +198,16 @@ namespace cppr
 		return data;
 	}
 
+	template<typename TCallable>
+	inline static Benchmark_Compare_Data
+	detailed(const char* benchmark_name,
+			  TCallable&& callable,
+			 usize atleast_run_count = 10,
+			  r64 avg_diff_in_millis = 1.0)
+	{
+		return detailed(make_strrng(benchmark_name), callable, atleast_run_count, avg_diff_in_millis);
+	}
+
 	/**
 	 * @brief      Creates benchmark of the provided callable
 	 *
@@ -218,6 +228,16 @@ namespace cppr
 		Benchmark_Compare_Data data;
 		_benchmark(os->unbuf_stdout, benchmark_name, callable, avg_diff_in_millis, atleast_run_count, data, true);
 		return data;
+	}
+
+	template<typename TCallable>
+	inline static Benchmark_Compare_Data
+	summary(const char* benchmark_name,
+			  TCallable&& callable,
+			  usize atleast_run_count = 10,
+			  r64 avg_diff_in_millis = 1.0)
+	{
+		return summary(make_strrng(benchmark_name), callable, atleast_run_count, avg_diff_in_millis);
 	}
 
 	/**

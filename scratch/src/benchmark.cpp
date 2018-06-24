@@ -759,7 +759,7 @@ task_wait(Executer* exe, Task::Arg arg)
 	}, nullptr);
 
 	w.stop();
-	cppr::printf("task {} took {} microseconds\n", exe->task_desc(), w.microseconds());
+	cppr::printfmt("task {} took {} microseconds\n", exe->task_desc(), w.microseconds());
 	++x;
 	return exe;
 }
@@ -767,14 +767,35 @@ task_wait(Executer* exe, Task::Arg arg)
 Executer*
 task(Executer* exe, Task::Arg arg)
 {
-	++x;
-	//usize msleep = usize(arg);
+	// ++x;
+	// usize msleep = usize(arg);
 	// cppr::printf("Task #{}, From Worker #{}\n", exe->task.id, exe->worker.id);
 	// auto id = exe->worker.id;
-	//exe = exe->yield(std::chrono::milliseconds(msleep));
+	// exe = exe->yield();
 	// if(id != exe->worker.id)
-	// 	cppr::printf("Back Task #{}, From Worker #{}\n", exe->task.id, exe->worker.id);
-	//++x;
+	// cppr::printf("Back Task #{}, From Worker #{}\n", exe->task.id, exe->worker.id);
+	// ++x;
+	return exe;
+}
+
+Executer*
+task_sender(Executer* exe, Task::Arg arg)
+{
+	Channel<int>* c = (Channel<int>*)arg;
+	auto err = c->send(exe, -1);
+	if(err)
+		println("ERROR");
+	return exe;
+}
+
+Executer*
+task_reciever(Executer* exe, Task::Arg arg)
+{
+	Channel<int>* c = (Channel<int>*)arg;
+	int x;
+	auto err = c->recieve(exe, x);
+	if(err)
+		println("ERROR");
 	return exe;
 }
 
@@ -786,7 +807,7 @@ loom_debug()
 	Owner<byte> mem;
 	u32 max_tasks = 10000;
 	u32 workers_count = 8;
-	u32 max_fibers = 256;
+	u32 max_fibers = 1000;
 	u32 stack_size = KILOBYTES(32);
 	usize required_size = l.init(std::move(mem), workers_count, max_tasks,
 								 max_fibers, stack_size);
@@ -795,8 +816,16 @@ loom_debug()
 	l.init(std::move(mem), workers_count, max_tasks, max_fibers, stack_size);
 
 	Stopwatch watch;
-
+	Channel<int> c(100);
+	int acc = 0;
+	
 	watch.start();
+
+	for(usize i = 0; i < max_fibers; ++i)
+	{
+		l.task_push("sender", task_sender, &c);
+		l.task_push("reciever", task_reciever, &c);
+	}
 
 	/*for(usize i = 0; i < 20; ++i)
 	{
@@ -810,17 +839,17 @@ loom_debug()
 	 {
 	 	//l.task_push("long", task_wait, nullptr);
 
-	 	for(usize i = 0; i < max_tasks; ++i)
+	 	/*for(usize i = 0; i < max_tasks; ++i)
 	 		l.task_push(task, nullptr);
 
 	 	for(usize i = 0; i < max_tasks; ++i)
-	 		l.task_push(task, nullptr);
+	 		l.task_push(task, nullptr);*/
 	 }
 
 	l.wait_until_finished();
 	watch.stop();
 
-	cppr::printf("total: {}ms\n{}ns per routine\n", watch.milliseconds(), watch.nanoseconds() / (x/2.0f));
+	cppr::printfmt("total: {}ms\n{}ns per routine\n", watch.milliseconds(), watch.nanoseconds() / (max_fibers));
 	println(x);
 	l.dispose();
 	os->free(l.memory);

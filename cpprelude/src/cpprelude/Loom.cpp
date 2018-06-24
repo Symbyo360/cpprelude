@@ -33,7 +33,7 @@ namespace cppr
 		return true;
 	}
 
-	inline static bool
+	bool
 	_external_do_one_task(Loom* loom)
 	{
 		Executer exe {

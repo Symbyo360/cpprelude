@@ -1794,7 +1794,7 @@ namespace cppr
 	 */
 	template<typename ... TArgs>
 	inline static usize
-	printf(const String_Range& format, TArgs&& ... args)
+	printfmt(const String_Range& format, TArgs&& ... args)
 	{
 		usize result = 0;
 		_acquire_print_lock();
@@ -1805,9 +1805,9 @@ namespace cppr
 
 	template<typename ... TArgs>
 	inline static usize
-	printf(const char* format, TArgs&& ... args)
+	printfmt(const char* format, TArgs&& ... args)
 	{
-		return printf(make_strrng(format), std::forward<TArgs>(args)...);
+		return printfmt(make_strrng(format), std::forward<TArgs>(args)...);
 	}
 
 	/**
@@ -1822,7 +1822,7 @@ namespace cppr
 	 */
 	template<typename ... TArgs>
 	inline static usize
-	printf_err(const String_Range& format, TArgs&& ... args)
+	printfmt_err(const String_Range& format, TArgs&& ... args)
 	{
 		usize result = 0;
 		_acquire_print_err_lock();
@@ -1833,7 +1833,7 @@ namespace cppr
 
 	template<typename ... TArgs>
 	inline static usize
-	printf_err(const char* format, TArgs&& ... args)
+	printfmt_err(const char* format, TArgs&& ... args)
 	{
 		return printf_err(make_strrng(format), std::forward<TArgs>(args)...);
 	}

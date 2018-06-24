@@ -3,6 +3,7 @@
 #include "cpprelude/api.h"
 #include "cpprelude/Ranges.h"
 #include "cpprelude/Owner.h"
+#include "cpprelude/Dynamic_Array.h"
 #include "sewing-fcontext/fcontext.h"
 #include <atomic>
 #include <thread>
@@ -504,6 +505,9 @@ namespace cppr
 		resolve(Fiber_Handle handle) const;
 	};
 
+	API_CPPR bool
+	_external_do_one_task(Loom* loom);
+
 	//Executer
 	struct Executer
 	{
@@ -532,5 +536,260 @@ namespace cppr
 
 		API_CPPR Executer*
 		force_yield(Yield_Condition::Predicate pred, Task::Arg arg);
+	};
+
+	/**
+	* @brief      A Channel implementation with a Dynamic_Array as the channel container
+	*
+	* @tparam     T     Type of the values in the channel
+	*/
+	template<class T>
+	struct Channel{
+		/**
+		* Data type of the channel
+		*/
+		using Data_Type = T;
+
+		/**
+		* Bool enumeration on the state of the channel's operation
+		*/
+		enum Status { OK, ERROR };
+
+		Dynamic_Array<T> _arr;
+		usize _index;
+		bool _is_close;
+		std::mutex mutex;
+		
+		/**
+		* @brief      Constructs a channel using the provided memory context
+		*
+		* @param[in]  context  The memory context to use for allocation and freeing
+		*/
+		Channel(const Memory_Context& context = os->global_memory)
+			: _arr(1, context)
+			, _index(0)
+			, _is_close(false) 
+		{}
+
+		/**
+		* @brief      Constructs a channel using the provided memory context
+		*
+		* @param[in]  count    Initializes the lenght of the channel
+		* @param[in]  context  The memory context to use for allocation and freeing
+		*/
+		Channel(usize count, const Memory_Context& context = os->global_memory)
+			:_arr(count, context)
+			, _index(0)
+			, _is_close(false) 
+		{}
+
+		/**
+		* @brief      Copy Constructor is deleted
+		*/
+		Channel(const Channel<T>& other) = delete;
+
+		/**
+		* @brief      Move Constructor
+		*
+		* @param[in]  other    The other channel to move from
+		*/
+		Channel(Channel<T>&& other)
+			:_arr(std::move(other._arr))
+			,_index(other._index)
+			,_is_close(other._is_close)
+		{
+			other._index = 0;
+			other._is_close = true;
+		}
+
+		/**
+		* @brief      Copy Assignement operator is deleted
+		*/
+		Channel<T>&
+		operator=(const Channel<T>& other) = delete;
+
+		/**
+		* @brief      Move Assignement operator
+		*
+		* @param[in]  other  The other channel to move
+		*
+		* @return     This channel by reference
+		*/
+		Channel<T>&
+		operator=(Channel<T>&& other)
+		{
+			_arr = std::move(other._arr);
+			_index = other._index;
+			_is_close = other._is_close;
+
+			other._index = 0;
+			other._is_close = true;
+			return *this;
+		}
+
+		/**
+		* @brief      Sends data to the channel
+		*
+		* @param[in]  exe   The executer object
+		* @param[in]  data  The data to be sent
+		* @return     returns the status of the channel's operation
+		*/
+		Status
+		send(Executer*& exe, const T& data)
+		{
+			while(!_is_close)
+			{
+				if(_index == _arr.capacity() && !_is_close)
+				{
+					exe = exe->yield([](Task::Arg arg) -> bool {
+						Channel<T>* self = (Channel<T>*) arg;
+						return ((self->_index < self->_arr.capacity()) || self->_is_close);
+					}, this);
+				}
+
+				std::lock_guard<std::mutex> guard(mutex);
+				if(_index < _arr.capacity() && !_is_close)
+				{
+					_arr[_index] = data;
+					++_index;
+					return Status::OK;
+				}
+			}
+			return Status::ERROR;
+		}
+
+		Status
+		send(const T& data)
+		{
+			while(!_is_close)
+			{
+				while(_index == _arr.capacity() && !_is_close)
+					std::this_thread::yield();
+
+				std::lock_guard<std::mutex> guard(mutex);
+				if(_index < _arr.capacity() && !_is_close)
+				{
+					_arr[_index] = data;
+					++_index;
+					return Status::OK;
+				}
+			}
+			return Status::ERROR;
+		}
+
+		Status
+		send(Loom* loom, const T& data)
+		{
+			while(!_is_close)
+			{
+				while(_index == _arr.capacity() && !_is_close)
+					if(!_external_do_one_task(loom))
+						std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+				std::lock_guard<std::mutex> guard(mutex);
+				if(_index < _arr.capacity() && !_is_close)
+				{
+					_arr[_index] = data;
+					++_index;
+					return Status::OK;
+				}
+			}
+			return Status::ERROR;
+		}
+		
+		/**
+		* @brief      returns the data from the channel
+		*
+		* @param[in]   exe   The executer object
+		* @param[out]  data  The data to be returned
+		* @return      returns the status of the channel's operation
+		*/
+		Status
+		recieve(Executer*& exe, T& data)
+		{
+			while(!_is_close)
+			{
+				if(_index == 0 && !_is_close)
+				{
+					exe = exe->yield([](Task::Arg arg) -> bool {
+						Channel<T>* self = (Channel<T>*) arg;
+						return ((self->_index > 0) || self->_is_close);
+					}, this);
+				}
+
+				std::lock_guard<std::mutex> guard(mutex);
+				if(_index > 0 && !_is_close)
+				{
+					--_index;
+					data = _arr[_index];
+					return Status::OK;
+				}
+			}
+			return Status::ERROR;
+		}
+
+		Status
+		recieve(T& data)
+		{
+			while(!_is_close)
+			{
+				while(_index == 0 && !_is_close)
+					std::this_thread::yield();
+
+				std::lock_guard<std::mutex> guard(mutex);
+				if(_index > 0 && !_is_close)
+				{
+					--_index;
+					data = _arr[_index];
+					return Status::OK;
+				}
+			}
+			return Status::ERROR;
+		}
+
+		Status
+		recieve(Loom* loom, T& data)
+		{
+			while(!_is_close)
+			{
+				while(_index == 0 && !_is_close)
+					if(!_external_do_one_task(loom))
+						std::this_thread::sleep_for(std::chrono::milliseconds(1));
+
+				std::lock_guard<std::mutex> guard(mutex);
+				if(_index > 0 && !_is_close)
+				{
+					--_index;
+					data = _arr[_index];
+					return Status::OK;
+				}
+			}
+			return Status::ERROR;
+		}
+
+		 /**
+		 * @brief   Closes the channel. If a channel is closed, then you can recieve but not send.
+		 */
+		void 
+		close()
+		{
+			_is_close = true;
+			_arr.reset();
+		}
+
+		bool
+		is_closed() const
+		{
+			return _is_close == true;
+		}
+
+		/**
+		* @return     The count of values in the channel
+		*/
+		usize
+		count() const
+		{
+			return _index;
+		}
 	};
 }

@@ -2425,7 +2425,7 @@ namespace cppr
 		i32 data;
 
 		Rune(i32 c = 0)
-			:data(internal::_utf8_to_big_endian(c))
+			:data(c)
 		{}
 
 		Rune(char c)
