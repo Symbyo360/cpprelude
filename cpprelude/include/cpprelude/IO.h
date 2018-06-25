@@ -17,10 +17,10 @@ namespace cppr
 	 * Here's a listing of the function provided by this file
 	 * - **print_err**: prints to the stderr
 	 * - **println_err**: just like the above but adds a newline at the end
-	 * - **printf_err**: print a formatted string to the stderr
+	 * - **printfmt_err**: print a formatted string to the stderr
 	 * - **print**: prints to the stdout
 	 * - **println**: just like the above but adds a newline at the end
-	 * - **printf**: print a formatted string to the stdout
+	 * - **printfmt**: print a formatted string to the stdout
 	 * - **vprintb**: variadic print binary function that's used to print values as binary data to a specific IO_Trait
 	 * - **vprints**: variadic print string function that's used to print values as string data to a specific IO_Trait
 	 * - **vprintf**: variadic print formatted string function that's used to print values as string data to a specific IO_Trait
@@ -131,7 +131,7 @@ namespace cppr
 	 * ##Examples
 	 * Input:
 	 * ```C++
-	 * cppr::printf("Hello, my name is {}, my age is {:.2f}", "Mostafa", 25.0f);
+	 * cppr::printfmt("Hello, my name is {}, my age is {:.2f}", "Mostafa", 25.0f);
 	 * ```
 	 * Output:
 	 * ```
@@ -141,7 +141,7 @@ namespace cppr
 	 * Input:
 	 * ```C++
 	 * for(usize i = 0; i < 10; ++i)
-	 * 	cppr::printf("My Random number is {:_^+10}\n", rand());
+	 * 	cppr::printfmt("My Random number is {:_^+10}\n", rand());
 	 * ```
 	 * Output:
 	 * ```
@@ -159,7 +159,7 @@ namespace cppr
 	 * 
 	 * Input:
 	 * ```C++
-	 * cppr::printf("Person {{ Name: {}, Age: {} }\n", "Mostafa", 25);
+	 * cppr::printfmt("Person {{ Name: {}, Age: {} }\n", "Mostafa", 25);
 	 * ```
 	 * Output:
 	 * ```
@@ -178,7 +178,7 @@ namespace cppr
 
 	template<typename ... TArgs>
 	inline static usize
-	printf_err(const String_Range& format, TArgs&& ... args);
+	printfmt_err(const String_Range& format, TArgs&& ... args);
 
 	/**
 	 * @brief      The Print string format which specifies the desired style of the print_str function
@@ -1835,7 +1835,7 @@ namespace cppr
 	inline static usize
 	printfmt_err(const char* format, TArgs&& ... args)
 	{
-		return printf_err(make_strrng(format), std::forward<TArgs>(args)...);
+		return printfmt_err(make_strrng(format), std::forward<TArgs>(args)...);
 	}
 
 

@@ -77,6 +77,16 @@ namespace cppr
 			other.size = 0;
 		}
 
+		template<typename R>
+		Owner(Owner<R>&& other)
+			:ptr(other.ptr),
+			 size(other.size)
+		{
+			static_assert(std::is_base_of<T, R>::value, "Owner cannot case between incompatible types");
+			other.ptr = nullptr;
+			other.size = 0;
+		}
+
 		/**
 		 * @brief      The Copy assignment operator is deleted
 		 */
@@ -89,6 +99,18 @@ namespace cppr
 		Owner&
 		operator=(Owner&& other)
 		{
+			ptr = other.ptr;
+			size = other.size;
+			other.ptr = nullptr;
+			other.size = 0;
+			return *this;
+		}
+
+		template<typename R>
+		Owner&
+		operator=(Owner<R>&& other)
+		{
+			static_assert(std::is_base_of<T, R>::value, "Owner cannot case between incompatible types");
 			ptr = other.ptr;
 			size = other.size;
 			other.ptr = nullptr;

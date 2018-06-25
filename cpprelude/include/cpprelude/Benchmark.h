@@ -281,7 +281,7 @@ namespace cppr
 				print(BAD_COLOR);
 			else
 				print(CLEAR_COLOR);
-			printf("{:32}: {:.2f}%\n", results[i].name, relative_throughput);
+			printfmt("{:32}: {:.2f}%\n", results[i].name, relative_throughput);
 		}
 
 		print(CLEAR_COLOR);

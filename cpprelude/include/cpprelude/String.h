@@ -794,7 +794,7 @@ namespace cppr
 		iterator
 		end()
 		{
-			return _bytes.ptr + _bytes_size;
+			return _bytes.ptr + _bytes_size - 1;
 		}
 
 		/**
@@ -803,7 +803,7 @@ namespace cppr
 		const_iterator
 		end() const
 		{
-			return _bytes.ptr + _bytes_size;
+			return _bytes.ptr + _bytes_size - 1;
 		}
 
 		/**
@@ -812,7 +812,7 @@ namespace cppr
 		const_iterator
 		cend() const
 		{
-			return _bytes.ptr + _bytes_size;
+			return _bytes.ptr + _bytes_size - 1;
 		}
 	};
 

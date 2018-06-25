@@ -8,6 +8,7 @@
 #include "cpprelude/IO_Trait.h"
 #include "sewing-fcontext/fcontext.h"
 #include <utility>
+#include <new>
 
 namespace cppr
 {
@@ -124,6 +125,55 @@ namespace cppr
 		free(Owner<T>&& value)
 		{
 			return global_memory->template free<T>(value);
+		}
+
+		/**
+		 * @brief Allocates and invokes the constructor of the allocated elements
+		 * 
+		 * @tparam T Type of the values to allocate
+		 * @tparam TArgs Types of the values to be passed to the constructor
+		 * @param count The number of values to allocate
+		 * @param args The arguments that will be passed to the constructor
+		 * @return Owner<T> The result memory
+		 */
+		template<typename T, typename ... TArgs>
+		Owner<T>
+		construct(usize count, TArgs&& ... args)
+		{
+			Owner<T> result = alloc<T>(count);
+			for(usize i = 0; i < count; ++i)
+				::new (result.ptr + i) T(std::forward<TArgs>(args)...);
+			return result;
+		}
+
+		/**
+		 * @brief Invokes the destructor of the values then frees the memory
+		 * 
+		 * @tparam T Type of the values in the memory
+		 * @param value Owner of the memory to be destructed
+		 */
+		template<typename T>
+		void
+		destruct(Owner<T>& value)
+		{
+			for(usize i = 0; i < value.count(); ++i)
+				value[i].~T();
+			free(value);
+		}
+
+		/**
+		 * @brief Invokes the destructor of the values then frees the memory
+		 * 
+		 * @tparam T Type of the values in the memory
+		 * @param value Owner of the memory to be destructed
+		 */
+		template<typename T>
+		void
+		destruct(Owner<T>&& value)
+		{
+			for(usize i = 0; i < value.count(); ++i)
+				value[i].~T();
+			free(std::move(value));
 		}
 
 		API_CPPR void

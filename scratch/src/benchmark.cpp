@@ -864,10 +864,10 @@ debug()
 void
 do_benchmark()
 {
-	while(true)
-	{
-		loom_debug();
-	}
+	// while(true)
+	// {
+	// 	loom_debug();
+	// }
 	cppr::usize limit = 1000;
 
 	compare_benchmarks(

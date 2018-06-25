@@ -52,14 +52,16 @@ namespace cppr
 		TKey key;
 		TValue value;
 
-		Pair_Node() {}
+		Pair_Node()
+			:key(TKey()), value(TValue())
+		{}
 
 		Pair_Node(const TKey& k)
-			:key(k)
+			:key(k), value(TValue())
 		{}
 
 		Pair_Node(TKey&& k)
-			:key(std::move(k))
+			:key(std::move(k)), value(TValue())
 		{}
 
 		Pair_Node(const TKey& k, const TValue& v)
@@ -187,7 +189,7 @@ namespace cppr
 				++i)
 			{
 				insert(*it);
-				it = std::next(it);
+				++it;
 			}
 		}
 
