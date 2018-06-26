@@ -102,7 +102,6 @@ e4_heap()
 	Owner<i32> my_array = os->template alloc<i32>(10);
 	//note that alloc doesn't invoke any constructors
 
-
 	//construct a single `1` Child and invoke the constructor with the argument `35`
 	//and store it in Base (this invokes constructors)
 	Owner<Base> ptr = os->template construct<Child>(1, 35);
@@ -256,6 +255,65 @@ e7_hash_map()
 	 	printfmt("ordered_dict[{:10}]: {:10}\n", entry.key, entry.value);
 }
 
+/**
+ * Example 8
+ * we will use the custom allocators with a single linked list
+ */
+#include <cpprelude/IO.h>
+#include <cpprelude/Single_List.h>
+#include <cpprelude/Allocators.h>
+using namespace cppr;
+
+void
+e8_custom_allocator()
+{
+	Arena_Allocator numbers_arena;
+	Single_List<usize> my_numbers(numbers_arena);
+	for(usize i = 0; i < 1000; ++i)
+		my_numbers.insert_front(i);
+
+	printfmt("used memory: {}, free memory: {}\n",
+		numbers_arena.used_memory_size(),
+		numbers_arena.unused_memory_size());
+}
+
+
+/**
+ * Example 9
+ * we will use the custom allocators with a single linked list
+ */
+#include <cpprelude/IO.h>
+#include <cpprelude/File.h>
+#include <cpprelude/Buffered_Stream.h>
+#include <cpprelude/String.h>
+using namespace cppr;
+
+void
+e9_load_file()
+{
+	//you can use the unwrap function
+	File file = unwrap(File::open("my_file", IO_MODE::READ, OPEN_MODE::OPEN_ONLY));
+
+	printfmt("file size: {}\n", file.size());
+
+	//start reading from the file
+	Buf_Reader reader(file);
+
+	//read the file line by line
+	String line;
+	while(readln(reader, line))
+		println(line);
+
+
+	//we can ignore the error value
+	File other_file = File::open("my_other_file", IO_MODE::READ, OPEN_MODE::OPEN_ONLY).value;
+
+	Owner<byte> file_content = os->template alloc<byte>(other_file.size());
+	other_file.read(file_content.all());
+	String content(std::move(file_content));
+	println(content);
+}
+
 void
 run_examples()
 {
@@ -266,4 +324,6 @@ run_examples()
 	e5_dynamic_array();
 	e6_string();
 	e7_hash_map();
+	e8_custom_allocator();
+	e9_load_file();
 }

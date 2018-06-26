@@ -617,7 +617,7 @@ bm_string(Stopwatch &watch, usize limit)
 bool
 bm_heap_sort(Stopwatch &watch, usize limit)
 {
-	Dynamic_Array<cppr::usize> array = RANDOM_ARRAY;
+	Dynamic_Array<usize> array = RANDOM_ARRAY;
 
 	watch.start();
 		cppr::heap_sort(array.all());
@@ -632,7 +632,7 @@ bm_heap_sort(Stopwatch &watch, usize limit)
 bool
 bm_std_heap_sort(Stopwatch &watch, usize limit)
 {
-	std::vector<cppr::usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
+	std::vector<usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
 
 	watch.start();
 		std::make_heap(array.begin(), array.end());
@@ -649,7 +649,7 @@ bm_std_heap_sort(Stopwatch &watch, usize limit)
 bool
 bm_merge_sort(Stopwatch &watch, usize limit)
 {
-	Dynamic_Array<cppr::usize> array = RANDOM_ARRAY;
+	Dynamic_Array<usize> array = RANDOM_ARRAY;
 
 	watch.start();
 		cppr::merge_sort(array.all());
@@ -664,7 +664,7 @@ bm_merge_sort(Stopwatch &watch, usize limit)
 bool
 bm_std_merge_sort(Stopwatch &watch, usize limit)
 {
-	std::vector<cppr::usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
+	std::vector<usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
 
 	watch.start();
 		std::stable_sort(array.begin(), array.end());
@@ -680,7 +680,7 @@ bm_std_merge_sort(Stopwatch &watch, usize limit)
 bool
 bm_quick_sort(Stopwatch &watch, usize limit)
 {
-	Dynamic_Array<cppr::usize> array = RANDOM_ARRAY;
+	Dynamic_Array<usize> array = RANDOM_ARRAY;
 
 	watch.start();
 		cppr::quick_sort(array.all());
@@ -695,7 +695,7 @@ bm_quick_sort(Stopwatch &watch, usize limit)
 bool
 bm_std_quick_sort(Stopwatch &watch, usize limit)
 {
-	std::vector<cppr::usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
+	std::vector<usize> array(RANDOM_ARRAY.begin(), RANDOM_ARRAY.end());
 
 	watch.start();
 		std::sort(array.begin(), array.end());
@@ -868,7 +868,7 @@ do_benchmark()
 	// {
 	// 	loom_debug();
 	// }
-	cppr::usize limit = 1000;
+	usize limit = 1000;
 
 	compare_benchmarks(
 		summary("std::vector"_rng, [&](Stopwatch& watch)

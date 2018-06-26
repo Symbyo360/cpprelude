@@ -82,7 +82,6 @@ namespace cppr
 			:ptr(other.ptr),
 			 size(other.size)
 		{
-			static_assert(std::is_base_of<T, R>::value, "Owner cannot case between incompatible types");
 			other.ptr = nullptr;
 			other.size = 0;
 		}
@@ -110,7 +109,6 @@ namespace cppr
 		Owner&
 		operator=(Owner<R>&& other)
 		{
-			static_assert(std::is_base_of<T, R>::value, "Owner cannot case between incompatible types");
 			ptr = other.ptr;
 			size = other.size;
 			other.ptr = nullptr;

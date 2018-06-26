@@ -131,6 +131,12 @@ namespace cppr
 		return { std::move(result), handle_result.error };
 	}
 
+	Result<File, OS_ERROR>
+	File::open(const char* name, IO_MODE io_mode, OPEN_MODE open_mode)
+	{
+		return File::open(make_strrng(name), io_mode, open_mode);
+	}
+
 	bool
 	File::close(File& file)
 	{

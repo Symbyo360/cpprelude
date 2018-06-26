@@ -10,7 +10,7 @@ TEST_CASE("Tree_Map", "[Tree_Map]")
 {
 	SECTION("Case 01")
 	{
-		Tree_Map<cppr::byte, bool> tree;
+		Tree_Map<byte, bool> tree;
 		tree.insert('e');
 		CHECK(tree._is_red_black_tree());
 		tree.insert('c');

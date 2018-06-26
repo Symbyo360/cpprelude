@@ -156,6 +156,11 @@ namespace cppr
 			 IO_MODE io_mode = IO_MODE::READ_WRITE,
 			 OPEN_MODE open_mode = OPEN_MODE::CREATE_OVERWRITE);
 
+		API_CPPR static Result<File, OS_ERROR>
+		open(const char* name,
+			 IO_MODE io_mode = IO_MODE::READ_WRITE,
+			 OPEN_MODE open_mode = OPEN_MODE::CREATE_OVERWRITE);
+
 		/**
 		 * @brief      Closes the given file
 		 *

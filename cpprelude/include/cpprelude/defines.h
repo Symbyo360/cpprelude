@@ -14,24 +14,25 @@
 #define GIGABYTES(amount) (MEGABYTES(amount) * 1024ULL)
 
 
-namespace cppr {
-	//type definitions
-	using ubyte = unsigned char;
-	using byte = char;
+//type definitions
+using ubyte = unsigned char;
+using byte = char;
 
-	using i8 = int8_t;
-	using i16 = int16_t;
-	using i32 = int32_t;
-	using i64 = int64_t;
+using i8 = int8_t;
+using i16 = int16_t;
+using i32 = int32_t;
+using i64 = int64_t;
 
-	using u8 = uint8_t;
-	using u16 = uint16_t;
-	using u32 = uint32_t;
-	using u64 = uint64_t;
+using u8 = uint8_t;
+using u16 = uint16_t;
+using u32 = uint32_t;
+using u64 = uint64_t;
 
-	using r32 = float;
-	using r64 = double;
+using r32 = float;
+using r64 = double;
 
+namespace cppr
+{
 	namespace details
 	{
 		template<u64 ptr_size>
@@ -52,7 +53,7 @@ namespace cppr {
 			using isize = i32;
 		};
 	}
-
-	using usize = details::size_type<sizeof(void*)>::usize;
-	using isize = details::size_type<sizeof(void*)>::isize;
 }
+
+using usize = cppr::details::size_type<sizeof(void*)>::usize;
+using isize = cppr::details::size_type<sizeof(void*)>::isize;
