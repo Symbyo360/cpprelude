@@ -99,11 +99,11 @@ namespace cppr
 			_count(0)
 		{
 			auto it = list.end();
-			it = std::prev(it);
+			--it;
 			for(usize i = 0; i < list.size(); ++i)
 			{
 				insert_front(*it);
-				it = std::prev(it);
+				--it;
 			}
 		}
 

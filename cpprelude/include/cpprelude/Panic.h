@@ -5,7 +5,7 @@
 
 namespace cppr
 {
-	API_CPPR void
+	[[noreturn]] API_CPPR void
 	_os_panic();
 
 	/**

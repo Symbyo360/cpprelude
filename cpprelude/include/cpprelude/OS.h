@@ -8,7 +8,6 @@
 #include "cpprelude/IO_Trait.h"
 #include "sewing-fcontext/fcontext.h"
 #include <utility>
-#include <new>
 
 namespace cppr
 {

@@ -9,7 +9,8 @@ namespace cppr
 		Stack_Allocator* self = (Stack_Allocator*)_self;
 
 		byte* last_ptr = self->_memory.ptr + self->_memory.size;
-		if(last_ptr - self->_alloc_head < size)
+		usize remaining_size = last_ptr - self->_alloc_head;
+		if(remaining_size < size)
 			return Owner<byte>();
 
 		auto result = Owner<byte>(self->_alloc_head, size);
@@ -128,7 +129,7 @@ namespace cppr
 	}
 
 	void
-	_arena_allocator_free(void* _self, const Owner<byte>& data)
+	_arena_allocator_free(void*, const Owner<byte>&)
 	{
 		//do nothing
 	}

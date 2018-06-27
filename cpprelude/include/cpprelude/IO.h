@@ -280,7 +280,7 @@ namespace cppr
 	namespace internal
 	{
 		inline static void
-		_variadic_print_binary_helper(IO_Trait* trait, usize& size)
+		_variadic_print_binary_helper(IO_Trait*, usize&)
 		{
 			return;
 		}
@@ -325,7 +325,7 @@ namespace cppr
 		};
 
 		inline static void
-		_variadic_print_string_helper(IO_Trait* trait, usize& size)
+		_variadic_print_string_helper(IO_Trait*, usize&)
 		{
 			return;
 		}
@@ -2030,7 +2030,7 @@ namespace cppr
 	namespace internal
 	{
 		inline static void
-		_variadic_read_binary_helper(IO_Trait* trait, usize& size)
+		_variadic_read_binary_helper(IO_Trait*, usize&)
 		{
 			return;
 		}
@@ -2204,7 +2204,7 @@ namespace cppr
 	namespace internal
 	{
 		inline static void
-		_variadic_read_string_helper(Bufio_Trait* trait, usize& size)
+		_variadic_read_string_helper(Bufio_Trait*, usize&)
 		{
 			return;
 		}

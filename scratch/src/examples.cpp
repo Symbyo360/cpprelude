@@ -1,5 +1,7 @@
 #include "examples.h"
 
+#define BLOCK_WARNING(var) ((void)var)
+
 /**
  * Example 1
  * we are just doing a hello world example using the basic types
@@ -41,6 +43,21 @@ e2_basic_types()
 	isize		_l;		//signed integer to represent size (u32 in case of x86, u64 in case of x64)
 	r32			_m;		//real 32 bit number
 	r64			_n;		//real 64 bit number
+
+	BLOCK_WARNING(_a);
+	BLOCK_WARNING(_b);
+	BLOCK_WARNING(_c);
+	BLOCK_WARNING(_d);
+	BLOCK_WARNING(_e);
+	BLOCK_WARNING(_f);
+	BLOCK_WARNING(_g);
+	BLOCK_WARNING(_h);
+	BLOCK_WARNING(_i);
+	BLOCK_WARNING(_j);
+	BLOCK_WARNING(_k);
+	BLOCK_WARNING(_l);
+	BLOCK_WARNING(_m);
+	BLOCK_WARNING(_n);
 }
 
 
@@ -108,12 +125,15 @@ e4_heap()
 
 	//you can access the underlying pointer
 	i32* arr_begin = my_array.ptr;
+	BLOCK_WARNING(arr_begin);
 
 	//you can access the size in bytes
 	usize arr_size_in_bytes = my_array.size;
+	BLOCK_WARNING(arr_size_in_bytes);
 
 	//you can access the count of elements
 	usize arr_count = my_array.count();
+	BLOCK_WARNING(arr_count);
 
 	//don't forget to free the allocated memory
 	os->free(my_number);
@@ -203,6 +223,10 @@ e6_string()
 	const char* c_str = en_name.data();
 	usize c_str_size = en_name.size();
 	usize rune_count = en_name.count();
+
+	BLOCK_WARNING(c_str);
+	BLOCK_WARNING(c_str_size);
+	BLOCK_WARNING(rune_count);
 
 	//read user name
 	String user_name;

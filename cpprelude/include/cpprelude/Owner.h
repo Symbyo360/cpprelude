@@ -116,6 +116,16 @@ namespace cppr
 			return *this;
 		}
 
+		operator T*()
+		{
+			return ptr;
+		}
+
+		operator const T*() const
+		{
+			return ptr;
+		}
+
 		/**
 		 * Bool cast operator
 		 */
@@ -166,32 +176,6 @@ namespace cppr
 		operator->() const
 		{
 			return ptr;
-		}
-
-		/**
-		 * @brief      The Subscript access operator
-		 *
-		 * @param[in]  index  The index of element in the memory block
-		 *
-		 * @return     The Indexed element by reference
-		 */
-		T&
-		operator[](usize index)
-		{
-			return ptr[index];
-		}
-
-		/**
-		 * @brief      The Const subscript access operator
-		 *
-		 * @param[in]  index  The index of element in the memory block
-		 *
-		 * @return     The Indexed element by const reference
-		 */
-		const T&
-		operator[](usize index) const
-		{
-			return ptr[index];
 		}
 
 		/**

@@ -442,11 +442,7 @@ namespace cppr
 	Loom::task_should_awake(Task_Handle handle)
 	{
 		Task* task = resolve(handle);
-		if(task->yield_cond.type == Yield_Condition::NONE)
-		{
-			return true;
-		}
-		else if(task->yield_cond.type == Yield_Condition::TIMED)
+		if(task->yield_cond.type == Yield_Condition::TIMED)
 		{
 			auto end = std::chrono::high_resolution_clock::now();
 			std::chrono::microseconds elapsed_time = std::chrono::duration_cast<std::chrono::microseconds>(end - task->yield_cond.timed.start_time);
@@ -456,6 +452,8 @@ namespace cppr
 		{
 			return task->yield_cond.pred.run();
 		}
+		
+		return true;
 	}
 
 	bool
