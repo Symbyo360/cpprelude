@@ -982,8 +982,7 @@ namespace cppr
 					{
 						usize new_index = _find_insertion_index(new_flags, new_values, _values[i].key);
 						new_flags[new_index] = internal::HASH_FLAGS::USED;
-						::new (new_values.ptr + new_index) Data_Type(_values[i]);
-						_values[i].~Data_Type();
+						::new (new_values.ptr + new_index) Data_Type(std::move(_values[i]));
 					}
 				}
 			}
