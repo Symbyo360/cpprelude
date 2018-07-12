@@ -707,7 +707,7 @@ namespace cppr
 		Status
 		recieve(Executer*& exe, T& data)
 		{
-			while(!_is_close)
+			while(!_is_close || _index > 0)
 			{
 				if(_index == 0 && !_is_close)
 				{
@@ -718,7 +718,7 @@ namespace cppr
 				}
 
 				std::lock_guard<std::mutex> guard(mutex);
-				if(_index > 0 && !_is_close)
+				if(_index > 0)
 				{
 					--_index;
 					data = _arr[_index];
@@ -731,13 +731,13 @@ namespace cppr
 		Status
 		recieve(T& data)
 		{
-			while(!_is_close)
+			while(!_is_close || _index > 0)
 			{
 				while(_index == 0 && !_is_close)
 					std::this_thread::yield();
 
 				std::lock_guard<std::mutex> guard(mutex);
-				if(_index > 0 && !_is_close)
+				if(_index > 0)
 				{
 					--_index;
 					data = _arr[_index];
@@ -750,14 +750,14 @@ namespace cppr
 		Status
 		recieve(Loom* loom, T& data)
 		{
-			while(!_is_close)
+			while(!_is_close || _index > 0)
 			{
 				while(_index == 0 && !_is_close)
 					if(!_external_do_one_task(loom))
 						std::this_thread::sleep_for(std::chrono::milliseconds(1));
 
 				std::lock_guard<std::mutex> guard(mutex);
-				if(_index > 0 && !_is_close)
+				if(_index > 0)
 				{
 					--_index;
 					data = _arr[_index];
@@ -774,7 +774,6 @@ namespace cppr
 		close()
 		{
 			_is_close = true;
-			_arr.reset();
 		}
 
 		bool
