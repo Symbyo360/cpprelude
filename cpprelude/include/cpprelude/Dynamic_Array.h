@@ -504,6 +504,17 @@ namespace cppr
 			}
 		}
 
+		void
+		insert_back(const std::initializer_list<Data_Type>& list)
+		{
+			reserve(list.size());
+			for(const auto& value: list)
+			{
+				::new (_data.ptr + _count) Data_Type(value);
+				++_count;
+			}
+		}
+
 		/**
 		 * @brief      Removes the specified count of values from the back of the array
 		 *
