@@ -21,6 +21,7 @@ project "cpprelude"
 
 	--linux configuration
 	filter "system:linux"
+		defines { "OS_LINUX" }
 		linkoptions {"-pthread"}
 
 	filter { "system:linux", "configurations:debug" }
@@ -43,6 +44,7 @@ project "cpprelude"
 
 	--windows configuration
 	filter "system:windows"
+		defines { "OS_WINDOWS" }
 		if os.getversion().majorversion == 10.0 then
 			systemversion(win10_sdk_version())
 		end

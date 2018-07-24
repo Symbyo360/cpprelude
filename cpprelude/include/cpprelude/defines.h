@@ -1,13 +1,6 @@
 #pragma once
 #include <stdint.h>
 
-//export definitions
-#if defined(WIN32)||defined(_WIN32)||defined(__WIN32__)||defined(_WIN64)||defined(WIN64)||defined(__MINGW32__)||defined(__MINGW64__)
-    #define OS_WINDOWS
-#elif defined(__linux__) || defined(__unix__)
-    #define OS_LINUX
-#endif
-
 #define BYTES(amount) (amount)
 #define KILOBYTES(amount) (BYTES(amount) * 1024ULL)
 #define MEGABYTES(amount) (KILOBYTES(amount) * 1024ULL)

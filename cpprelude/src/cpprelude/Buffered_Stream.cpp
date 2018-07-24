@@ -8,7 +8,6 @@ namespace cppr
 	_buf_reader_write(void*, const Slice<byte>&)
 	{
 		panic("Buf_Reader cannot write"_rng);
-		return 0;
 	}
 
 	usize
@@ -77,7 +76,6 @@ namespace cppr
 	_buf_reader_flush(void*)
 	{
 		panic("Buf_Reader cannot flush"_rng);
-		return 0;
 	}
 
 	Buf_Reader::Buf_Reader(IO_Trait* io, const Memory_Context& context)
@@ -173,21 +171,18 @@ namespace cppr
 	_buf_writer_read(void*, Slice<byte>&)
 	{
 		panic("Buf_Writer cannot read"_rng);
-		return 0;
 	}
 
 	Slice<byte>
 	_buf_writer_peek(void*, usize)
 	{
 		panic("Buf_Writer cannot peek"_rng);
-		return make_slice<byte>();
 	}
 
 	usize
 	_buf_writer_skip(void*, usize)
 	{
 		panic("Buf_Writer cannot skip"_rng);
-		return 0;
 	}
 
 	usize

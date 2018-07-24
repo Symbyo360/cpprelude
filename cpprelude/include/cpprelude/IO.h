@@ -270,7 +270,7 @@ namespace cppr
 			sign(SIGN::NONE),
 			prefix(false),
 			width(0),
-			precision(-1),
+			precision(static_cast<usize>(-1)),
 			type(TYPE::NONE)
 		{}
 	};
@@ -1855,7 +1855,7 @@ namespace cppr
 	_guarantee_text_chunk(Bufio_Trait* trait, usize REQUEST_SIZE)
 	{
 		usize requested_size = 0;
-		usize last_size = -1;
+		usize last_size = static_cast<usize>(-1);
 
 		//skip all the spaces at the start of the string
 		while (true)
@@ -1890,7 +1890,7 @@ namespace cppr
 		//so we have to check for whitespaces at the end also
 		//set the requested size to 0 to get the already buffered data
 		requested_size = 0;
-		last_size = -1;
+		last_size = static_cast<usize>(-1);
 		while (true)
 		{
 			bool found_whitespace = false;

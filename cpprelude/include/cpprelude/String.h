@@ -54,7 +54,7 @@ namespace cppr
 		String(const Memory_Context& context = os->global_memory)
 			:mem_context(context),
 			 _bytes_size(0),
-			 _runes_count(-1)
+			 _runes_count(static_cast<usize>(-1))
 		{}
 
 		/**
@@ -71,7 +71,7 @@ namespace cppr
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
 			move<byte>(_bytes.all(), str_range.bytes);
 			_bytes[_bytes_size - 1] = '\0';
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 		}
 
 		/**
@@ -89,7 +89,7 @@ namespace cppr
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
 			move<byte>(_bytes.all(), str_range.bytes);
 			_bytes[_bytes_size - 1] = '\0';
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 		}
 
 		/**
@@ -108,7 +108,7 @@ namespace cppr
 			_bytes = mem_context.template alloc<byte>(_bytes_size);
 			move<byte>(_bytes.all(), str_range.bytes);
 			_bytes[_bytes_size - 1] = '\0';
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 		}
 
 		/**
@@ -119,7 +119,7 @@ namespace cppr
 		 */
 		String(const Owner<byte>& data, const Memory_Context& context = os->global_memory)
 			:mem_context(context),
-			 _runes_count(-1)
+			 _runes_count(static_cast<usize>(-1))
 		{
 			_bytes = mem_context.template alloc<byte>(data.size);
 			move<byte>(_bytes, data);
@@ -136,7 +136,7 @@ namespace cppr
 			:mem_context(context),
 			 _bytes(std::move(data)),
 			 _bytes_size(_bytes.size),
-			 _runes_count(-1)
+			 _runes_count(static_cast<usize>(-1))
 		{}
 
 		/**
@@ -180,7 +180,7 @@ namespace cppr
 			 _runes_count(other._runes_count)
 		{
 			other._bytes_size = 0;
-			other._runes_count = -1;
+			other._runes_count = static_cast<usize>(-1);
 		}
 
 		/**
@@ -232,7 +232,7 @@ namespace cppr
 			move<byte>(_bytes.all(), str.bytes);
 			_bytes_size = str.bytes.size + 1;
 			_bytes[_bytes_size - 1] = '\0';
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 			return *this;
 		}
 
@@ -256,7 +256,7 @@ namespace cppr
 			move<byte>(_bytes.all(), make_slice(str, str_size));
 			_bytes_size = str_size + 1;
 			_bytes[_bytes_size - 1] = '\0';
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 			return *this;
 		}
 
@@ -276,7 +276,7 @@ namespace cppr
 			_runes_count = other._runes_count;
 
 			other._bytes_size = 0;
-			other._runes_count = -1;
+			other._runes_count = static_cast<usize>(-1);
 			return *this;
 		}
 
@@ -622,7 +622,7 @@ namespace cppr
 
 			move<byte>(_bytes.range(_bytes_size, _bytes_size + other._bytes_size), other._bytes.range(0, other._bytes_size));
 			_bytes_size += other._bytes_size;
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 		}
 
 		/**
@@ -642,7 +642,7 @@ namespace cppr
 			_bytes_size += str.bytes.size;
 			_bytes[_bytes_size] = '\0';
 			++_bytes_size;
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 		}
 
 		/**
@@ -663,7 +663,7 @@ namespace cppr
 			_bytes_size += str_size;
 			_bytes[_bytes_size] = '\0';
 			++_bytes_size;
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 		}
 
 		/**
@@ -708,7 +708,7 @@ namespace cppr
 		clear()
 		{
 			_bytes_size = 0;
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 		}
 
 		/**
@@ -720,7 +720,7 @@ namespace cppr
 			if(mem_context.valid())
 				mem_context.template free<byte>(_bytes);
 			_bytes_size = 0;
-			_runes_count = -1;
+			_runes_count = static_cast<usize>(-1);
 		}
 
 		/**
@@ -911,8 +911,8 @@ namespace cppr
 	inline static usize
 	_readln(Bufio_Trait* trait, String& value)
 	{
-		usize newline_offset = -1;
-		usize last_size = -1;
+		usize newline_offset = static_cast<usize>(-1);
+		usize last_size = static_cast<usize>(-1);
 		usize request_size = 0;
 		while(true)
 		{
