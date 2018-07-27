@@ -8,45 +8,29 @@
 
 
 //type definitions
-using ubyte = unsigned char;
-using byte = char;
+#ifdef USE_CPPR_NAMESPACE
+namespace cppr{
+#endif
 
-using i8 = int8_t;
-using i16 = int16_t;
-using i32 = int32_t;
-using i64 = int64_t;
+typedef unsigned char ubyte;
+typedef char byte;
 
-using u8 = uint8_t;
-using u16 = uint16_t;
-using u32 = uint32_t;
-using u64 = uint64_t;
+typedef int8_t  i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
 
-using r32 = float;
-using r64 = double;
+typedef uint8_t  u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
 
-namespace cppr
-{
-	namespace details
-	{
-		template<u64 ptr_size>
-		struct size_type
-		{};
+typedef float r32;
+typedef double r64;
 
-		template<>
-		struct size_type<8>
-		{
-			using usize = u64;
-			using isize = i64;
-		};
+typedef size_t usize;
+typedef intptr_t isize;
 
-		template<>
-		struct size_type<4>
-		{
-			using usize = u32;
-			using isize = i32;
-		};
-	}
+#ifdef USE_CPPR_NAMESPACE
 }
-
-using usize = cppr::details::size_type<sizeof(void*)>::usize;
-using isize = cppr::details::size_type<sizeof(void*)>::isize;
+#endif

@@ -6,30 +6,50 @@ project "unittest"
 	targetdir (bin_path .. "/%{cfg.platform}/%{cfg.buildcfg}/")
 	location  (build_path .. "/unittest/")
 
-	files {"include/**.h", "src/**.cpp"}
+	files
+	{
+		"include/**.h",
+		"src/**.cpp"
+	}
 
-	includedirs {
+	includedirs
+	{
 		"include/",
 		cpprelude_path .. "/include/",
 		catch_path .. "/include/"
 	}
 
-	links {"cpprelude"}
+	links
+	{
+		"cpprelude"
+	}
 
-	if os.istarget("linux") then
+	--language configuration
+	exceptionhandling "OFF"
+	rtti "OFF"
+	warnings "Extra"
+	cppdialect "c++14"
 
-		buildoptions {"-std=c++14", "-Wall"}
+	--linux configuration
+	filter "system:linux"
+		defines { "OS_LINUX" }
 		linkoptions {"-pthread"}
 
-	elseif os.istarget("windows") then
+	filter { "system:linux", "configurations:debug" }
+		linkoptions {"-rdynamic"}
 
+	--windows configuration
+	filter "system:windows"
+		defines { "OS_WINDOWS" }
+		buildoptions {"/utf-8"}
 		if os.getversion().majorversion == 10.0 then
 			systemversion(win10_sdk_version())
 		end
 
-		buildoptions {"/utf-8", "/std:c++14"}
-	end
+	filter { "system:windows", "configurations:debug" }
+		links {"dbghelp"}
 
+	--os agnostic configuration
 	filter "configurations:debug"
 		defines {"DEBUG"}
 		symbols "On"
