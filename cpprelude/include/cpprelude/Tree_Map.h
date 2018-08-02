@@ -3,7 +3,6 @@
 #include "cpprelude/defines.h"
 #include "cpprelude/defaults.h"
 #include "cpprelude/Ranges.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include <utility>
 
@@ -147,7 +146,7 @@ namespace cppr
 
 		Node_Type *_root;
 		usize _count;
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		TCompare _less_than;
 
 		/**
@@ -155,8 +154,8 @@ namespace cppr
 		 *
 		 * @param[in]  context  The memory context to use for memory allocation and freeing
 		 */
-		Red_Black_Tree(const Memory_Context& context = os->global_memory)
-			:_root(nullptr), _count(0), mem_context(context)
+		Red_Black_Tree(Allocator_Trait* context = allocator())
+			:_root(nullptr), _count(0), _allocator(context)
 		{}
 
 		/**
@@ -166,8 +165,8 @@ namespace cppr
 		 * @param[in]  context           The memory context
 		 */
 		Red_Black_Tree(const TCompare& compare_function,
-					   const Memory_Context& context = os->global_memory)
-			:_root(nullptr), _count(0), mem_context(context),
+					   Allocator_Trait* context = allocator())
+			:_root(nullptr), _count(0), _allocator(context),
 			 _less_than(compare_function)
 		{}
 
@@ -180,8 +179,8 @@ namespace cppr
 		 */
 		Red_Black_Tree(std::initializer_list<T> list,
 					   const TCompare& compare_function = TCompare(),
-					   const Memory_Context& context = os->global_memory)
-			:_root(nullptr), _count(0), mem_context(context), _less_than(compare_function)
+					   Allocator_Trait* context = allocator())
+			:_root(nullptr), _count(0), _allocator(context), _less_than(compare_function)
 		{
 			auto it = list.begin();
 			for(usize i = 0;
@@ -199,7 +198,7 @@ namespace cppr
 		 * @param[in]  other  The other tree to copy from
 		 */
 		Red_Black_Tree(const Red_Black_Tree& other)
-			:_root(nullptr), _count(0), mem_context(other.mem_context),
+			:_root(nullptr), _count(0), _allocator(other._allocator),
 			 _less_than(other._less_than)
 		{
 			_copy_content(other);
@@ -213,7 +212,7 @@ namespace cppr
 		 */
 		Red_Black_Tree(const Red_Black_Tree& other,
 					   const TCompare& compare_function)
-			:_root(nullptr), _count(0), mem_context(other.mem_context),
+			:_root(nullptr), _count(0), _allocator(other._allocator),
 			 _less_than(compare_function)
 		{
 			_copy_content(other);
@@ -226,8 +225,8 @@ namespace cppr
 		 * @param[in]  context  The memory context
 		 */
 		Red_Black_Tree(const Red_Black_Tree& other,
-					   const Memory_Context& context)
-			:_root(nullptr), _count(0), mem_context(context),
+					   Allocator_Trait* context)
+			:_root(nullptr), _count(0), _allocator(context),
 			 _less_than(other._less_than)
 		{
 			_copy_content(other);
@@ -241,9 +240,9 @@ namespace cppr
 		 * @param[in]  compare_function  The compare function
 		 */
 		Red_Black_Tree(const Red_Black_Tree& other,
-					   const Memory_Context& context,
+					   Allocator_Trait* context,
 					   const TCompare& compare_function)
-			:_root(nullptr), _count(0), mem_context(context),
+			:_root(nullptr), _count(0), _allocator(context),
 			 _less_than(compare_function)
 		{
 			_copy_content(other);
@@ -256,7 +255,7 @@ namespace cppr
 		 */
 		Red_Black_Tree(Red_Black_Tree&& other)
 			:_root(other._root), _count(other._count),
-			 mem_context(std::move(other.mem_context)),
+			 _allocator(std::move(other._allocator)),
 			 _less_than(std::move(other._less_than))
 		{
 			other._root = nullptr;
@@ -282,7 +281,7 @@ namespace cppr
 		operator=(const Red_Black_Tree& other)
 		{
 			clear();
-			mem_context = other.mem_context;
+			_allocator = other._allocator;
 			_less_than = other._less_than;
 			_copy_content(other);
 			return *this;
@@ -299,7 +298,7 @@ namespace cppr
 		operator=(Red_Black_Tree&& other)
 		{
 			_reset(_root);
-			mem_context = std::move(other.mem_context);
+			_allocator = std::move(other._allocator);
 			_less_than = std::move(other._less_than);
 
 			_count = other._count;
@@ -615,7 +614,7 @@ namespace cppr
 		{
 			std::swap(_root, other._root);
 			std::swap(_count, other._count);
-			std::swap(mem_context, other.mem_context);
+			std::swap(_allocator, other._allocator);
 			std::swap(_less_than, other._less_than);
 		}
 
@@ -1081,7 +1080,7 @@ namespace cppr
 		Node_Type*
 		_create_node(const Data_Type& data)
 		{
-			Node_Type* result = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type* result = _allocator->template alloc<Node_Type>().ptr;
 			::new (result) Node_Type(data);
 			return result;
 		}
@@ -1089,7 +1088,7 @@ namespace cppr
 		Node_Type*
 		_create_node(Data_Type&& data)
 		{
-			Node_Type *result = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *result = _allocator->template alloc<Node_Type>().ptr;
 			::new (result) Node_Type(std::move(data));
 			return result;
 		}
@@ -1100,7 +1099,7 @@ namespace cppr
 			if (it == nullptr) return;
 
 			it->data.~Data_Type();
-			mem_context.free(own(it));
+			_allocator->free(own(it));
 			--_count;
 		}
 
@@ -1110,7 +1109,7 @@ namespace cppr
 			if (it == nullptr) return;
 
 			it->data.~Data_Type();
-			mem_context.free(own(it));
+			_allocator->free(own(it));
 			--_count;
 		}
 
@@ -1297,7 +1296,7 @@ namespace cppr
 		 *
 		 * @param[in]  context  The memory context to use for memory allocation and freeing
 		 */
-		Red_Black_Map(const Memory_Context& context = os->global_memory)
+		Red_Black_Map(Allocator_Trait* context = allocator())
 			:_impl(context)
 		{}
 
@@ -1308,7 +1307,7 @@ namespace cppr
 		 * @param[in]  context           The memory context
 		 */
 		Red_Black_Map(const TCompare& compare_function,
-					  const Memory_Context& context = os->global_memory)
+					  Allocator_Trait* context = allocator())
 			:_impl(compare_function, context)
 		{}
 
@@ -1321,7 +1320,7 @@ namespace cppr
 		 */
 		Red_Black_Map(std::initializer_list<Data_Type> list,
 					  const TCompare& compare_function = TCompare(),
-					  const Memory_Context& context = os->global_memory)
+					  Allocator_Trait* context = allocator())
 			:_impl(list, compare_function, context)
 		{}
 
@@ -1352,7 +1351,7 @@ namespace cppr
 		 * @param[in]  context  The memory context
 		 */
 		Red_Black_Map(const Red_Black_Map& other,
-					  const Memory_Context& context)
+					  Allocator_Trait* context)
 			:_impl(other, context)
 		{}
 
@@ -1364,7 +1363,7 @@ namespace cppr
 		 * @param[in]  compare_function  The compare function
 		 */
 		Red_Black_Map(const Red_Black_Map& other,
-					  const Memory_Context& context,
+					  Allocator_Trait* context,
 					  const TCompare& compare_function)
 			:_impl(other, context, compare_function)
 		{}

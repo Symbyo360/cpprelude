@@ -2,7 +2,6 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/Dynamic_Array.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include "cpprelude/Ranges.h"
 #include "cpprelude/IO.h"
@@ -41,7 +40,7 @@ namespace cppr
 		 */
 		using const_iterator = String_Iterator;
 
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		Owner<byte> _bytes;
 		usize _bytes_size;
 		mutable usize _runes_count;
@@ -51,8 +50,8 @@ namespace cppr
 		 *
 		 * @param[in]   context  The memory context to use for allocation and freeing
 		 */
-		String(const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		String(Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _bytes_size(0),
 			 _runes_count(static_cast<usize>(-1))
 		{}
@@ -63,12 +62,12 @@ namespace cppr
 		 * @param[in]  str_range  The string range to construct the string from
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		String(const String_Range& str_range, const Memory_Context& context = os->global_memory)
-			:mem_context(context)
+		String(const String_Range& str_range, Allocator_Trait* context = allocator())
+			:_allocator(context)
 		{
 			_bytes_size = str_range.bytes.size + 1;
 
-			_bytes = mem_context.template alloc<byte>(_bytes_size);
+			_bytes = _allocator->template alloc<byte>(_bytes_size);
 			move<byte>(_bytes.all(), str_range.bytes);
 			_bytes[_bytes_size - 1] = '\0';
 			_runes_count = static_cast<usize>(-1);
@@ -80,13 +79,13 @@ namespace cppr
 		 * @param[in]  str      The C string to consruct the string from
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		String(const char* str, const Memory_Context& context = os->global_memory)
-			:mem_context(context)
+		String(const char* str, Allocator_Trait* context = allocator())
+			:_allocator(context)
 		{
 			String_Range str_range = make_strrng(str);
 			_bytes_size = str_range.bytes.size + 1;
 
-			_bytes = mem_context.template alloc<byte>(_bytes_size);
+			_bytes = _allocator->template alloc<byte>(_bytes_size);
 			move<byte>(_bytes.all(), str_range.bytes);
 			_bytes[_bytes_size - 1] = '\0';
 			_runes_count = static_cast<usize>(-1);
@@ -99,13 +98,13 @@ namespace cppr
 		 * @param[in]  count    The C string size
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		String(const char* str, usize count, const Memory_Context& context = os->global_memory)
-			:mem_context(context)
+		String(const char* str, usize count, Allocator_Trait* context = allocator())
+			:_allocator(context)
 		{
 			String_Range str_range = make_strrng(str, count);
 			_bytes_size = str_range.bytes.size + 1;
 
-			_bytes = mem_context.template alloc<byte>(_bytes_size);
+			_bytes = _allocator->template alloc<byte>(_bytes_size);
 			move<byte>(_bytes.all(), str_range.bytes);
 			_bytes[_bytes_size - 1] = '\0';
 			_runes_count = static_cast<usize>(-1);
@@ -117,11 +116,11 @@ namespace cppr
 		 * @param[in]  data     The data pointer to copy the string data from
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		String(const Owner<byte>& data, const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		String(const Owner<byte>& data, Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _runes_count(static_cast<usize>(-1))
 		{
-			_bytes = mem_context.template alloc<byte>(data.size);
+			_bytes = _allocator->template alloc<byte>(data.size);
 			move<byte>(_bytes, data);
 			_bytes_size = data.size;
 		}
@@ -132,8 +131,8 @@ namespace cppr
 		 * @param[in]  data       The data that will be moved to the string
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		String(Owner<byte>&& data, const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		String(Owner<byte>&& data, Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _bytes(std::move(data)),
 			 _bytes_size(_bytes.size),
 			 _runes_count(static_cast<usize>(-1))
@@ -145,11 +144,11 @@ namespace cppr
 		 * @param[in]  other  The other string to copy
 		 */
 		String(const String& other)
-			:mem_context(other.mem_context),
+			:_allocator(other._allocator),
 			 _bytes_size(other._bytes_size),
 			 _runes_count(other._runes_count)
 		{
-			_bytes = mem_context.template alloc<byte>(_bytes_size);
+			_bytes = _allocator->template alloc<byte>(_bytes_size);
 			move<byte>(_bytes, other._bytes);
 		}
 
@@ -159,12 +158,12 @@ namespace cppr
 		 * @param[in]  other    The other string to copy
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		String(const String& other, const Memory_Context& context)
-			:mem_context(context),
+		String(const String& other, Allocator_Trait* context)
+			:_allocator(context),
 			 _bytes_size(other._bytes_size),
 			 _runes_count(other._runes_count)
 		{
-			_bytes = mem_context.template alloc<byte>(_bytes_size);
+			_bytes = _allocator->template alloc<byte>(_bytes_size);
 			move<byte>(_bytes, other._bytes);
 		}
 
@@ -174,7 +173,7 @@ namespace cppr
 		 * @param[in]  other    The other string to move
 		 */
 		String(String&& other)
-			:mem_context(std::move(other.mem_context)),
+			:_allocator(std::move(other._allocator)),
 			 _bytes(std::move(other._bytes)),
 			 _bytes_size(other._bytes_size),
 			 _runes_count(other._runes_count)
@@ -203,8 +202,8 @@ namespace cppr
 		{
 			if(_bytes.size < other._bytes_size)
 			{
-				mem_context.template free<byte>(_bytes);
-				_bytes = mem_context.template alloc<byte>(other._bytes_size);
+				_allocator->template free<byte>(_bytes);
+				_bytes = _allocator->template alloc<byte>(other._bytes_size);
 			}
 
 			move<byte>(_bytes, other._bytes);
@@ -225,8 +224,8 @@ namespace cppr
 		{
 			if(_bytes.size < (str.bytes.size + 1))
 			{
-				mem_context.template free<byte>(_bytes);
-				_bytes = mem_context.template alloc<byte>(str.bytes.size + 1);
+				_allocator->template free<byte>(_bytes);
+				_bytes = _allocator->template alloc<byte>(str.bytes.size + 1);
 			}
 
 			move<byte>(_bytes.all(), str.bytes);
@@ -249,8 +248,8 @@ namespace cppr
 			usize str_size = std::strlen(str);
 			if(_bytes.size < (str_size + 1))
 			{
-				mem_context.template free<byte>(_bytes);
-				_bytes = mem_context.template alloc<byte>(str_size + 1);
+				_allocator->template free<byte>(_bytes);
+				_bytes = _allocator->template alloc<byte>(str_size + 1);
 			}
 
 			move<byte>(_bytes.all(), make_slice(str, str_size));
@@ -270,7 +269,7 @@ namespace cppr
 		String&
 		operator=(String&& other)
 		{
-			mem_context = std::move(other.mem_context);
+			_allocator = std::move(other._allocator);
 			_bytes = std::move(other._bytes);
 			_bytes_size = other._bytes_size;
 			_runes_count = other._runes_count;
@@ -600,10 +599,10 @@ namespace cppr
 			usize double_cap = _bytes.size * 2;
 			usize fit = _bytes_size + expected_count;
 			usize new_cap = double_cap > fit ? double_cap : fit;
-			auto new_bytes = mem_context.template alloc<byte>(new_cap);
+			auto new_bytes = _allocator->template alloc<byte>(new_cap);
 			if(_bytes_size > 0)
 				move<byte>(new_bytes, _bytes);
-			mem_context.template free<byte>(_bytes);
+			_allocator->template free<byte>(_bytes);
 			_bytes = std::move(new_bytes);
 		}
 
@@ -676,7 +675,7 @@ namespace cppr
 		 * @return     The newly created sub string
 		 */
 		String
-		substr(usize start, usize end, const Memory_Context& context = os->global_memory) const
+		substr(usize start, usize end, Allocator_Trait* context = allocator()) const
 		{
 			auto start_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), start);
 			auto end_bytes_offset = internal::_utf8_count_runes_to(_bytes.all(), end);
@@ -696,7 +695,7 @@ namespace cppr
 		 * @return     The newly created sub string
 		 */
 		String
-		substr(iterator start, iterator end, const Memory_Context& context = os->global_memory) const
+		substr(iterator start, iterator end, Allocator_Trait* context = allocator()) const
 		{
 			return String(range(start, end), context);
 		}
@@ -717,8 +716,8 @@ namespace cppr
 		void
 		reset()
 		{
-			if(mem_context.valid())
-				mem_context.template free<byte>(_bytes);
+			if(_allocator)
+				_allocator->template free<byte>(_bytes);
 			_bytes_size = 0;
 			_runes_count = static_cast<usize>(-1);
 		}

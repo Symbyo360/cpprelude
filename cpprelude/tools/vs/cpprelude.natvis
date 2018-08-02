@@ -15,8 +15,8 @@
     </Expand>
   </Type>
 
-  <Type Name="cppr::Memory_Context">
-    <DisplayString>Memory_Context</DisplayString>
+  <Type Name="cppr::Allocator_Trait">
+    <DisplayString>Allocator_Trait</DisplayString>
     <Expand>
       <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
       <Item Name="[Flags]" ExcludeView="simple">_flags</Item>
@@ -61,7 +61,7 @@
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
       <Item Name="[capacity]" ExcludeView="simple">capacity()</Item>
-      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
       <Item Name="[Owner]" ExcludeView="simple">_data</Item>
       <ArrayItems>
         <Size>_count</Size>
@@ -88,7 +88,7 @@
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
       <LinkedListItems>
         <HeadPointer>_head</HeadPointer>
         <NextPointer>next</NextPointer>
@@ -117,7 +117,7 @@
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
       <LinkedListItems>
         <Size>_count</Size>
         <HeadPointer>_head->next</HeadPointer>
@@ -161,7 +161,7 @@
     <DisplayString Condition="_list._count != 0">{{ count={_list._count} }}</DisplayString>
     <Expand>
       <Item Name="[Single_List]" ExcludeView="simple">_list</Item>
-      <Item Name="[Memory_Context]" ExcludeView="simple">_list.mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_list._allocator</Item>
       <Item Name="count">_list._count</Item>
       <LinkedListItems>
         <HeadPointer>_list._head</HeadPointer>
@@ -175,7 +175,7 @@
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
       <Item Name="count">_count</Item>
       <IndexListItems>
         <Size>_count</Size>
@@ -201,7 +201,7 @@
     <DisplayString Condition="_list._count != 0">{{ count={_list._count} }}</DisplayString>
     <Expand>
       <Item Name="[Double_List]" ExcludeView="simple">_list</Item>
-      <Item Name="[Memory_Context]" ExcludeView="simple">_list.mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_list._allocator</Item>
       <Item Name="count">_list._count</Item>
       <LinkedListItems>
         <HeadPointer>_list._head->next</HeadPointer>
@@ -216,7 +216,7 @@
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
       <Item Name="[Dynamic_Array]" ExcludeView="simple">_array</Item>
-      <Item Name="[Memory_Context]" ExcludeView="simple">_array.mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_array._allocator</Item>
       <Item Name="count">_count</Item>
       <ArrayItems>
         <Size>_count</Size>
@@ -230,7 +230,7 @@
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
       <TreeItems>
         <Size>_count</Size>
         <HeadPointer>_root</HeadPointer>
@@ -246,7 +246,7 @@
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
       <TreeItems>
         <Size>_count</Size>
         <HeadPointer>_root</HeadPointer>
@@ -261,7 +261,7 @@
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
       <CustomListItems>
         <Variable Name="i" InitialValue="0"/>
         <Loop>
@@ -281,7 +281,7 @@
     <DisplayString Condition="_count == 0">empty</DisplayString>
     <DisplayString Condition="_count != 0">{{ count={_count} }}</DisplayString>
     <Expand>
-      <Item Name="[Memory_Context]" ExcludeView="simple">mem_context</Item>
+      <Item Name="[Allocator_Trait]" ExcludeView="simple">_allocator</Item>
       <CustomListItems>
         <Variable Name="i" InitialValue="0"/>
         <Loop>

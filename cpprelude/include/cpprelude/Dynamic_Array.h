@@ -2,7 +2,6 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/Owner.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include <initializer_list>
 #include <utility>
@@ -47,7 +46,7 @@ namespace cppr
 		/**
 		 * Memory context used by the container
 		 */
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		Owner<Data_Type> _data;
 		usize _count;
 
@@ -56,8 +55,8 @@ namespace cppr
 		 *
 		 * @param      context  The memory context to use for allocation and freeing
 		 */
-		Dynamic_Array(const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Dynamic_Array(Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _count(0)
 		{}
 
@@ -68,11 +67,11 @@ namespace cppr
 		 * @param      context  The memory context to use for allocaiton and freeing
 		 */
 		Dynamic_Array(std::initializer_list<Data_Type> list,
-			const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+			Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _count(0)
 		{
-			_data = mem_context.template alloc<Data_Type>(list.size());
+			_data = _allocator->template alloc<Data_Type>(list.size());
 			for(const auto& value: list)
 			{
 				::new (_data.ptr + _count) Data_Type(value);
@@ -86,11 +85,11 @@ namespace cppr
 		 * @param[in]  count    The count of values that array will be initialized with
 		 * @param      context  The memory context to use for allocation and freeing
 		 */
-		Dynamic_Array(usize count, const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Dynamic_Array(usize count, Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _count(0)
 		{
-			_data = mem_context.template alloc<Data_Type>(count);
+			_data = _allocator->template alloc<Data_Type>(count);
 			for(_count = 0; _count < count; ++_count)
 				::new (_data.ptr + _count) Data_Type();
 		}
@@ -103,11 +102,11 @@ namespace cppr
 		 * @param      context     The memroy context to use for allocation and freeing
 		 */
 		Dynamic_Array(usize count, const Data_Type& fill_value,
-			const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+			Allocator_Trait* context = allocator())
+			:_allocator(context),
 			_count(0)
 		{
-			_data = mem_context.template alloc<Data_Type>(count);
+			_data = _allocator->template alloc<Data_Type>(count);
 			for(_count = 0; _count < count; ++_count)
 				::new (_data.ptr + _count) Data_Type(fill_value);
 		}
@@ -118,10 +117,10 @@ namespace cppr
 		 * @param[in]  other  The other dynamic array to copy from
 		 */
 		Dynamic_Array(const Dynamic_Array<Data_Type>& other)
-			:mem_context(other.mem_context),
+			:_allocator(other._allocator),
 			_count(0)
 		{
-			_data = mem_context.template alloc<Data_Type>(other._count);
+			_data = _allocator->template alloc<Data_Type>(other._count);
 			for(_count = 0; _count < other._count; ++_count)
 				::new (_data.ptr + _count) Data_Type(other._data[_count]);
 		}
@@ -132,11 +131,11 @@ namespace cppr
 		 * @param[in]  other    The other dynamic array to copy from
 		 * @param      context  The context to use for memory allocation and freeing
 		 */
-		Dynamic_Array(const Dynamic_Array<Data_Type>& other, const Memory_Context& context)
-			:mem_context(context),
+		Dynamic_Array(const Dynamic_Array<Data_Type>& other, Allocator_Trait* context)
+			:_allocator(context),
 			_count(0)
 		{
-			_data = mem_context.template alloc<Data_Type>(other._count);
+			_data = _allocator->template alloc<Data_Type>(other._count);
 			for(_count = 0; _count < other._count; ++_count)
 				::new (_data.ptr + _count) Data_Type(other._data[_count]);
 		}
@@ -147,7 +146,7 @@ namespace cppr
 		 * @param[in]  other  The other dynamic array to move from
 		 */
 		Dynamic_Array(Dynamic_Array<Data_Type>&& other)
-			:mem_context(std::move(other.mem_context)),
+			:_allocator(std::move(other._allocator)),
 			 _data(std::move(other._data)),
 			 _count(other._count)
 		{
@@ -173,8 +172,8 @@ namespace cppr
 		operator=(const Dynamic_Array<Data_Type>& other)
 		{
 			reset();
-			mem_context = other.mem_context;
-			_data = mem_context.template alloc<Data_Type>(other._count);
+			_allocator = other._allocator;
+			_data = _allocator->template alloc<Data_Type>(other._count);
 			for(_count = 0; _count < other._count; ++_count)
 				::new (_data.ptr + _count) Data_Type(other._data[_count]);
 			return *this;
@@ -191,7 +190,7 @@ namespace cppr
 		operator=(Dynamic_Array<Data_Type>&& other)
 		{
 			reset();
-			mem_context = std::move(other.mem_context);
+			_allocator = std::move(other._allocator);
 			_data = std::move(other._data);
 			_count = other._count;
 
@@ -284,12 +283,12 @@ namespace cppr
 			auto new_capacity = double_cap > expected_count ? double_cap : expected_count;
 			//account for the existing count in the array
 			new_capacity += _count;
-			Owner<Data_Type> new_data = mem_context.template alloc<Data_Type>(new_capacity);
+			Owner<Data_Type> new_data = _allocator->template alloc<Data_Type>(new_capacity);
 			for(usize i = 0; i < _count; ++i)
 				::new (new_data.ptr + i) Data_Type(std::move(_data[i]));
 
 			if(_data)
-				mem_context.template free<Data_Type>(_data);
+				_allocator->template free<Data_Type>(_data);
 
 			_data = std::move(new_data);
 		}
@@ -306,11 +305,11 @@ namespace cppr
 			auto new_capacity = double_cap > expected_count ? double_cap : expected_count;
 			//account for the existing count in the array
 			new_capacity += _count;
-			Owner<Data_Type> new_data = mem_context.template alloc<Data_Type>(new_capacity);
+			Owner<Data_Type> new_data = _allocator->template alloc<Data_Type>(new_capacity);
 			move(new_data, _data);
 
 			if(_data)
-				mem_context.template free<Data_Type>(_data);
+				_allocator->template free<Data_Type>(_data);
 
 			_data = std::move(new_data);
 		}
@@ -552,7 +551,7 @@ namespace cppr
 			for(usize i = 0; i < _count; ++i)
 				_data[i].~Data_Type();
 
-			mem_context.template free<Data_Type>(_data);
+			_allocator->template free<Data_Type>(_data);
 			_count = 0;
 		}
 
@@ -565,10 +564,10 @@ namespace cppr
 			if(capacity() == _count)
 				return;
 
-			Owner<Data_Type> new_data = mem_context.template alloc<Data_Type>(_count);
+			Owner<Data_Type> new_data = _allocator->template alloc<Data_Type>(_count);
 			for(usize i = 0; i < _count; ++i)
 				::new (new_data.ptr + i) Data_Type(std::move(_data[i]));
-			mem_context.template free<Data_Type>(_data);
+			_allocator->template free<Data_Type>(_data);
 			_data = std::move(new_data);
 		}
 

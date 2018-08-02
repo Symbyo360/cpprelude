@@ -565,7 +565,7 @@ namespace cppr
 		*
 		* @param[in]  context  The memory context to use for allocation and freeing
 		*/
-		Channel(const Memory_Context& context = os->global_memory)
+		Channel(Allocator_Trait* context = allocator())
 			: _arr(1, context)
 			, _index(0)
 			, _is_close(false) 
@@ -577,7 +577,7 @@ namespace cppr
 		* @param[in]  count    Initializes the lenght of the channel
 		* @param[in]  context  The memory context to use for allocation and freeing
 		*/
-		Channel(usize count, const Memory_Context& context = os->global_memory)
+		Channel(usize count, Allocator_Trait* context = allocator())
 			:_arr(count, context)
 			, _index(0)
 			, _is_close(false) 

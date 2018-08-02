@@ -1,5 +1,6 @@
 #pragma once
 #include <stdint.h>
+#include <stddef.h>
 
 #define BYTES(amount) (amount)
 #define KILOBYTES(amount) (BYTES(amount) * 1024ULL)

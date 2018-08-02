@@ -78,7 +78,7 @@ namespace cppr
 		panic("Buf_Reader cannot flush"_rng);
 	}
 
-	Buf_Reader::Buf_Reader(IO_Trait* io, const Memory_Context& context)
+	Buf_Reader::Buf_Reader(IO_Trait* io, Allocator_Trait* context)
 		:_data_buffer(context),
 		 _io(io)
 	{
@@ -201,7 +201,7 @@ namespace cppr
 		return result;
 	}
 
-	Buf_Writer::Buf_Writer(IO_Trait* io, usize flush_size, const Memory_Context& context)
+	Buf_Writer::Buf_Writer(IO_Trait* io, usize flush_size, Allocator_Trait* context)
 		:_data_buffer(context),
 		 _io(io),
 		 flush_limit(flush_size)

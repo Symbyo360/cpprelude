@@ -25,7 +25,7 @@ project "unittest"
 	}
 
 	--language configuration
-	exceptionhandling "OFF"
+	exceptionhandling "ON"
 	rtti "OFF"
 	warnings "Extra"
 	cppdialect "c++14"

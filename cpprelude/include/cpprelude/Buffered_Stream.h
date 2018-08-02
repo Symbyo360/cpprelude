@@ -3,7 +3,6 @@
 #include "cpprelude/api.h"
 #include "cpprelude/Memory_Stream.h"
 #include "cpprelude/IO.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include "cpprelude/Ranges.h"
 
@@ -24,7 +23,7 @@ namespace cppr
 		 * @param io The underlying IO_Trait to buffer
 		 * @param context The memory context used for memory resources
 		 */
-		API_CPPR Buf_Reader(IO_Trait* io, const Memory_Context& context = os->global_memory);
+		API_CPPR Buf_Reader(IO_Trait* io, Allocator_Trait* context = allocator());
 
 		/**
 		 * @brief Copy Constructor is deleted
@@ -139,7 +138,7 @@ namespace cppr
 		 * @param flush_size The flush limit of buffered data in bytes
 		 * @param context The memory context used for memory resources
 		 */
-		API_CPPR Buf_Writer(IO_Trait* io, usize flush_size = KILOBYTES(4), const Memory_Context& context = os->global_memory);
+		API_CPPR Buf_Writer(IO_Trait* io, usize flush_size = KILOBYTES(4), Allocator_Trait* context = allocator());
 
 		/**
 		 * @brief Copy Constructor is deleted

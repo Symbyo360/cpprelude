@@ -2,7 +2,6 @@
 
 #include "cpprelude/api.h"
 #include "cpprelude/Owner.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include "cpprelude/Allocator_Trait.h"
 
@@ -17,7 +16,7 @@ namespace cppr
 		/**
 		 * Memory context used by the stack allocator
 		 */
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		Owner<byte> _memory;
 		byte *_alloc_head;
 
@@ -26,7 +25,7 @@ namespace cppr
 		 *
 		 * @param[in]  context  The memory context used to init the stack memory
 		 */
-		API_CPPR Stack_Allocator(const Memory_Context& context = os->global_memory);
+		API_CPPR Stack_Allocator(Allocator_Trait* context = allocator());
 
 		/**
 		 * @brief      Creates a stack allocator
@@ -34,7 +33,7 @@ namespace cppr
 		 * @param[in]  stack_size  The stack size
 		 * @param[in]  context  The memory context used to init the stack memory
 		 */
-		API_CPPR Stack_Allocator(usize stack_size, const Memory_Context& context = os->global_memory);
+		API_CPPR Stack_Allocator(usize stack_size, Allocator_Trait* context = allocator());
 
 		/**
 		 * Copy Constructor is deleted
@@ -106,15 +105,6 @@ namespace cppr
 		operator Allocator_Trait*()
 		{
 			return &_allocator_trait;
-		}
-
-		/**
-		 * @brief      Implicit cast operator to Memory Context
-		 */
-		inline
-		operator Memory_Context()
-		{
-			return Memory_Context(&_allocator_trait);
 		}
 
 		/**
@@ -234,7 +224,7 @@ namespace cppr
 		/**
 		 * Memory context used by the arena allocator
 		 */
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		internal::Arena_Node* _head;
 		usize block_size, arena_size, used_size;
 
@@ -243,7 +233,7 @@ namespace cppr
 		 *
 		 * @param[in]  context  The memory context used by the arena allocator
 		 */
-		API_CPPR Arena_Allocator(const Memory_Context& context = os->global_memory);
+		API_CPPR Arena_Allocator(Allocator_Trait* context = allocator());
 
 		/**
 		 * @brief      Creates an arena allocator
@@ -251,7 +241,7 @@ namespace cppr
 		 * @param[in]  block_size  The memory block size unit of the arena in bytes
 		 * @param[in]  context  The memory context used by the arena allocator
 		 */
-		API_CPPR Arena_Allocator(usize block_size, const Memory_Context& context = os->global_memory);
+		API_CPPR Arena_Allocator(usize block_size, Allocator_Trait* context = allocator());
 
 		/**
 		 * @brief      Copy Constructor is deleted
@@ -317,15 +307,6 @@ namespace cppr
 		operator Allocator_Trait*()
 		{
 			return &_allocator_trait;
-		}
-
-		/**
-		 * @brief      Implicit cast operator to Memory Context
-		 */
-		inline
-		operator Memory_Context()
-		{
-			return Memory_Context(&_allocator_trait);
 		}
 
 		/**

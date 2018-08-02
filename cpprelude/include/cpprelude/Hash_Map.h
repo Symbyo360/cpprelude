@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cpprelude/defines.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include "cpprelude/Owner.h"
 #include "cpprelude/Hash.h"
@@ -114,7 +113,7 @@ namespace cppr
 		/**
 		 * Memory contex used by the container
 		 */
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		Owner<Data_Type> _values;
 		Owner<internal::HASH_FLAGS> _flags;
 		THash _hasher;
@@ -125,8 +124,8 @@ namespace cppr
 		 *
 		 * @param      context  The memory context to use for allocation and freeing
 		 */
-		Hash_Set(const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Hash_Set(Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _hasher(THash()),
 			 _count(0)
 		{}
@@ -137,8 +136,8 @@ namespace cppr
 		 * @param[in]  hasher   The hasher functor to use
 		 * @param      context  The memory context to use for allocation and freeing
 		 */
-		Hash_Set(const THash& hasher, const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Hash_Set(const THash& hasher, Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _hasher(hasher),
 			 _count(0)
 		{}
@@ -149,14 +148,14 @@ namespace cppr
 		 * @param[in]  other  The other hash set to copy from
 		 */
 		Hash_Set(const Hash_Set& other)
-			:mem_context(other.mem_context),
+			:_allocator(other._allocator),
 			 _hasher(other._hasher),
 			 _count(other._count)
 		{
-			_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
+			_flags = _allocator->template alloc<internal::HASH_FLAGS>(other._flags.count());
 			move(_flags, other._flags);
 
-			_values = mem_context.template alloc<Data_Type>(other._values.count());
+			_values = _allocator->template alloc<Data_Type>(other._values.count());
 			for(usize i = 0; i < _flags.count(); ++i)
 				if(_flags[i] == internal::HASH_FLAGS::USED)
 					::new (_values.ptr + i) Data_Type(other._values[i]);
@@ -168,15 +167,15 @@ namespace cppr
 		 * @param[in]  other    The other hash set to copy from
 		 * @param      context  The context to use for memory allocation and freeing
 		 */
-		Hash_Set(const Hash_Set& other, const Memory_Context& context)
-			:mem_context(context),
+		Hash_Set(const Hash_Set& other, Allocator_Trait* context)
+			:_allocator(context),
 			 _hasher(other._hasher),
 			 _count(other._count)
 		{
-			_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
+			_flags = _allocator->template alloc<internal::HASH_FLAGS>(other._flags.count());
 			move(_flags, other._flags);
 
-			_values = mem_context.template alloc<Data_Type>(other._values.count());
+			_values = _allocator->template alloc<Data_Type>(other._values.count());
 			for(usize i = 0; i < other._flags.count(); ++i)
 				if(other._flags[i] == internal::HASH_FLAGS::USED)
 					::new (_values.ptr + i) Data_Type(other._values[i]);
@@ -188,7 +187,7 @@ namespace cppr
 		 * @param[in]  other  The other hash set to move from
 		 */
 		Hash_Set(Hash_Set&& other)
-			:mem_context(std::move(other.mem_context)),
+			:_allocator(std::move(other._allocator)),
 			 _values(std::move(other._values)),
 			 _flags(std::move(other._flags)),
 			 _hasher(std::move(other._hasher)),
@@ -210,8 +209,8 @@ namespace cppr
 			if(_flags.count() < other._flags.count())
 			{
 				reset();
-				_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
-				_values = mem_context.template alloc<Data_Type>(other._values.count());
+				_flags = _allocator->template alloc<internal::HASH_FLAGS>(other._flags.count());
+				_values = _allocator->template alloc<Data_Type>(other._values.count());
 			}
 			else
 			{
@@ -226,7 +225,7 @@ namespace cppr
 			}
 
 			_hasher = other._hasher;
-			mem_context = other.mem_context;
+			_allocator = other._allocator;
 
 			move(_flags, other._flags);
 			for(usize i = 0; i < _flags.count(); ++i)
@@ -250,7 +249,7 @@ namespace cppr
 		operator=(Hash_Set&& other)
 		{
 			reset();
-			mem_context = std::move(other.mem_context);
+			_allocator = std::move(other._allocator);
 			_values = std::move(other._values);
 			_flags = std::move(other._flags);
 			_hasher = std::move(other._hasher);
@@ -310,8 +309,8 @@ namespace cppr
 			usize fit = _count + expected_count;
 			usize new_cap = double_cap > fit ? double_cap : fit;
 
-			auto new_flags = mem_context.template alloc<internal::HASH_FLAGS>(new_cap);
-			auto new_values = mem_context.template alloc<Data_Type>(new_cap);
+			auto new_flags = _allocator->template alloc<internal::HASH_FLAGS>(new_cap);
+			auto new_values = _allocator->template alloc<Data_Type>(new_cap);
 
 			std::memset(new_flags.ptr, 0, new_flags.size);
 
@@ -328,8 +327,8 @@ namespace cppr
 				}
 			}
 
-			mem_context.template free<internal::HASH_FLAGS>(_flags);
-			mem_context.template free<Data_Type>(_values);
+			_allocator->template free<internal::HASH_FLAGS>(_flags);
+			_allocator->template free<Data_Type>(_values);
 
 			_flags = std::move(new_flags);
 			_values = std::move(new_values);
@@ -475,8 +474,8 @@ namespace cppr
 		reset()
 		{
 			clear();
-			mem_context.template free<internal::HASH_FLAGS>(_flags);
-			mem_context.template free<Data_Type>(_values);
+			_allocator->template free<internal::HASH_FLAGS>(_flags);
+			_allocator->template free<Data_Type>(_values);
 		}
 
 		/**
@@ -773,7 +772,7 @@ namespace cppr
 		/**
 		 * Memory contex used by the container
 		 */
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		Owner<Data_Type> _values;
 		Owner<internal::HASH_FLAGS> _flags;
 		THash _hasher;
@@ -784,8 +783,8 @@ namespace cppr
 		 *
 		 * @param      context  The memory context to use for allocation and freeing
 		 */
-		Hash_Map(const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Hash_Map(Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _hasher(THash()),
 			 _count(0)
 		{}
@@ -796,8 +795,8 @@ namespace cppr
 		 * @param[in]  hasher   The hasher functor to use
 		 * @param      context  The memory context to use for allocation and freeing
 		 */
-		Hash_Map(const THash& hasher, const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Hash_Map(const THash& hasher, Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _hasher(hasher),
 			 _count(0)
 		{}
@@ -808,14 +807,14 @@ namespace cppr
 		 * @param[in]  other  The other hash map to copy from
 		 */
 		Hash_Map(const Hash_Map& other)
-			:mem_context(other.mem_context),
+			:_allocator(other._allocator),
 			 _hasher(other._hasher),
 			 _count(other._count)
 		{
-			_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
+			_flags = _allocator->template alloc<internal::HASH_FLAGS>(other._flags.count());
 			move(_flags, other._flags);
 
-			_values = mem_context.template alloc<Data_Type>(other._values.count());
+			_values = _allocator->template alloc<Data_Type>(other._values.count());
 			for(usize i = 0; i < _flags.count(); ++i)
 				if(_flags[i] == internal::HASH_FLAGS::USED)
 					::new (_values.ptr + i) Data_Type(other._values[i]);
@@ -827,15 +826,15 @@ namespace cppr
 		 * @param[in]  other    The other hash map to copy from
 		 * @param      context  The context to use for memory allocation and freeing
 		 */
-		Hash_Map(const Hash_Map& other, const Memory_Context& context)
-			:mem_context(context),
+		Hash_Map(const Hash_Map& other, Allocator_Trait* context)
+			:_allocator(context),
 			 _hasher(other._hasher),
 			 _count(other._count)
 		{
-			_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
+			_flags = _allocator->template alloc<internal::HASH_FLAGS>(other._flags.count());
 			move(_flags, other._flags);
 
-			_values = mem_context.template alloc<Data_Type>(other._values.count());
+			_values = _allocator->template alloc<Data_Type>(other._values.count());
 			for(usize i = 0; i < other._flags.count(); ++i)
 				if(other._flags[i] == internal::HASH_FLAGS::USED)
 					::new (_values.ptr + i) Data_Type(other._values[i]);
@@ -847,7 +846,7 @@ namespace cppr
 		 * @param[in]  other  The other hash map to move from
 		 */
 		Hash_Map(Hash_Map&& other)
-			:mem_context(std::move(other.mem_context)),
+			:_allocator(std::move(other._allocator)),
 			 _values(std::move(other._values)),
 			 _flags(std::move(other._flags)),
 			 _hasher(std::move(other._hasher)),
@@ -869,8 +868,8 @@ namespace cppr
 			if(_flags.count() < other._flags.count())
 			{
 				reset();
-				_flags = mem_context.template alloc<internal::HASH_FLAGS>(other._flags.count());
-				_values = mem_context.template alloc<Data_Type>(other._values.count());
+				_flags = _allocator->template alloc<internal::HASH_FLAGS>(other._flags.count());
+				_values = _allocator->template alloc<Data_Type>(other._values.count());
 			}
 			else
 			{
@@ -885,7 +884,7 @@ namespace cppr
 			}
 
 			_hasher = other._hasher;
-			mem_context = other.mem_context;
+			_allocator = other._allocator;
 
 			move(_flags, other._flags);
 			for(usize i = 0; i < _flags.count(); ++i)
@@ -909,7 +908,7 @@ namespace cppr
 		operator=(Hash_Map&& other)
 		{
 			reset();
-			mem_context = std::move(other.mem_context);
+			_allocator = std::move(other._allocator);
 			_values = std::move(other._values);
 			_flags = std::move(other._flags);
 			_hasher = std::move(other._hasher);
@@ -969,8 +968,8 @@ namespace cppr
 			usize fit = _count + expected_count;
 			usize new_cap = double_cap > fit ? double_cap : fit;
 
-			auto new_flags = mem_context.template alloc<internal::HASH_FLAGS>(new_cap);
-			auto new_values = mem_context.template alloc<Data_Type>(new_cap);
+			auto new_flags = _allocator->template alloc<internal::HASH_FLAGS>(new_cap);
+			auto new_values = _allocator->template alloc<Data_Type>(new_cap);
 
 			std::memset(new_flags.ptr, 0, new_flags.size);
 
@@ -987,8 +986,8 @@ namespace cppr
 				}
 			}
 
-			mem_context.template free<internal::HASH_FLAGS>(_flags);
-			mem_context.template free<Data_Type>(_values);
+			_allocator->template free<internal::HASH_FLAGS>(_flags);
+			_allocator->template free<Data_Type>(_values);
 
 			_flags = std::move(new_flags);
 			_values = std::move(new_values);
@@ -1388,8 +1387,8 @@ namespace cppr
 		reset()
 		{
 			clear();
-			mem_context.template free<internal::HASH_FLAGS>(_flags);
-			mem_context.template free<Data_Type>(_values);
+			_allocator->template free<internal::HASH_FLAGS>(_flags);
+			_allocator->template free<Data_Type>(_values);
 		}
 
 		/**

@@ -2,7 +2,6 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/api.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/Dynamic_Array.h"
 #include "cpprelude/IO_Trait.h"
 #include "cpprelude/OS.h"
@@ -23,7 +22,7 @@ namespace cppr
 		 *
 		 * @param      context  The memory context to use for allocation and freeing
 		 */
-		API_CPPR Memory_Stream(const Memory_Context& context = os->global_memory);
+		API_CPPR Memory_Stream(Allocator_Trait* context = allocator());
 
 		/**
 		 * @brief      Constructs a memory stream
@@ -32,7 +31,7 @@ namespace cppr
 		 * @param      context  The memory context to use for allocation and freeing
 		 */
 		API_CPPR Memory_Stream(const Dynamic_Array<byte>& data,
-							   const Memory_Context& context = os->global_memory);
+							   Allocator_Trait* context = allocator());
 
 		/**
 		 * @brief      Constructs a memory stream

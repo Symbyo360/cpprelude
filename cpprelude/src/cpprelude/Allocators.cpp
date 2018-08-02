@@ -27,8 +27,8 @@ namespace cppr
 			self->_alloc_head = data.ptr;
 	}
 
-	Stack_Allocator::Stack_Allocator(const Memory_Context& context)
-		:mem_context(context),
+	Stack_Allocator::Stack_Allocator(Allocator_Trait* context)
+		:_allocator(context),
 		 _alloc_head(nullptr)
 	{
 		_allocator_trait._self = this;
@@ -37,10 +37,10 @@ namespace cppr
 	}
 
 	Stack_Allocator::Stack_Allocator(usize stack_size,
-									 const Memory_Context& context)
-		:mem_context(context)
+									 Allocator_Trait* context)
+		:_allocator(context)
 	{
-		_memory = mem_context.template alloc<byte>(stack_size);
+		_memory = _allocator->template alloc<byte>(stack_size);
 		_alloc_head = _memory.ptr;
 
 		_allocator_trait._self = this;
@@ -50,7 +50,7 @@ namespace cppr
 
 	Stack_Allocator::Stack_Allocator(Stack_Allocator&& other)
 		:_allocator_trait(std::move(other._allocator_trait)),
-		 mem_context(std::move(other.mem_context)),
+		 _allocator(std::move(other._allocator)),
 		 _memory(std::move(other._memory)),
 		 _alloc_head(other._alloc_head)
 	{
@@ -63,10 +63,10 @@ namespace cppr
 	Stack_Allocator::operator=(Stack_Allocator&& other)
 	{
 		if(_memory)
-			mem_context.template free<byte>(_memory);
+			_allocator->template free<byte>(_memory);
 
 		_allocator_trait = std::move(other._allocator_trait);
-		mem_context = std::move(other.mem_context);
+		_allocator = std::move(other._allocator);
 		_memory = std::move(other._memory);
 		_alloc_head = other._alloc_head;
 
@@ -78,7 +78,7 @@ namespace cppr
 
 	Stack_Allocator::~Stack_Allocator()
 	{
-		mem_context.template free<byte>(_memory);
+		_allocator->template free<byte>(_memory);
 	}
 
 	void
@@ -86,7 +86,7 @@ namespace cppr
 	{
 		reset();
 
-		_memory = mem_context.template alloc<byte>(stack_size);
+		_memory = _allocator->template alloc<byte>(stack_size);
 		_alloc_head = _memory.ptr;
 	}
 
@@ -94,7 +94,7 @@ namespace cppr
 	Stack_Allocator::reset()
 	{
 		if(_memory)
-			mem_context.template free<byte>(_memory);
+			_allocator->template free<byte>(_memory);
 		_alloc_head = nullptr;
 	}
 
@@ -134,8 +134,8 @@ namespace cppr
 		//do nothing
 	}
 
-	Arena_Allocator::Arena_Allocator(const Memory_Context& context)
-		:mem_context(context),
+	Arena_Allocator::Arena_Allocator(Allocator_Trait* context)
+		:_allocator(context),
 		 _head(nullptr),
 		 block_size(KILOBYTES(4)),
 		 arena_size(0),
@@ -146,8 +146,8 @@ namespace cppr
 		_allocator_trait._free = _arena_allocator_free;
 	}
 
-	Arena_Allocator::Arena_Allocator(usize mem_block_size, const Memory_Context& context)
-		:mem_context(context),
+	Arena_Allocator::Arena_Allocator(usize mem_block_size, Allocator_Trait* context)
+		:_allocator(context),
 		 _head(nullptr),
 		 block_size(mem_block_size),
 		 arena_size(0),
@@ -160,7 +160,7 @@ namespace cppr
 
 	Arena_Allocator::Arena_Allocator(Arena_Allocator&& other)
 		:_allocator_trait(std::move(other._allocator_trait)),
-		 mem_context(std::move(other.mem_context)),
+		 _allocator(std::move(other._allocator)),
 		 _head(other._head),
 		 block_size(other.block_size),
 		 arena_size(other.arena_size),
@@ -179,7 +179,7 @@ namespace cppr
 		reset();
 
 		_allocator_trait = std::move(other._allocator_trait);
-		mem_context = std::move(other.mem_context);
+		_allocator = std::move(other._allocator);
 		_head = other._head;
 		block_size = other.block_size;
 		arena_size = other.arena_size;
@@ -208,7 +208,7 @@ namespace cppr
 			usize request_size = grow_size > block_size ? grow_size : block_size;
 			request_size += node_size;
 
-			internal::Arena_Node* new_node = (internal::Arena_Node*)mem_context.template alloc<byte>(request_size).ptr;
+			internal::Arena_Node* new_node = (internal::Arena_Node*)_allocator->template alloc<byte>(request_size).ptr;
 			arena_size += request_size - node_size;
 
 			::new (new_node) internal::Arena_Node(own(((byte*) new_node) + node_size, request_size - node_size));
@@ -223,7 +223,7 @@ namespace cppr
 		while(_head != nullptr)
 		{
 			auto next = _head->next_node;
-			mem_context.template free<byte>(own((byte*)_head, _head->header.size + sizeof(internal::Arena_Node)));
+			_allocator->template free<byte>(own((byte*)_head, _head->header.size + sizeof(internal::Arena_Node)));
 			_head = next;
 		}
 		arena_size = 0;

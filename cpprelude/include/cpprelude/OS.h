@@ -340,6 +340,15 @@ namespace cppr
 		fcontext_jump(fcontext_t* out_fcontext, fcontext_t in_fcontext, intptr_t vp, int preserve_fpu = 1);
 	};
 
+	API_CPPR Allocator_Trait*
+	allocator();
+
+	API_CPPR void
+	allocator_push(Allocator_Trait* alloc);
+
+	API_CPPR Allocator_Trait*
+	allocator_pop();
+
 	/**
 	 * A pointer to the singleton OS
 	 */

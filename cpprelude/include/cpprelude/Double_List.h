@@ -2,7 +2,6 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/Owner.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include "cpprelude/Ranges.h"
 
@@ -74,7 +73,7 @@ namespace cppr
 		/**
 		 * Memory context used by the container
 		 */
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		Node_Type *_head, *_tail;
 		usize _count;
 
@@ -83,8 +82,8 @@ namespace cppr
 		 *
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		Double_List(const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Double_List(Allocator_Trait* context = allocator())
+			:_allocator(context),
 			_head(nullptr),
 			_tail(nullptr),
 			_count(0)
@@ -99,8 +98,8 @@ namespace cppr
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
 		Double_List(std::initializer_list<Data_Type> list,
-					const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+					Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _head(nullptr),
 			 _tail(nullptr),
 			 _count(0)
@@ -119,8 +118,8 @@ namespace cppr
 		 * @param[in]  context     The memory context to use for allocation and freeing
 		 */
 		Double_List(usize fill_count, const Data_Type& fill_value,
-					const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+					Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _head(nullptr),
 			 _tail(nullptr),
 			 _count(0)
@@ -137,7 +136,7 @@ namespace cppr
 		 * @param[in]  other  The other list to copy
 		 */
 		Double_List(const Double_List<Data_Type>& other)
-			:mem_context(other.mem_context),
+			:_allocator(other._allocator),
 			 _head(nullptr),
 			 _tail(nullptr),
 			 _count(0)
@@ -148,7 +147,7 @@ namespace cppr
 			Node_Type* it = other._head->next;
 			while(it != other._tail)
 			{
-				Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
+				Node_Type* new_node = _allocator->template alloc<Node_Type>().ptr;
 				::new (&new_node->value) Data_Type(it->value);
 
 				_insert_back_helper(insertion_head, new_node);
@@ -165,8 +164,8 @@ namespace cppr
 		 * @param[in]  context  The memory context to use for memory allocation and freeing
 		 */
 		Double_List(const Double_List<Data_Type>& other,
-					const Memory_Context& context)
-			:mem_context(context),
+					Allocator_Trait* context)
+			:_allocator(context),
 			 _head(nullptr),
 			 _tail(nullptr),
 			 _count(0)
@@ -177,7 +176,7 @@ namespace cppr
 			Node_Type* it = other._head->next;
 			while(it != other._tail)
 			{
-				Node_Type* new_node = mem_context.template alloc<Node_Type>();
+				Node_Type* new_node = _allocator->template alloc<Node_Type>();
 				::new (&new_node->value) Data_Type(it->value);
 
 				_insert_back_helper(insertion_head, new_node);
@@ -193,7 +192,7 @@ namespace cppr
 		 * @param[in]  other  The other list to move from
 		 */
 		Double_List(Double_List<Data_Type>&& other)
-			:mem_context(std::move(other.mem_context)),
+			:_allocator(std::move(other._allocator)),
 			 _head(other._head),
 			 _tail(other._tail),
 			 _count(other._count)
@@ -224,13 +223,13 @@ namespace cppr
 		{
 			reset();
 
-			mem_context = other.mem_context;
+			_allocator = other._allocator;
 
 			Node_Type* insertion_head = _head;
 			Node_Type* it = other._head->next;
 			while(it != other._tail)
 			{
-				Node_Type* new_node = mem_context.template alloc<Node_Type>();
+				Node_Type* new_node = _allocator->template alloc<Node_Type>();
 				::new (&new_node->value) Data_Type(it->value);
 
 				_insert_back_helper(insertion_head, new_node);
@@ -255,7 +254,7 @@ namespace cppr
 			reset();
 			_free_sentinals();
 
-			mem_context = std::move(other.mem_context);
+			_allocator = std::move(other._allocator);
 			_head = other._head;
 			_tail = other._tail;
 			_count = other._count;
@@ -343,7 +342,7 @@ namespace cppr
 		void
 		emplace_front(TArgs&& ... args)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 
 			_insert_front_helper(_head->next, new_node);
@@ -358,7 +357,7 @@ namespace cppr
 		void
 		insert_front(const Data_Type& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 
 			_insert_front_helper(_head->next, new_node);
@@ -373,7 +372,7 @@ namespace cppr
 		void
 		insert_front(Data_Type&& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			
 			_insert_front_helper(_head->next, new_node);
@@ -391,7 +390,7 @@ namespace cppr
 		void
 		emplace_back(TArgs&& ... args)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			
 			_insert_back_helper(_tail->prev, new_node);
@@ -406,7 +405,7 @@ namespace cppr
 		void
 		insert_back(const Data_Type& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			
 			_insert_back_helper(_tail->prev, new_node);
@@ -421,7 +420,7 @@ namespace cppr
 		void
 		insert_back(Data_Type&& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			
 			_insert_back_helper(_tail->prev, new_node);
@@ -440,7 +439,7 @@ namespace cppr
 		void
 		emplace_after(Node_Type *it, TArgs&& ... args)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			_insert_back_helper(it, new_node);
 			++_count;
@@ -470,7 +469,7 @@ namespace cppr
 		void
 		insert_after(Node_Type *it, const Data_Type& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			_insert_back_helper(it, new_node);
 			++_count;
@@ -497,7 +496,7 @@ namespace cppr
 		void
 		insert_after(Node_Type *it, Data_Type&& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			_insert_back_helper(it, new_node);
 			++_count;
@@ -527,7 +526,7 @@ namespace cppr
 		void
 		emplace_before(Node_Type *it, TArgs&& ... args)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			_insert_front_helper(it, new_node);
 			++_count;
@@ -557,7 +556,7 @@ namespace cppr
 		void
 		insert_before(Node_Type *it, const Data_Type& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			_insert_front_helper(it, new_node);
 			++_count;
@@ -584,7 +583,7 @@ namespace cppr
 		void
 		insert_before(Node_Type *it, Data_Type&& value)
 		{
-			Node_Type *new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type *new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			_insert_front_helper(it, new_node);
 			++_count;
@@ -623,7 +622,7 @@ namespace cppr
 
 				it->value.~T();
 
-				mem_context.template free<Node_Type>(own(it));
+				_allocator->template free<Node_Type>(own(it));
 				it = next_node;
 				--_count;
 			}
@@ -652,7 +651,7 @@ namespace cppr
 
 				it->value.~T();
 
-				mem_context.template free<Node_Type>(own(it));
+				_allocator->template free<Node_Type>(own(it));
 				it = prev_node;
 				--_count;
 			}
@@ -873,8 +872,8 @@ namespace cppr
 		inline void
 		_init_sentinals()
 		{
-			_head = mem_context.template alloc<Node_Type>().ptr;
-			_tail = mem_context.template alloc<Node_Type>().ptr;
+			_head = _allocator->template alloc<Node_Type>().ptr;
+			_tail = _allocator->template alloc<Node_Type>().ptr;
 			_head->next = _tail;
 			_tail->prev = _head;
 		}
@@ -882,8 +881,8 @@ namespace cppr
 		inline void
 		_free_sentinals()
 		{
-			mem_context.template free<Node_Type>(own(_head));
-			mem_context.template free<Node_Type>(own(_tail));
+			_allocator->template free<Node_Type>(own(_head));
+			_allocator->template free<Node_Type>(own(_tail));
 			_head = nullptr;
 			_tail = nullptr;
 		}

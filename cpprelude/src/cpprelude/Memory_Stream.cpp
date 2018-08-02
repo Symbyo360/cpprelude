@@ -31,7 +31,7 @@ namespace cppr
 		return readable_size;
 	}
 
-	Memory_Stream::Memory_Stream(const Memory_Context& context)
+	Memory_Stream::Memory_Stream(Allocator_Trait* context)
 		:_buffer(context),
 		 _cursor(0)
 	{
@@ -40,7 +40,7 @@ namespace cppr
 		_io_trait._read = _default_memory_stream_read;
 	}
 
-	Memory_Stream::Memory_Stream(const Dynamic_Array<byte>& buffer, const Memory_Context& context)
+	Memory_Stream::Memory_Stream(const Dynamic_Array<byte>& buffer, Allocator_Trait* context)
 		:_buffer(buffer, context),
 		 _cursor(0)
 	{

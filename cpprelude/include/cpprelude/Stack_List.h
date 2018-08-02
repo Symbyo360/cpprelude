@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cpprelude/Single_List.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 
 namespace cppr
@@ -36,7 +35,7 @@ namespace cppr
 		 *
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		Stack_List(const Memory_Context& context = os->global_memory)
+		Stack_List(Allocator_Trait* context = allocator())
 			:_list(context)
 		{}
 
@@ -56,7 +55,7 @@ namespace cppr
 		 * @param[in]  context  The memory context to use for memory allocation and freeing
 		 */
 		Stack_List(const Stack_List& other,
-					const Memory_Context& context)
+					Allocator_Trait* context)
 			:_list(other._list, context)
 		{}
 

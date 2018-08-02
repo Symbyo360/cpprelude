@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cpprelude/Dynamic_Array.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include "cpprelude/defaults.h"
 
@@ -42,7 +41,7 @@ namespace cppr
 		 * @param[in]  context       The memory context to use for allocation and freeing memory
 		 */
 		Priority_Queue(const TCompare& compare_func = TCompare(),
-					   const Memory_Context& context = os->global_memory)
+					   Allocator_Trait* context = allocator())
 			:_array(context), _count(0), _compare(compare_func)
 		{}
 
@@ -54,7 +53,7 @@ namespace cppr
 		 * @param[in]  context       The memory context to use for allocation and freeing memory
 		 */
 		Priority_Queue(usize count, const TCompare& compare_func = TCompare(),
-					   const Memory_Context& context = os->global_memory)
+					   Allocator_Trait* context = allocator())
 			:_array(count, context), _count(0), _compare(compare_func)
 		{}
 
@@ -66,7 +65,7 @@ namespace cppr
 		 * @param[in]  context       The memory context to use for allocation and freeing memory
 		 */
 		Priority_Queue(std::initializer_list<T> list, const TCompare& compare_func = TCompare(),
-					   const Memory_Context& context = os->global_memory)
+					   Allocator_Trait* context = allocator())
 			:_array(list, context), _count(list.size()), _compare(compare_func)
 		{
 			_heapify();
@@ -83,7 +82,7 @@ namespace cppr
 		 */
 		template<typename TRange>
 		Priority_Queue(const TRange& range, const TCompare& compare_func = TCompare(),
-					   const Memory_Context& context = os->global_memory)
+					   Allocator_Trait* context = allocator())
 			:_array(context), _count(range.count()), _compare(compare_func)
 		{
 			_array.reserve(_count);

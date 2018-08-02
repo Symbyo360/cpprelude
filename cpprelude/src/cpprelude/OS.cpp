@@ -1,6 +1,7 @@
 #include "cpprelude/OS.h"
 #include "cpprelude/IO.h"
 #include "cpprelude/Buffered_Stream.h"
+#include "cpprelude/Stack_Array.h"
 #include "sewing-fcontext/fcontext.h"
 #include <stdlib.h>
 
@@ -701,6 +702,13 @@ namespace cppr
 		#endif
 	}
 
+	Stack_Array<Allocator_Trait*>*
+	_allocators(Allocator_Trait* alloc = nullptr)
+	{
+		static Stack_Array<Allocator_Trait*> _allocators(alloc);
+		return &_allocators;
+	}
+
 	//Init Stuff
 	OS*
 	_actual_init_os()
@@ -783,6 +791,7 @@ namespace cppr
 		static Buf_Reader _buf_stdin(_os.unbuf_stdin, _os.global_memory);
 		_os.buf_stdin = _buf_stdin;
 
+		_allocators(&_global_memory_trait)->push(&_global_memory_trait);
 
 		_is_initialized = true;
 
@@ -790,4 +799,24 @@ namespace cppr
 	}
 
 	OS *os = _actual_init_os();
+
+	Allocator_Trait*
+	allocator()
+	{
+		return _allocators()->top();
+	}
+
+	void
+	allocator_push(Allocator_Trait* alloc)
+	{
+		_allocators()->push(alloc);
+	}
+
+	Allocator_Trait*
+	allocator_pop()
+	{
+		auto res = _allocators()->top();
+		_allocators()->pop();
+		return res;
+	}
 }

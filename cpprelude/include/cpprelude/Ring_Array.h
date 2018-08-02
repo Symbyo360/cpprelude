@@ -2,7 +2,6 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/Dynamic_Array.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include "cpprelude/Ranges.h"
 
@@ -46,7 +45,7 @@ namespace cppr
 		/**
 		 * Memory context used in this ring array
 		 */
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		Owner<Data_Type> _data;
 		usize _head_index, _tail_index;
 		usize _count;
@@ -56,8 +55,8 @@ namespace cppr
 		 *
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		Ring_Array(const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Ring_Array(Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _head_index(0),
 			 _tail_index(0),
 			 _count(0)
@@ -70,8 +69,8 @@ namespace cppr
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
 		Ring_Array(std::initializer_list<Data_Type> list,
-				   const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+				   Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _head_index(0),
 			 _tail_index(0),
 			 _count(0)
@@ -87,8 +86,8 @@ namespace cppr
 		 * @param[in]  count    The count of values that array will be initialized with
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		Ring_Array(usize count, const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Ring_Array(usize count, Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _head_index(0),
 			 _tail_index(0),
 			 _count(0)
@@ -106,8 +105,8 @@ namespace cppr
 		 * @param[in]  context     The memory context to use for allocation and freeing
 		 */
 		Ring_Array(usize count, const Data_Type& fill_value,
-				   const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+				   Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _head_index(0),
 			 _tail_index(0),
 			 _count(0)
@@ -123,7 +122,7 @@ namespace cppr
 		 * @param[in]  other  The other ring array to copy from
 		 */
 		Ring_Array(const Ring_Array& other)
-			:mem_context(other.mem_context),
+			:_allocator(other._allocator),
 			 _head_index(0),
 			 _tail_index(0),
 			 _count(0)
@@ -147,8 +146,8 @@ namespace cppr
 		 * @param[in]  other    The other ring array to copy from
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		Ring_Array(const Ring_Array& other, const Memory_Context& context)
-			:mem_context(context),
+		Ring_Array(const Ring_Array& other, Allocator_Trait* context)
+			:_allocator(context),
 			 _head_index(0),
 			 _tail_index(0),
 			 _count(other._count)
@@ -171,7 +170,7 @@ namespace cppr
 		 * @param[in]  other  The other ring array to move from
 		 */
 		Ring_Array(Ring_Array&& other)
-			:mem_context(std::move(other.mem_context)),
+			:_allocator(std::move(other._allocator)),
 			 _data(std::move(other._data)),
 			 _head_index(other._head_index),
 			 _tail_index(other._tail_index),
@@ -201,7 +200,7 @@ namespace cppr
 		operator=(const Ring_Array& other)
 		{
 			reset();
-			mem_context = other.mem_context;
+			_allocator = other._allocator;
 
 			reserve(_count);
 
@@ -227,7 +226,7 @@ namespace cppr
 		operator=(Ring_Array&& other)
 		{
 			reset();
-			mem_context = std::move(other.mem_context);
+			_allocator = std::move(other._allocator);
 			_data = std::move(other._data);
 			_head_index = other._head_index;
 			_tail_index = other._tail_index;
@@ -282,7 +281,7 @@ namespace cppr
 		reset()
 		{
 			clear();
-			mem_context.template free<Data_Type>(_data);
+			_allocator->template free<Data_Type>(_data);
 			_head_index = 0;
 			_tail_index = 0;
 		}
@@ -644,13 +643,13 @@ namespace cppr
 			if(_data.count() == 0)
 			{
 				if(expected_count == 0)
-					_data = mem_context.template alloc<Data_Type>(STARTING_COUNT);
+					_data = _allocator->template alloc<Data_Type>(STARTING_COUNT);
 				else
-					_data = mem_context.template alloc<Data_Type>(expected_count);
+					_data = _allocator->template alloc<Data_Type>(expected_count);
 			}
 			else
 			{
-				Owner<Data_Type> new_data = mem_context.template alloc<Data_Type>(expected_count);
+				Owner<Data_Type> new_data = _allocator->template alloc<Data_Type>(expected_count);
 
 				usize index = _increment(_tail_index);
 				for(usize i = 0; i < _count; ++i)
@@ -660,7 +659,7 @@ namespace cppr
 				}
 
 				if(_data)
-					mem_context.template free<Data_Type>(_data);
+					_allocator->template free<Data_Type>(_data);
 
 				_data = std::move(new_data);
 				_head_index = _count - 1;

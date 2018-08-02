@@ -2,7 +2,6 @@
 
 #include "cpprelude/defines.h"
 #include "cpprelude/Owner.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 #include "cpprelude/Ranges.h"
 
@@ -71,7 +70,7 @@ namespace cppr
 		 */
 		using const_iterator = typename Range_Type::const_iterator;
 
-		Memory_Context mem_context;
+		Allocator_Trait* _allocator;
 		Node_Type* _head;
 		usize _count;
 
@@ -80,8 +79,8 @@ namespace cppr
 		 *
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		Single_List(const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+		Single_List(Allocator_Trait* context = allocator())
+			:_allocator(context),
 			 _head(nullptr),
 			 _count(0)
 		{}
@@ -93,8 +92,8 @@ namespace cppr
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
 		Single_List(std::initializer_list<Data_Type> list,
-					const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+					Allocator_Trait* context = allocator())
+			:_allocator(context),
 			_head(nullptr),
 			_count(0)
 		{
@@ -115,8 +114,8 @@ namespace cppr
 		 * @param[in]  context     The memory context to use for allocation and freeing
 		 */
 		Single_List(usize count, const Data_Type& fill_value,
-					const Memory_Context& context = os->global_memory)
-			:mem_context(context),
+					Allocator_Trait* context = allocator())
+			:_allocator(context),
 			_head(nullptr),
 			_count(0)
 		{
@@ -130,7 +129,7 @@ namespace cppr
 		 * @param[in]  other  The other single list to copy from
 		 */
 		Single_List(const Single_List<Data_Type>& other)
-			:mem_context(other.mem_context),
+			:_allocator(other._allocator),
 			_head(nullptr),
 			_count(0)
 		{
@@ -138,7 +137,7 @@ namespace cppr
 			auto it = &other._head;
 			for(usize i = 0; i < other._count; ++i)
 			{
-				*insertion_head = mem_context.template alloc<Node_Type>().ptr;
+				*insertion_head = _allocator->template alloc<Node_Type>().ptr;
 				(*insertion_head)->next = nullptr;
 
 				::new (&(*insertion_head)->value) Data_Type((*it)->value);
@@ -156,8 +155,8 @@ namespace cppr
 		 * @param[in]  context  The context to use for memory allocation and freeing
 		 */
 		Single_List(const Single_List<Data_Type>& other,
-					const Memory_Context& context)
-			:mem_context(context),
+					Allocator_Trait* context)
+			:_allocator(context),
 			_head(nullptr),
 			_count(0)
 		{
@@ -165,7 +164,7 @@ namespace cppr
 			auto it = &other._head;
 			for(usize i = 0; i < other._count; ++i)
 			{
-				*insertion_head = mem_context.template alloc<Node_Type>();
+				*insertion_head = _allocator->template alloc<Node_Type>();
 				(*insertion_head)->next = nullptr;
 
 				::new (&(*insertion_head)->value) Data_Type((*it)->value);
@@ -182,7 +181,7 @@ namespace cppr
 		 * @param[in]  other  The other list to move from
 		 */
 		Single_List(Single_List<Data_Type>&& other)
-			:mem_context(std::move(other.mem_context)),
+			:_allocator(std::move(other._allocator)),
 			 _head(std::move(other._head)),
 			 _count(other._count)
 		{
@@ -210,13 +209,13 @@ namespace cppr
 		{
 			reset();
 
-			mem_context = other.mem_context;
+			_allocator = other._allocator;
 
 			auto insertion_head = &_head;
 			auto it = &other._head;
 			for(usize i = 0; i < other._count; ++i)
 			{
-				*insertion_head = mem_context.template alloc<Node_Type>().ptr;
+				*insertion_head = _allocator->template alloc<Node_Type>().ptr;
 				(*insertion_head)->next = nullptr;
 
 				::new (&(*insertion_head)->value) Data_Type((*it)->value);
@@ -241,7 +240,7 @@ namespace cppr
 		{
 			reset();
 
-			mem_context = std::move(other.mem_context);
+			_allocator = std::move(other._allocator);
 			_count = other._count;
 			_head = std::move(other._head);
 
@@ -303,7 +302,7 @@ namespace cppr
 		void
 		emplace_front(TArgs&& ... args)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type* new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			new_node->next = _head;
 			_head = new_node;
@@ -318,7 +317,7 @@ namespace cppr
 		void
 		insert_front(const Data_Type& value)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type* new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			new_node->next = _head;
 			_head = new_node;
@@ -333,7 +332,7 @@ namespace cppr
 		void
 		insert_front(Data_Type&& value)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type* new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			new_node->next = _head;
 			_head = new_node;
@@ -352,7 +351,7 @@ namespace cppr
 		void
 		emplace_after(Node_Type *it, TArgs&& ... args)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type* new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::forward<TArgs>(args)...);
 			new_node->next = it->next;
 			it->next = new_node;
@@ -383,7 +382,7 @@ namespace cppr
 		void
 		insert_after(Node_Type *it, const Data_Type& value)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type* new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(value);
 			new_node->next = it->next;
 			it->next = new_node;
@@ -411,7 +410,7 @@ namespace cppr
 		void
 		insert_after(Node_Type *it, Data_Type&& value)
 		{
-			Node_Type* new_node = mem_context.template alloc<Node_Type>().ptr;
+			Node_Type* new_node = _allocator->template alloc<Node_Type>().ptr;
 			::new (&new_node->value) Data_Type(std::move(value));
 			new_node->next = it->next;
 			it->next = new_node;
@@ -451,7 +450,7 @@ namespace cppr
 
 				it->value.~T();
 
-				mem_context.template free<Node_Type>(own(it));
+				_allocator->template free<Node_Type>(own(it));
 
 				it = next_node;
 				--_count;

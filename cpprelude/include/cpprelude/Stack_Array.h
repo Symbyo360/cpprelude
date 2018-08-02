@@ -1,7 +1,6 @@
 #pragma once
 
 #include "cpprelude/Dynamic_Array.h"
-#include "cpprelude/Memory_Context.h"
 #include "cpprelude/OS.h"
 
 namespace cppr
@@ -36,7 +35,7 @@ namespace cppr
 		 *
 		 * @param[in]  context  The memory context to use for allocation and freeing
 		 */
-		Stack_Array(const Memory_Context& context = os->global_memory)
+		Stack_Array(Allocator_Trait* context = allocator())
 			:_array(context)
 		{}
 
@@ -56,7 +55,7 @@ namespace cppr
 		 * @param[in]  context  The memory context to use for memory allocation and freeing
 		 */
 		Stack_Array(const Stack_Array& other,
-					const Memory_Context& context)
+					Allocator_Trait* context)
 			:_array(other._array, context)
 		{}
 
