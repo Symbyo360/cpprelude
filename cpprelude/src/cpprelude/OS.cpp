@@ -1,7 +1,7 @@
 #include "cpprelude/OS.h"
 #include "cpprelude/IO.h"
 #include "cpprelude/Buffered_Stream.h"
-#include "cpprelude/Stack_Array.h"
+#include "cpprelude/Dynamic_Array.h"
 #include "sewing-fcontext/fcontext.h"
 #include <stdlib.h>
 
@@ -53,8 +53,8 @@ namespace cppr
 	{
 		#ifdef DEBUG
 		{
-			println_err("OS allocation_count = ", allocation_count, "\n",
-						"OS allocation_size  = ", allocation_size);
+			println_err("OS allocation_count = ", allocation_count, "\n");
+						//"OS allocation_size  = ", allocation_size);
 		}
 		#endif
 	}
@@ -702,11 +702,11 @@ namespace cppr
 		#endif
 	}
 
-	Stack_Array<Allocator_Trait*>*
+	Dynamic_Array<Allocator_Trait*>*
 	_allocators(Allocator_Trait* alloc = nullptr)
 	{
-		static Stack_Array<Allocator_Trait*> _allocators(alloc);
-		return &_allocators;
+		static thread_local Dynamic_Array<Allocator_Trait*> _allocs({ os->global_memory }, os->global_memory);
+		return &_allocs;
 	}
 
 	//Init Stuff
@@ -791,8 +791,6 @@ namespace cppr
 		static Buf_Reader _buf_stdin(_os.unbuf_stdin, _os.global_memory);
 		_os.buf_stdin = _buf_stdin;
 
-		_allocators(&_global_memory_trait)->push(&_global_memory_trait);
-
 		_is_initialized = true;
 
 		return &_os;
@@ -803,20 +801,23 @@ namespace cppr
 	Allocator_Trait*
 	allocator()
 	{
-		return _allocators()->top();
+		return _allocators()->back();
 	}
 
 	void
 	allocator_push(Allocator_Trait* alloc)
 	{
-		_allocators()->push(alloc);
+		_allocators()->insert_back(alloc);
 	}
 
 	Allocator_Trait*
 	allocator_pop()
 	{
-		auto res = _allocators()->top();
-		_allocators()->pop();
+		auto stack = _allocators();
+		if(stack->count() == 1)
+			return nullptr;
+		auto res = stack->back();
+		stack->remove_back();
 		return res;
 	}
 }
