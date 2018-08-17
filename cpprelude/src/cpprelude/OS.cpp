@@ -3,6 +3,7 @@
 #include "cpprelude/Buffered_Stream.h"
 #include "cpprelude/Dynamic_Array.h"
 #include "sewing-fcontext/fcontext.h"
+#include <mutex>
 #include <stdlib.h>
 
 #if defined(OS_WINDOWS)
@@ -33,6 +34,29 @@ static_assert(sizeof(intptr_t) == sizeof(void*),
 
 namespace cppr
 {
+	Owner<byte>
+	_malloc(void* _self, usize size)
+	{
+		return Owner<byte>((byte*)::malloc(size), size);
+	}
+
+	void
+	_free(void* _self, const Owner<byte>& value)
+	{
+		::free(value.ptr);
+	}
+	
+	struct Memory_Block
+	{
+		usize size = 0;
+		Memory_Stream call_stack;
+		Memory_Block *next = nullptr, *prev = nullptr;
+	};
+
+	static Allocator_Trait 	_mallocator { nullptr, _malloc, _free };
+	static Memory_Block* 	_leak_head = nullptr;
+	static std::mutex		_leak_mtx;
+
 	OS::~OS()
 	{
 		#if defined(OS_WINDOWS) && defined(DEBUG)
@@ -45,25 +69,39 @@ namespace cppr
 			}
 		}
 		#endif
-		_print_memory_report();
+		print_leak_report();
 	}
 
 	void
-	OS::_print_memory_report() const
+	OS::print_leak_report(IO_Trait* io) const
 	{
-		#ifdef DEBUG
+		if(_leak_head)
 		{
-			println_err("OS allocation_count = ", allocation_count, "\n");
-						//"OS allocation_size  = ", allocation_size);
+			if(io == nullptr) io = unbuf_stderr;
+			usize count = 0;
+			usize size = 0;
+			auto it = _leak_head;
+			while(it)
+			{
+				vprints(io, "Leak size: ", it->size, ", call stack:\n");
+				if(it->call_stack.empty())
+					vprints(io, "run in debug mode to get call stack info\n");
+				else
+					vprints(io, it->call_stack.str_content(), "\n");
+				count++;
+				size += it->size;
+				it = it->next;
+			}
+			vprints(io, "Leaks count: ", count, ", Leaks size(bytes): ", size, "\n");
 		}
-		#endif
 	}
 
 	void
-	OS::dump_callstack() const
+	OS::dump_callstack(IO_Trait* io) const
 	{
 		#ifdef DEBUG
 		{
+			if(io == nullptr) io = unbuf_stderr;
 			constexpr usize MAX_NAME_LEN = 1024;
 			constexpr usize STACK_MAX = 4096;
 			void* callstack[STACK_MAX];
@@ -88,9 +126,9 @@ namespace cppr
 				for(usize i = 0; i < frames_count; ++i)
 				{
 					if(SymFromAddr(process_handle, (DWORD64)(callstack[i]), NULL, symbol))
-						println_err("[", frames_count - i - 1, "]: ", symbol->Name);
+						vprints(io, "[", frames_count - i - 1, "]: ", symbol->Name, "\n");
 					else
-						println_err("[", frames_count - i - 1, "]: unknown symbol");
+						vprints(io, "[", frames_count - i - 1, "]: unknown symbol", "\n");
 				}
 			}
 			#elif defined(OS_LINUX)
@@ -128,7 +166,7 @@ namespace cppr
 						//function maybe inlined
 						if(mangled_name_size == 0)
 						{
-							println_err("[", frames_count - i - 1, "]: unknown/inlined symbol");
+							vprints(io, "[", frames_count - i - 1, "]: unknown/inlined symbol\n");
 							continue;
 						}
 
@@ -142,12 +180,12 @@ namespace cppr
 						if(status == 0)
 						{
 							String_Range function_name = make_strrng(demangled_buffer, demangled_buffer_length);
-							println_err("[", frames_count - i - 1, "]: ", function_name);
+							vprints(io, "[", frames_count - i - 1, "]: ", function_name, "\n");
 						}
 						else
 						{
 							String_Range function_name = make_strrng(name_buffer, copy_size);
-							println_err("[", frames_count - i - 1, "]: ", function_name);
+							vprints(io, "[", frames_count - i - 1, "]: ", function_name, "\n");
 						}
 					}
 					::free(symbols);
@@ -250,7 +288,7 @@ namespace cppr
 			LPWSTR win_filename;
 			//i use small buffer to optimise for the common cases
 			if (size_needed > buffer_size)
-				win_filename = this->template alloc<WCHAR>(size_needed).ptr;
+				win_filename = global_memory->template alloc<WCHAR>(size_needed).ptr;
 			else
 				win_filename = utf16_buffer;
 			MultiByteToWideChar(CP_UTF8, MB_PRECOMPOSED,
@@ -263,7 +301,7 @@ namespace cppr
 											   NULL);
 
 			if(size_needed > buffer_size)
-				this->free(own(win_filename, size_needed));
+				global_memory->free(own(win_filename, size_needed));
 
 			if (handle.windows_handle == INVALID_HANDLE_VALUE)
 			{
@@ -556,43 +594,57 @@ namespace cppr
 
 	//Memory Functions
 	Owner<byte>
-	_global_memory_alloc(void* _self, usize size)
+	_debug_memory_alloc(void* _self, usize size)
 	{
 		if(size == 0)
 			return Owner<byte>();
 
-		byte* ptr = (byte*)std::malloc(size);
+		Memory_Block* ptr = (Memory_Block*)std::malloc(size + sizeof(Memory_Block));
 
 		if(ptr == nullptr)
 			return Owner<byte>();
 
-		#ifdef DEBUG
+		ptr->size = size;
+		ptr->next = _leak_head;
+		ptr->prev = nullptr;
+		_leak_mtx.lock();
 		{
-			OS* self = (OS*)_self;
-			self->allocation_count += 1;
-			self->allocation_size += size;
-			//os->dump_callstack();
+			if(_leak_head) _leak_head->prev = ptr;
+			_leak_head = ptr;
 		}
-		#endif
-		return Owner<byte>(ptr, size);
+		_leak_mtx.unlock();
+
+		::new (&ptr->call_stack) Memory_Stream(&_mallocator);
+		OS* os = (OS*)_self;
+		os->dump_callstack(ptr->call_stack);
+
+		return Owner<byte>((byte*)(ptr + 1), size);
 	}
 
 	void
-	_global_memory_free(void* _self, const Owner<byte>& value)
+	_debug_memory_free(void* _self, const Owner<byte>& value)
 	{
 		if(!value)
 			return;
 
-		#ifdef DEBUG
-		{
-			OS* self = (OS*)_self;
-			self->allocation_count -= 1;
-			self->allocation_size -= value.size;
-			//os->dump_callstack();
-		}
-		#endif
+		Memory_Block* ptr = (Memory_Block*)(value.ptr - sizeof(Memory_Block));
 
-		std::free(value.ptr);
+		_leak_mtx.lock();
+		{
+			if(ptr == _leak_head)
+				_leak_head = ptr->next;
+			
+			if(ptr->prev)
+				ptr->prev->next = ptr->next;
+
+			if(ptr->next)
+				ptr->next->prev = ptr->prev;
+		}
+		_leak_mtx.unlock();
+
+		ptr->call_stack.reset();
+
+		std::free(ptr);
 	}
 
 	Owner<byte>
@@ -608,12 +660,6 @@ namespace cppr
 		if(result.empty())
 			return Owner<byte>();
 
-		#ifdef DEBUG
-		{
-			self->allocation_count += 1;
-			self->allocation_size += size;
-		}
-		#endif
 		return result;
 	}
 
@@ -624,13 +670,6 @@ namespace cppr
 			return;
 
 		OS* self = (OS*)_self;
-
-		#ifdef DEBUG
-		{
-			self->allocation_count -= 1;
-			self->allocation_size -= value.size;
-		}
-		#endif
 
 		self->virtual_free(value);
 	}
@@ -651,7 +690,7 @@ namespace cppr
 			Owner<WCHAR> dynamic_buffer;
 			if(count_needed > BUFFER_SIZE)
 			{
-				dynamic_buffer = os->template alloc<WCHAR>(count_needed);
+				dynamic_buffer = os->global_memory->template alloc<WCHAR>(count_needed);
 				wide_ptr = dynamic_buffer.ptr;
 			}
 			else
@@ -665,7 +704,7 @@ namespace cppr
 			auto success = WriteConsoleW(handle->windows_handle, wide_ptr, count_needed, &count_chars_written, NULL);
 
 			if(count_needed > BUFFER_SIZE)
-				os->free(dynamic_buffer);
+				os->global_memory->free(dynamic_buffer);
 
 			if(success)
 				return data.size;
@@ -713,7 +752,7 @@ namespace cppr
 	OS*
 	_actual_init_os()
 	{
-		static Allocator_Trait _global_memory_trait, _virtual_memory_trait;
+		static Allocator_Trait _global_memory_trait, _virtual_memory_trait, _leak_detector_trait;
 		static File_Handle _stdout_handle, _stderr_handle, _stdin_handle;
 		static IO_Trait _stdout, _stderr, _stdin;
 		static OS _os;
@@ -755,14 +794,20 @@ namespace cppr
 		//setup the OS hooks
 		_os.global_memory = &_global_memory_trait;
 		_os.virtual_memory = &_virtual_memory_trait;
+		_os.leak_detector = &_leak_detector_trait;
 		_os.unbuf_stdout = &_stdout;
 		_os.unbuf_stderr = &_stderr;
 		_os.unbuf_stdin = &_stdin;
 
 		//setup the global memory allocator
 		_global_memory_trait._self  = &_os;
-		_global_memory_trait._alloc = _global_memory_alloc;
-		_global_memory_trait._free  = _global_memory_free;
+		_global_memory_trait._alloc = _malloc;
+		_global_memory_trait._free 	= _free;
+
+		//setup the leak detector allocator
+		_leak_detector_trait._self = &_os;
+		_leak_detector_trait._alloc = _debug_memory_alloc;
+		_leak_detector_trait._free = _debug_memory_free;
 
 		//setup the virtual memory allocator
 		_virtual_memory_trait._self  = &_os;
@@ -783,9 +828,6 @@ namespace cppr
 		_stdin._self = &_stdin_handle;
 		_stdin._write =  nullptr;
 		_stdin._read = _read_std_handle;
-
-		_os.allocation_count = 0;
-		_os.allocation_size = 0;
 
 		//setup the buffered stdin
 		static Buf_Reader _buf_stdin(_os.unbuf_stdin, _os.global_memory);
