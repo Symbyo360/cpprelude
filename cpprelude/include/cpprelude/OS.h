@@ -270,13 +270,33 @@ namespace cppr
 		return allocator()->template free<T>(value);
 	}
 
+	template<typename T>
+	Owner<T>
+	alloc_from(Allocator_Trait* trait, usize count = 1)
+	{
+		return trait->template alloc<T>(count);
+	}
+
+	template<typename T>
+	void
+	free_from(Allocator_Trait* trait, Owner<T>& value)
+	{
+		return trait->template free<T>(value);
+	}
+
+	template<typename T>
+	void
+	free_from(Allocator_Trait* trait, Owner<T>&& value)
+	{
+		return trait->template free<T>(value);
+	}
+
 	template<typename T, typename ... TArgs>
 	Owner<T>
-	construct(usize count, TArgs&& ... args)
+	construct(TArgs&& ... args)
 	{
-		auto result = alloc<T>(count);
-		for(usize i = 0; i < count; ++i)
-			::new (result.ptr + i) T(std::forward<TArgs>(args)...);
+		auto result = alloc<T>(1);
+		::new (result) T(std::forward<TArgs>(args)...);
 		return result;
 	}
 
@@ -296,6 +316,33 @@ namespace cppr
 		for(usize i = 0; i < value.count(); ++i)
 			value[i].~T();
 		free(value);
+	}
+
+	template<typename T, typename ... TArgs>
+	Owner<T>
+	construct_from(Allocator_Trait* trait, TArgs&& ... args)
+	{
+		auto result = alloc_from<T>(trait, 1);
+		::new (result) T(std::forward<TArgs>(args)...);
+		return result;
+	}
+
+	template<typename T>
+	void
+	destruct_from(Allocator_Trait* trait, Owner<T>& value)
+	{
+		for(usize i = 0; i < value.count(); ++i)
+			value[i].~T();
+		free_from(trait, value);
+	}
+
+	template<typename T>
+	void
+	destruct_from(Allocator_Trait* trait, Owner<T>&& value)
+	{
+		for(usize i = 0; i < value.count(); ++i)
+			value[i].~T();
+		free_from(trait, value);
 	}
 
 	/**
