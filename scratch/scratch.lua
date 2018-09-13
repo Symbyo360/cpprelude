@@ -2,7 +2,7 @@ project "scratch"
 	language "C++"
 	kind "ConsoleApp"
 	targetdir (bin_path .. "/%{cfg.platform}/%{cfg.buildcfg}/")
-	location  (build_path .. "/scratch/")
+	location  (build_path .. "/%{prj.name}/")
 
 	files
 	{

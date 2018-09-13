@@ -135,7 +135,7 @@ namespace cppr
 			{
 				//+1 for null terminated string
 				char name_buffer[MAX_NAME_LEN+1];
-				char demangled_buffer[MAX_NAME_LEN];
+				char demangled_buffer[MAX_NAME_LEN+1];
 				usize demangled_buffer_length = MAX_NAME_LEN;
 
 				//capture the call stack
@@ -177,16 +177,11 @@ namespace cppr
 
 						int status = 0;
 						abi::__cxa_demangle(name_buffer, demangled_buffer, &demangled_buffer_length, &status);
+						demangled_buffer[MAX_NAME_LEN] = 0;
 						if(status == 0)
-						{
-							String_Range function_name = make_strrng(demangled_buffer, demangled_buffer_length);
-							vprints(io, "[", frames_count - i - 1, "]: ", function_name, "\n");
-						}
+							vprints(io, "[", frames_count - i - 1, "]: ", demangled_buffer, "\n");
 						else
-						{
-							String_Range function_name = make_strrng(name_buffer, copy_size);
-							vprints(io, "[", frames_count - i - 1, "]: ", function_name, "\n");
-						}
+							vprints(io, "[", frames_count - i - 1, "]: ", name_buffer, "\n");
 					}
 					::free(symbols);
 				}
@@ -682,34 +677,43 @@ namespace cppr
 
 		#if defined(OS_WINDOWS)
 		{
-			constexpr usize BUFFER_SIZE = KILOBYTES(2);
-			WCHAR buffer[BUFFER_SIZE];
-			WCHAR* wide_ptr = nullptr;
-			auto count_needed = MultiByteToWideChar(CP_UTF8, NULL, data.ptr, data.size, NULL, 0);
-
-			Owner<WCHAR> dynamic_buffer;
-			if(count_needed > BUFFER_SIZE)
+			//check whether it's a console or a redirected stuff
+			DWORD mode;
+			if(GetConsoleMode(handle->windows_handle, &mode) != 0)
 			{
-				dynamic_buffer = os->global_memory->template alloc<WCHAR>(count_needed);
-				wide_ptr = dynamic_buffer.ptr;
+				constexpr usize BUFFER_SIZE = KILOBYTES(2);
+				WCHAR buffer[BUFFER_SIZE];
+				WCHAR* wide_ptr = nullptr;
+				auto count_needed = MultiByteToWideChar(CP_UTF8, NULL, data.ptr, data.size, NULL, 0);
+
+				Owner<WCHAR> dynamic_buffer;
+				if(count_needed > BUFFER_SIZE)
+				{
+					dynamic_buffer = os->global_memory->template alloc<WCHAR>(count_needed);
+					wide_ptr = dynamic_buffer.ptr;
+				}
+				else
+				{
+					wide_ptr = buffer;
+				}
+
+				MultiByteToWideChar(CP_UTF8, NULL, data.ptr, data.size, wide_ptr, count_needed);
+
+				DWORD count_chars_written = 0;
+				auto success = WriteConsoleW(handle->windows_handle, wide_ptr, count_needed, &count_chars_written, NULL);
+
+				if(count_needed > BUFFER_SIZE)
+					os->global_memory->free(dynamic_buffer);
+
+				if(success)
+					return data.size;
+				else
+					return 0;
 			}
 			else
 			{
-				wide_ptr = buffer;
+				return os->file_write(*handle, data);
 			}
-
-			MultiByteToWideChar(CP_UTF8, NULL, data.ptr, data.size, wide_ptr, count_needed);
-
-			DWORD count_chars_written = 0;
-			auto success = WriteConsoleW(handle->windows_handle, wide_ptr, count_needed, &count_chars_written, NULL);
-
-			if(count_needed > BUFFER_SIZE)
-				os->global_memory->free(dynamic_buffer);
-
-			if(success)
-				return data.size;
-			else
-				return 0;
 		}
 		#elif defined(OS_LINUX)
 		{

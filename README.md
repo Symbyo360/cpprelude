@@ -10,7 +10,9 @@ Developed by:
 
 **[Nora Abdel-hameed](mailto:nora.abdelhameed@gmail.com)**
 
-**CPPrelude** version 1.0.0 is released under the GNU Lesser General Public License version 3.
+**CPPrelude** version 5.0.0 is released under the GNU Lesser General Public License version 3.
+
+Check out the [examples](scratch/src/examples.cpp).
 
 ## Philosophy and Coding standard
 

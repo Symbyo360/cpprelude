@@ -4,7 +4,7 @@ project "unittest"
 	language "C++"
 	kind "ConsoleApp"
 	targetdir (bin_path .. "/%{cfg.platform}/%{cfg.buildcfg}/")
-	location  (build_path .. "/unittest/")
+	location  (build_path .. "/%{prj.name}/")
 
 	files
 	{

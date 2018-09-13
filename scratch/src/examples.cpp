@@ -119,9 +119,9 @@ e4_heap()
 	Owner<i32> my_array = alloc<i32>(10);
 	//note that alloc doesn't invoke any constructors
 
-	//construct a single `1` Child and invoke the constructor with the argument `35`
+	//construct a single Child and invoke the constructor with the argument `35`
 	//and store it in Base (this invokes constructors)
-	Owner<Base> ptr = construct<Child>(1, 35);
+	Owner<Base> ptr = construct<Child>(35);
 
 	//you can access the underlying pointer
 	i32* arr_begin = my_array.ptr;

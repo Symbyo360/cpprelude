@@ -2,7 +2,7 @@ project "cpprelude"
 	language "C++"
 	kind "SharedLib"
 	targetdir (bin_path .. "/%{cfg.platform}/%{cfg.buildcfg}/")
-	location  (build_path .. "/cpprelude/")
+	location  (build_path .. "/%{prj.name}/")
 
 	files
 	{
