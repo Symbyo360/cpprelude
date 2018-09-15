@@ -26,7 +26,7 @@ namespace cppr
 		usize readable_size = min(available_size, data.size);
 		if(readable_size == 0)
 			return 0;
-		copy<byte>(data, self->_buffer.range(self->_cursor, readable_size));
+		copy<byte>(data, self->_buffer.range(self->_cursor, self->_cursor + readable_size));
 		self->_cursor += readable_size;
 		return readable_size;
 	}
