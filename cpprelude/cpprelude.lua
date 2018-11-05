@@ -3,14 +3,20 @@ project "cpprelude"
 	kind "SharedLib"
 	targetdir (bin_path .. "/%{cfg.platform}/%{cfg.buildcfg}/")
 	location  (build_path .. "/%{prj.name}/")
-
+	
 	files
 	{
 		"include/**.h",
-		"src/**.cpp"
+		"src/**.cpp",
+		tracy_path .. "/Tracy.hpp",
+		tracy_path .. "/TracyClient.cpp"
 	}
 
-	includedirs {"include/"}
+	includedirs 
+	{
+		"include/",
+		tracy_path
+	}
 
 	--language configuration
 	exceptionhandling "OFF"
@@ -76,7 +82,7 @@ project "cpprelude"
 	--os agnostic configuration
 	filter "configurations:debug"
 		targetsuffix "d"
-		defines {"DEBUG", "CPPR_DLL"}
+		defines {"DEBUG", "CPPR_DLL", "TRACY_ENABLE"}
 		symbols "On"
 
 	filter "configurations:release"

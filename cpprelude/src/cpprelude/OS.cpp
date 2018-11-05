@@ -6,6 +6,8 @@
 #include <mutex>
 #include <stdlib.h>
 
+#include "Tracy.hpp"
+
 #if defined(OS_WINDOWS)
 #define NOMINMAX
 #define WIN32_LEAN_AND_MEAN
@@ -37,12 +39,15 @@ namespace cppr
 	Owner<byte>
 	_malloc(void* _self, usize size)
 	{
-		return Owner<byte>((byte*)::malloc(size), size);
+		Owner<byte> value = Owner<byte>((byte*)::malloc(size), size);
+		TracyAlloc(value.ptr, size);
+		return value;
 	}
 
 	void
 	_free(void* _self, const Owner<byte>& value)
 	{
+		TracyFree(value.ptr);
 		::free(value.ptr);
 	}
 	
