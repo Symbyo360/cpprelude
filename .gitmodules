@@ -1,4 +1,4 @@
 [submodule "unittest/deps/Catch"]
 	path = unittest/deps/Catch
-	url = git@github.com:philsquared/Catch.git
+	url = https://github.com/Symbyo360/Catch2.git
 	branch = master
